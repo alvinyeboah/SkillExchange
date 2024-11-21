@@ -12,9 +12,8 @@ export async function GET(req: Request) {
   if (roleResult instanceof Response) return roleResult;
 
   try {
-    // Fetch all challenges
     const [challenges] = await pool.query<RowDataPacket[]>(
-      "SELECT * FROM Challenges ORDER BY start_date DESC"
+      "SELECT challenge_id, title, reward_skillcoins, start_date, end_date, created_at FROM Challenges ORDER BY start_date DESC"
     );
 
     return NextResponse.json(challenges, { status: 200 });
@@ -26,30 +25,29 @@ export async function GET(req: Request) {
   }
 }
 
-export async function POST(req: Request) {
-  const authResult = await authMiddleware(req);
-  if (authResult instanceof Response) return authResult;
-
+export async function DELETE(req: Request) {
   try {
-    const { title, description, reward_skillcoins, start_date, end_date } =
-      await req.json();
+    const { challenge_id } = await req.json();
 
-    // Create a new challenge
     const [result] = await pool.query<ResultSetHeader>(
-      "INSERT INTO Challenges (title, description, reward_skillcoins, start_date, end_date) VALUES (?, ?, ?, ?, ?)",
-      [title, description, reward_skillcoins, start_date, end_date]
+      "DELETE FROM Challenges WHERE challenge_id = ?",
+      [challenge_id]
     );
 
+    if (result.affectedRows === 0) {
+      return NextResponse.json(
+        { message: "Challenge not found" },
+        { status: 404 }
+      );
+    }
+
     return NextResponse.json(
-      {
-        message: "Challenge created successfully",
-        challengeId: result.insertId,
-      },
-      { status: 201 }
+      { message: "Challenge deleted successfully" },
+      { status: 200 }
     );
   } catch (error: any) {
     return NextResponse.json(
-      { message: "Failed to create challenge", error: error.message },
+      { message: "Failed to delete challenge", error: error.message },
       { status: 500 }
     );
   }

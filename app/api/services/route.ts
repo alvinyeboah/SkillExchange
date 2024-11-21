@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import pool from "@/lib/db";
-import { RowDataPacket, ResultSetHeader } from "mysql2";
 import { authMiddleware } from "@/lib/middleware/authMiddleware";
 import { roleMiddleware } from "@/lib/middleware/roleMiddleware";
 
@@ -12,15 +11,13 @@ export async function GET(req: Request) {
   if (roleResult instanceof Response) return roleResult;
 
   try {
-    // Fetch all challenges
-    const [challenges] = await pool.query<RowDataPacket[]>(
-      "SELECT * FROM Challenges ORDER BY start_date DESC"
+    const [services] = await pool.query(
+      "SELECT * FROM Services ORDER BY created_at DESC"
     );
-
-    return NextResponse.json(challenges, { status: 200 });
+    return NextResponse.json(services, { status: 200 });
   } catch (error: any) {
     return NextResponse.json(
-      { message: "Failed to fetch challenges", error: error.message },
+      { message: "Failed to fetch services", error: error.message },
       { status: 500 }
     );
   }
@@ -30,26 +27,24 @@ export async function POST(req: Request) {
   const authResult = await authMiddleware(req);
   if (authResult instanceof Response) return authResult;
 
-  try {
-    const { title, description, reward_skillcoins, start_date, end_date } =
-      await req.json();
+  const roleResult = roleMiddleware(req, ["admin"]);
+  if (roleResult instanceof Response) return roleResult;
 
-    // Create a new challenge
-    const [result] = await pool.query<ResultSetHeader>(
-      "INSERT INTO Challenges (title, description, reward_skillcoins, start_date, end_date) VALUES (?, ?, ?, ?, ?)",
-      [title, description, reward_skillcoins, start_date, end_date]
+  try {
+    const { user_id, title, description, skillcoin_price, delivery_time } =
+      await req.json();
+    await pool.query(
+      "INSERT INTO Services (user_id, title, description, skillcoin_price, delivery_time) VALUES (?, ?, ?, ?, ?)",
+      [user_id, title, description, skillcoin_price, delivery_time]
     );
 
     return NextResponse.json(
-      {
-        message: "Challenge created successfully",
-        challengeId: result.insertId,
-      },
+      { message: "Service created successfully" },
       { status: 201 }
     );
   } catch (error: any) {
     return NextResponse.json(
-      { message: "Failed to create challenge", error: error.message },
+      { message: "Failed to create service", error: error.message },
       { status: 500 }
     );
   }
