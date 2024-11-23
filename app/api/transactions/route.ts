@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import pool from "@/lib/db";
-import { RowDataPacket } from "mysql2";
 import { authMiddleware } from "@/lib/middleware/authMiddleware";
 
 export async function GET(req: Request) {
@@ -8,7 +7,7 @@ export async function GET(req: Request) {
   if (authResult instanceof Response) return authResult;
 
   try {
-    const [transactions] = await pool.query<RowDataPacket[]>(
+    const [transactions] = await pool.query(
       "SELECT * FROM Transactions ORDER BY transaction_date DESC"
     );
 
@@ -22,8 +21,6 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const authResult = await authMiddleware(req);
-  if (authResult instanceof Response) return authResult;
 
   try {
     const { from_user_id, to_user_id, service_id, skillcoins_transferred } =

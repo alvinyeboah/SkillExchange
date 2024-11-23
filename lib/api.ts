@@ -1,114 +1,278 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+const BASE_URL = '/api'; 
 
-// Generic fetcher function with error handling
-export const fetcher = async (
-  endpoint: string,
-  options: RequestInit = {}
-): Promise<any> => {
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-    ...options,
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || 'API request failed');
-  }
-
-  return await response.json();
-};
-
-// User-related API calls
-export const userAPI = {
-  register: async (data: { username: string; email: string; password: string }) =>
-    fetcher('/auth/register', {
+export async function login(userData: {email: string, password: string}) {
+  try {
+    const response = await fetch(`${BASE_URL}/auth/login`, {
       method: 'POST',
-      body: JSON.stringify(data),
-    }),
-
-  login: async (data: { email: string; password: string }) =>
-    fetcher('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
-    logout: () => {
-        localStorage.removeItem('authToken');
-        window.location.href = '/login';
+      headers: {
+        'Content-Type': 'application/json',
       },
+      credentials: 'include',
+      body: JSON.stringify(userData),
+    });
 
-  getProfile: async (userId: number) =>
-    fetcher(`/users/${userId}`),
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Login failed');
+    }
 
-  getWallet: async (userId: number) =>
-    fetcher(`/wallet?userId=${userId}`),
-};
+    return response.json();
+  } catch (error: any) {
+    throw new Error(error.message || 'Network error');
+  }
+}
 
-export const serviceAPI = {
-  getAll: async () =>
-    fetcher('/services'),
-
-  getById: async (serviceId: number) =>
-    fetcher(`/services/${serviceId}`),
-
-  create: async (data: {
-    title: string;
-    description: string;
-    skillcoin_price: number;
-    delivery_time: number;
-  }) =>
-    fetcher('/services', {
+// Register API
+export async function register(userData: { email: string; password: string; username: string }) {
+  try {
+    const response = await fetch('/api/auth/register', {
       method: 'POST',
-      body: JSON.stringify(data),
-    }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(userData),
+    });
 
-  update: async (serviceId: number, data: Partial<{
-    title: string;
-    description: string;
-    skillcoin_price: number;
-    delivery_time: number;
-  }>) =>
-    fetcher(`/services/${serviceId}`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    }),
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Registration failed');
+    }
 
-  delete: async (serviceId: number) =>
-    fetcher(`/services/${serviceId}`, {
-      method: 'DELETE',
-    }),
-};
+    return response.json(); 
+  } catch (error: any) {
+    throw new Error(error.message || 'Network error');
+  }
+}
 
-// Transaction-related API calls
-export const transactionAPI = {
-  getHistory: async (userId: number) =>
-    fetcher(`/transactions?userId=${userId}`),
 
-  create: async (data: {
-    from_user_id: number;
-    to_user_id: number;
-    service_id: number;
-    skillcoins_transferred: number;
-  }) =>
-    fetcher('/transactions', {
+// Logout API
+export async function logout() {
+  try {
+    const response = await fetch(`${BASE_URL}/auth/logout`, {
       method: 'POST',
-      body: JSON.stringify(data),
-    }),
-};
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
-// Challenge-related API calls
-export const challengeAPI = {
-  getAll: async () =>
-    fetcher('/challenges'),
+    if (!response.ok) {
+      throw new Error('Logout failed');
+    }
 
-  getById: async (challengeId: number) =>
-    fetcher(`/challenges/${challengeId}`),
+    return response.json();
+  } catch (error: any) {
+    throw new Error(error.message || 'Network error');
+  }
+}
 
-  participate: async (data: { challenge_id: number; user_id: number }) =>
-    fetcher('/challenges/participate', {
+// Get Analytics (Admin-only)
+export async function getAnalytics() {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/analytics`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to fetch analytics');
+    }
+
+    return response.json();
+  } catch (error: any) {
+    throw new Error(error.message || 'Network error');
+  }
+}
+
+// Fetch All Services
+export async function getServices() {
+  try {
+    const response = await fetch(`${BASE_URL}/services`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to fetch services');
+    }
+
+    return response.json();
+  } catch (error: any) {
+    throw new Error(error.message || 'Network error');
+  }
+}
+
+// Create a Service
+export async function createService(serviceData: { title: string; description: string; skillcoinPrice: number; deliveryTime: string }) {
+  try {
+    const response = await fetch(`${BASE_URL}/services`, {
       method: 'POST',
-      body: JSON.stringify(data),
-    }),
-};
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(serviceData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to create service');
+    }
+
+    return response.json();
+  } catch (error: any) {
+    throw new Error(error.message || 'Network error');
+  }
+}
+
+// Fetch Leaderboard
+export async function getLeaderboard() {
+  try {
+    const response = await fetch(`${BASE_URL}/community/leaderboard`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to fetch leaderboard');
+    }
+
+    return response.json();
+  } catch (error: any) {
+    throw new Error(error.message || 'Network error');
+  }
+}
+
+// Fetch Dashboard Stats
+export async function getDashboardStats() {
+  try {
+    const response = await fetch(`${BASE_URL}/community/dashboard`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to fetch dashboard stats');
+    }
+
+    return response.json();
+  } catch (error: any) {
+    throw new Error(error.message || 'Network error');
+  }
+}
+
+// Fetch Reviews for a Service
+export async function getServiceReviews(serviceId: string) {
+  try {
+    const response = await fetch(`${BASE_URL}/services/${serviceId}/reviews`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to fetch reviews');
+    }
+
+    return response.json();
+  } catch (error: any) {
+    throw new Error(error.message || 'Network error');
+  }
+}
+
+// Add Review to a Service
+export async function addServiceReview(serviceId: string, reviewData: { ratingValue: number; review: string }) {
+  try {
+    const response = await fetch(`${BASE_URL}/services/${serviceId}/reviews`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(reviewData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to add review');
+    }
+
+    return response.json();
+  } catch (error: any) {
+    throw new Error(error.message || 'Network error');
+  }
+}
+
+// Fetch Challenges
+export async function fetchChallenges(userId: number) {
+  try {
+    const response = await fetch(`${BASE_URL}/challenges/user/${userId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to fetch challenges');
+    }
+
+    return response.json();
+  } catch (error: any) {
+    throw new Error(error.message || 'Network error');
+  }
+}
+
+// Fetch User Transactions
+export async function fetchTransactions(userId: number) {
+  try {
+    const response = await fetch(`${BASE_URL}/transactions/${userId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to fetch transactions');
+    }
+
+    return response.json();
+  } catch (error: any) {
+    throw new Error(error.message || 'Network error');
+  }
+}
+
+// Fetch User Services
+export async function fetchServices(userId: number) {
+  try {
+    const response = await fetch(`${BASE_URL}/services/${userId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to fetch services');
+    }
+
+    return response.json();
+  } catch (error: any) {
+    throw new Error(error.message || 'Network error');
+  }
+}

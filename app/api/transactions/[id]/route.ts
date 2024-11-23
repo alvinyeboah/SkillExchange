@@ -1,14 +1,11 @@
 import { NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { RowDataPacket } from "mysql2";
-import { authMiddleware } from "@/lib/middleware/authMiddleware";
 
 export async function GET(
   req: Request,
   { params }: { params: { id: string } }
-) {
-  const authResult = await authMiddleware(req);
-  if (authResult instanceof Response) return authResult;
+) {;
 
   try {
     const [transactions] = await pool.query<RowDataPacket[]>(

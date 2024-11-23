@@ -1,26 +1,72 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import jwt from 'jsonwebtoken';
+import { verifyJWTEdge } from './lib/jwt-edge';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your_secret_key';
+const protectedPaths = [
+  '/dashboard',
+  '/profile',
+  '/settings',
+  '/wallet',
+  '/marketplace',
+  '/challenges',
+  '/community'
+];
 
-export function middleware(req: NextRequest) {
-  // Define protected routes
-  const protectedRoutes = ['/dashboard', '/profile', '/wallet'];
+const authPaths = ['/auth/signin', '/auth/register'];
+const publicApiRoutes = ['/api/auth/login', '/api/auth/register', '/api/auth/check'];
 
-  if (protectedRoutes.some((route) => req.nextUrl.pathname.startsWith(route))) {
-    const token = req.cookies.get('authToken')?.value;
+export async function middleware(request: NextRequest) {
+  const currentPath = request.nextUrl.pathname;
+  
+  // Allow public API routes
+  if (publicApiRoutes.includes(currentPath)) {
+    return NextResponse.next();
+  }
 
-    if (!token) {
-      return NextResponse.redirect(new URL('/auth/signin', req.url));
+  // Get and verify auth token
+  const authToken = request.cookies.get('authToken');
+  const payload = authToken?.value ? await verifyJWTEdge(authToken.value) : null;
+  const isValidSession = !!payload;
+
+  // Handle auth paths (signin/register)
+  if (authPaths.includes(currentPath)) {
+    if (isValidSession) {
+      return NextResponse.redirect(new URL('/dashboard', request.url));
     }
+    return NextResponse.next();
+  }
 
-    try {
-      jwt.verify(token, JWT_SECRET);
-    } catch (error) {
-      return NextResponse.redirect(new URL('/auth/signin', req.url));
+  // Handle protected paths
+  if (protectedPaths.includes(currentPath)) {
+    if (!isValidSession) {
+      const signinUrl = new URL('/auth/signin', request.url);
+      signinUrl.searchParams.set('callbackUrl', currentPath);
+      return NextResponse.redirect(signinUrl);
     }
+  }
+
+  // Add user info to headers for protected routes
+  if (isValidSession && payload) {
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set('user', JSON.stringify({
+      userId: payload.userId,
+      email: payload.email,
+      role: payload.role,
+      username: payload.username
+    }));
+    
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    });
   }
 
   return NextResponse.next();
 }
+
+export const config = {
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|public).*)',
+  ],
+};

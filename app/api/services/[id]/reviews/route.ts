@@ -1,27 +1,29 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { RowDataPacket, ResultSetHeader } from "mysql2";
-import { authMiddleware } from "@/lib/middleware/authMiddleware";
 
 export async function GET(
-  req: Request,
+  req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const authResult = await authMiddleware(req);
-  if (authResult instanceof Response) return authResult;
 
   try {
-    // Fetch reviews for the specified service
+    const { id: serviceId } = params;
+
     const [reviews] = await pool.query<RowDataPacket[]>(
       `
-      SELECT Ratings.rating_id, Ratings.rating_value, Ratings.review, Ratings.created_at,
-             Users.username
+      SELECT 
+        Ratings.rating_id, 
+        Ratings.rating_value, 
+        Ratings.review, 
+        Ratings.created_at,
+        Users.username
       FROM Ratings
       INNER JOIN Users ON Ratings.user_id = Users.user_id
       WHERE Ratings.service_id = ?
       ORDER BY Ratings.created_at DESC
       `,
-      [params.id]
+      [serviceId]
     );
 
     return NextResponse.json(reviews, { status: 200 });
@@ -34,27 +36,26 @@ export async function GET(
 }
 
 export async function POST(
-  req: Request,
+  req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const authResult = await authMiddleware(req);
-  if (authResult instanceof Response) return authResult;
 
   try {
+    const { id: serviceId } = params;
     const { user_id, rating_value, review } = await req.json();
 
-    // Validate rating value
-    if (rating_value < 1 || rating_value > 5) {
+    // Validate rating
+    if (typeof rating_value !== "number" || rating_value < 1 || rating_value > 5) {
       return NextResponse.json(
-        { message: "Rating must be between 1 and 5" },
+        { message: "Rating must be a number between 1 and 5" },
         { status: 400 }
       );
     }
 
-    // Insert the new review into the database
+    // Insert review into database
     const [result] = await pool.query<ResultSetHeader>(
       "INSERT INTO Ratings (service_id, user_id, rating_value, review) VALUES (?, ?, ?, ?)",
-      [params.id, user_id, rating_value, review]
+      [serviceId, user_id, rating_value, review]
     );
 
     return NextResponse.json(

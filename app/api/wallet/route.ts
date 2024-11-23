@@ -18,26 +18,55 @@ export async function GET(req: Request) {
       );
     }
 
-    // Fetch user wallet summary
-    const [wallet] = await pool.query<RowDataPacket[]>(
-      "SELECT user_id, username, email, skillcoins AS balance FROM Users WHERE user_id = ?",
-      [userId]
-    );
+    // Start a transaction
+    const connection = await pool.getConnection();
+    await connection.beginTransaction();
 
-    if (wallet.length === 0) {
-      return NextResponse.json({ message: "User not found" }, { status: 404 });
+    try {
+      // Fetch user data including skillcoins
+      const [users] = await connection.query<RowDataPacket[]>(
+        "SELECT user_id, username, email, skillcoins FROM Users WHERE user_id = ?",
+        [userId]
+      );
+
+      if (users.length === 0) {
+        await connection.rollback();
+        return NextResponse.json({ message: "User not found" }, { status: 404 });
+      }
+
+      const user = users[0];
+
+      // Fetch transaction history
+      const [transactions] = await connection.query<RowDataPacket[]>(
+        `SELECT 
+          t.*,
+          CASE 
+            WHEN from_user_id = ? THEN 'Spent'
+            ELSE 'Earned'
+          END as type
+        FROM Transactions t
+        WHERE from_user_id = ? OR to_user_id = ?
+        ORDER BY transaction_date DESC`,
+        [userId, userId, userId]
+      );
+
+      await connection.commit();
+      
+      return NextResponse.json({
+        balance: user.skillcoins,
+        user: {
+          id: user.user_id,
+          username: user.username,
+          email: user.email
+        },
+        transactions
+      }, { status: 200 });
+    } catch (error) {
+      await connection.rollback();
+      throw error;
+    } finally {
+      connection.release();
     }
-
-    // Fetch transaction history for the user
-    const [transactions] = await pool.query<RowDataPacket[]>(
-      "SELECT * FROM Transactions WHERE from_user_id = ? OR to_user_id = ? ORDER BY transaction_date DESC",
-      [userId, userId]
-    );
-
-    return NextResponse.json(
-      { wallet: wallet[0], transactions },
-      { status: 200 }
-    );
   } catch (error: any) {
     return NextResponse.json(
       { message: "Failed to fetch wallet", error: error.message },
@@ -46,37 +75,25 @@ export async function GET(req: Request) {
   }
 }
 
-export async function PATCH(req: Request) {
-  const authResult = await authMiddleware(req);
-  if (authResult instanceof Response) return authResult;
+export async function POST(req: Request) {
 
   try {
-    const { userId, adjustment } = await req.json();
+    const { from_user_id, to_user_id, service_id, skillcoins_transferred } =
+      await req.json();
 
-    if (!userId || typeof adjustment !== "number") {
-      return NextResponse.json(
-        { message: "User ID and adjustment are required" },
-        { status: 400 }
-      );
-    }
-
-    // Update user skillcoin balance
-    const [result] = await pool.query<ResultSetHeader>(
-      "UPDATE Users SET skillcoins = skillcoins + ? WHERE user_id = ?",
-      [adjustment, userId]
+    // Insert a new transaction
+    await pool.query(
+      "INSERT INTO Transactions (from_user_id, to_user_id, service_id, skillcoins_transferred) VALUES (?, ?, ?, ?)",
+      [from_user_id, to_user_id, service_id, skillcoins_transferred]
     );
 
-    if (result.affectedRows === 0) {
-      return NextResponse.json({ message: "User not found" }, { status: 404 });
-    }
-
     return NextResponse.json(
-      { message: "Wallet updated successfully" },
-      { status: 200 }
+      { message: "Transaction created successfully" },
+      { status: 201 }
     );
   } catch (error: any) {
     return NextResponse.json(
-      { message: "Failed to update wallet", error: error.message },
+      { message: "Failed to create transaction", error: error.message },
       { status: 500 }
     );
   }

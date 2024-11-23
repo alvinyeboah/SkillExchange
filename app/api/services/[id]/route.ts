@@ -2,19 +2,16 @@ import { NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { RowDataPacket } from "mysql2";
 import { Service } from "@/types/service";
-import { authMiddleware } from "@/lib/middleware/authMiddleware";
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
-  const authResult = await authMiddleware(req);
-  if (authResult instanceof Response) return authResult;
 
   try {
     const [service] = await pool.query<RowDataPacket[]>(
       "SELECT * FROM Services WHERE service_id = ?",
-      [params.id]
+      [context.params.id]
     );
 
     if (service.length === 0) {
@@ -37,8 +34,6 @@ export async function PUT(
   req: Request,
   { params }: { params: { id: string } }
 ) {
-  const authResult = await authMiddleware(req);
-  if (authResult instanceof Response) return authResult;
 
   try {
     const { title, description, skillcoin_price, delivery_time } =
@@ -66,9 +61,6 @@ export async function DELETE(
   req: Request,
   { params }: { params: { id: string } }
 ) {
-  const authResult = await authMiddleware(req);
-  if (authResult instanceof Response) return authResult;
-
   try {
     // Delete the service from the database
     await pool.query("DELETE FROM Services WHERE service_id = ?", [params.id]);

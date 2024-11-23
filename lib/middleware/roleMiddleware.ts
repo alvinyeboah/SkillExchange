@@ -8,7 +8,7 @@ export function roleMiddleware(req: Request, requiredRoles: string[]) {
 
   const user = JSON.parse(userHeader);
   if (!requiredRoles.includes(user.role)) {
-    return NextResponse.json({ message: 'Access denied' }, { status: 403 });
+    return NextResponse.json({ message: 'x' }, { status: 403 });
   }
 
   return NextResponse.next();

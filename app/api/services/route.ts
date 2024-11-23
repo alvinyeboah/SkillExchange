@@ -7,9 +7,6 @@ export async function GET(req: Request) {
   const authResult = await authMiddleware(req);
   if (authResult instanceof Response) return authResult;
 
-  const roleResult = roleMiddleware(req, ["admin"]);
-  if (roleResult instanceof Response) return roleResult;
-
   try {
     const [services] = await pool.query(
       "SELECT * FROM Services ORDER BY created_at DESC"
@@ -24,8 +21,6 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const authResult = await authMiddleware(req);
-  if (authResult instanceof Response) return authResult;
 
   const roleResult = roleMiddleware(req, ["admin"]);
   if (roleResult instanceof Response) return roleResult;
