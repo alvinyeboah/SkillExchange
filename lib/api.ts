@@ -23,7 +23,12 @@ export async function login(userData: {email: string, password: string}) {
 }
 
 // Register API
-export async function register(userData: { email: string; password: string; username: string }) {
+export async function register(userData: { 
+  email: string; 
+  password: string; 
+  username: string;
+  name: string; 
+}) {
   try {
     const response = await fetch('/api/auth/register', {
       method: 'POST',
@@ -38,7 +43,7 @@ export async function register(userData: { email: string; password: string; user
       throw new Error(errorData.message || 'Registration failed');
     }
 
-    return response.json(); 
+    return response.json();
   } catch (error: any) {
     throw new Error(error.message || 'Network error');
   }
@@ -269,6 +274,26 @@ export async function fetchServices(userId: number) {
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.message || 'Failed to fetch services');
+    }
+
+    return response.json();
+  } catch (error: any) {
+    throw new Error(error.message || 'Network error');
+  }
+}
+
+export async function getChallenges() {
+  try {
+    const response = await fetch(`${BASE_URL}/challenges`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to fetch challenges');
     }
 
     return response.json();

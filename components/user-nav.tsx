@@ -14,9 +14,11 @@ import {
 import { useRouter } from "next/navigation"
 import { logout } from "@/lib/api"
 import { toast } from "sonner"
+import { useState } from "react"
 
-export function UserNav({ user }: { user: { name?: string; email: string; image?: string } }) {
+export function UserNav({ user }: { user: { name?: string; email: string; avatar_url?: string } }) {
   const router = useRouter()
+  const [notifications, setNotifications] = useState([]);
   
   const handleLogout = async () => {
     try {
@@ -28,14 +30,13 @@ export function UserNav({ user }: { user: { name?: string; email: string; image?
       toast.error("Error logging out")
     }
   }
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={user.image} alt={user.name} />
-            <AvatarFallback>{user?.name}</AvatarFallback>
+          <Avatar>
+            <AvatarImage src={user.avatar_url} alt={user.name} />
+            <AvatarFallback>{user.name?.[0]}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>

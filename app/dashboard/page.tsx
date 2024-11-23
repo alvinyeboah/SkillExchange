@@ -104,7 +104,7 @@ export default function Dashboard() {
             <CardContent>
               <ul className="space-y-4">
                 {stats?.leaderboard?.map((user, index) => (
-                  <li key={user.id} className="flex items-center justify-between">
+                  <li key={`${user.id}-${user.username}`} className="flex items-center justify-between">
                     <div className="flex items-center">
                       <span className="font-bold mr-4 w-4">{index + 1}</span>
                       <Avatar className="h-10 w-10 mr-4">

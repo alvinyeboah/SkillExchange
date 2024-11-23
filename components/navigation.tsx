@@ -7,6 +7,7 @@ import { Zap, Search, Sun, Moon, Menu } from 'lucide-react'
 import { Input } from './ui/input'
 import { useAuth } from "@/hooks/use-auth"
 import { UserNav } from "./user-nav"
+import { NotificationsDropdown } from "./notifications-dropdown"
 
 
 function ThemeToggle() {
@@ -50,6 +51,7 @@ export default function Header() {
             </div>
           </form>
           <ThemeToggle />
+          {user && <NotificationsDropdown />}
           {user ? (
             <UserNav user={user} />
           ) : (

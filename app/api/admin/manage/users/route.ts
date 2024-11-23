@@ -13,7 +13,7 @@ export async function GET(req: Request) {
 
   try {
     const [users] = await pool.query<RowDataPacket[]>(
-      "SELECT user_id, username, email, skillcoins, created_at FROM Users ORDER BY created_at DESC"
+      "SELECT user_id, username, email, avatar_url, skillcoins, created_at FROM Users ORDER BY created_at DESC"
     );
 
     return NextResponse.json(users, { status: 200 });

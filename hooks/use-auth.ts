@@ -28,17 +28,17 @@ interface UserService {
   rating: number
 }
 
-interface User {
+export interface User {
   id: number
   email: string
-  role?: string
-  name?: string
-  bio?: string
   username: string
-  avatar?: string
-  skillcoins: number
-  created_at: string
+  name?: string
+  avatar_url?: string
+  bio?: string
   skills?: string[]
+  role?: string
+  created_at: string
+  skillcoins: number
   ratings?: UserRating
   transactions?: UserTransaction[]
   activeChallenges?: UserChallenge[]
@@ -57,6 +57,7 @@ interface AuthState {
   clearError: () => void
   refreshUserData: () => Promise<void>
   checkAuth: () => Promise<void>
+  updateUser: (user: User) => void
 }
 
 export const useAuth = create<AuthState>()(
@@ -143,7 +144,9 @@ export const useAuth = create<AuthState>()(
         } catch (error: any) {
           console.error('Failed to refresh user data:', error)
         }
-      }
+      },
+
+      updateUser: (user: User) => set({ user })
     }),
     {
       name: 'auth-storage',
@@ -151,9 +154,3 @@ export const useAuth = create<AuthState>()(
     }
   )
 )
-
-// Optional: Create a React hook wrapper for better type inference
-export function useAuthState() {
-  const state = useAuth()
-  return state
-} 

@@ -1,4 +1,6 @@
 "use client";
+
+import { useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,28 +28,36 @@ import {
   ArrowRight,
   Search,
   Mail,
+  Briefcase,
+  TrendingUp,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useServices } from "@/hooks/use-services";
 import { useChallenges } from "@/hooks/use-challenges";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { AddReminder } from '@/components/AddReminder';
+import { ReminderCheck } from "@/components/reminder-check";
+
+
 export default function Home() {
   const { user } = useAuth();
-  const { services, isLoading: servicesLoading } = useServices();
-  const {  isLoading: challengesLoading } = useChallenges();
+  const { services, isLoading: servicesLoading, fetchServices } = useServices();
+  const { challenges, isLoading: challengesLoading, fetchChallenges } = useChallenges();
+
+  useEffect(() => {
+    fetchServices();
+    fetchChallenges();
+  }, [fetchServices, fetchChallenges]);
 
   if (servicesLoading || challengesLoading) {
     return <LoadingSpinner />;
   }
 
-  console.log("🚀 ~ Home ~ services:", services)
-  console.log("🚀 ~ Home ~ user:", user)
-  
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col items-center justify-center min-h-screen">
       <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-background">
         <div className="container px-4 md:px-6">
-          <div className="flex flex-col items-center space-y-4 text-center">
+          <div className="flex flex-col items-center justify-center space-y-4 text-center">
             <div className="space-y-2">
               <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">
                 Welcome to SkillExchange
@@ -57,11 +67,11 @@ export default function Home() {
                 vibrant community!
               </p>
             </div>
-            <div className="space-x-4">
-              <Button asChild>
+            <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+              <Button asChild size="lg">
                 <Link href="/marketplace">Explore Marketplace</Link>
               </Button>
-              <Button variant="outline" asChild>
+              <Button variant="outline" size="lg" asChild>
                 <Link href="/challenges">View Challenges</Link>
               </Button>
             </div>
@@ -75,14 +85,14 @@ export default function Home() {
             How It Works
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card>
+            <Card className="flex flex-col h-full">
               <CardHeader>
                 <CardTitle className="flex items-center">
-                  <Zap className="w-6 h-6 mr-2 text-yellow-500" />
+                  <Briefcase className="w-6 h-6 mr-2 text-primary" />
                   Offer Your Skills
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="flex-grow">
                 Post your services and showcase your talents to the community.
               </CardContent>
               <CardFooter>
@@ -93,14 +103,14 @@ export default function Home() {
                 </Button>
               </CardFooter>
             </Card>
-            <Card>
+            <Card className="flex flex-col h-full">
               <CardHeader>
                 <CardTitle className="flex items-center">
-                  <Star className="w-6 h-6 mr-2 text-yellow-500" />
+                  <Zap className="w-6 h-6 mr-2 text-primary" />
                   Earn SkillCoins
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="flex-grow">
                 Complete tasks and challenges to earn our platform's currency.
               </CardContent>
               <CardFooter>
@@ -111,14 +121,14 @@ export default function Home() {
                 </Button>
               </CardFooter>
             </Card>
-            <Card>
+            <Card className="flex flex-col h-full">
               <CardHeader>
                 <CardTitle className="flex items-center">
-                  <Trophy className="w-6 h-6 mr-2 text-yellow-500" />
+                  <TrendingUp className="w-6 h-6 mr-2 text-primary" />
                   Grow Your Skills
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="flex-grow">
                 Learn from others and take on challenges to improve your
                 abilities.
               </CardContent>
@@ -141,12 +151,13 @@ export default function Home() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {services.slice(0, 6).map((service) => (
-              <Card key={service.service_id}>
+              <Card key={service.service_id} className="flex flex-col h-full">
                 <CardHeader>
                   <CardTitle>{service.title}</CardTitle>
-                  <CardDescription>{service.description}</CardDescription>
+                  <CardDescription>{service.title}</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="flex-grow">
+                  <p className="mb-4 text-sm">{service.description}</p>
                   <div className="flex justify-between items-center">
                     <span className="text-2xl font-bold">
                       {service.skillcoin_price}{" "}
@@ -158,9 +169,9 @@ export default function Home() {
                           src={service?.profile_image}
                           alt={service?.provider_name}
                         />
-                        <AvatarFallback>{service?.provider_name[0]}</AvatarFallback>
+                        <AvatarFallback>{service?.provider_name}</AvatarFallback>
                       </Avatar>
-                      <span>{service?.provider_name}</span>
+                      <span className="text-sm">{service?.provider_name}</span>
                     </div>
                   </div>
                 </CardContent>
@@ -186,28 +197,13 @@ export default function Home() {
             Active Challenges
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {[
-              {
-                title: "30-Day Coding Challenge",
-                description: "Complete 30 coding tasks in 30 days",
-                participants: 250,
-                reward: 500,
-                timeLeft: "15 days",
-              },
-              {
-                title: "Design Sprint",
-                description: "Create a landing page in 48 hours",
-                participants: 100,
-                reward: 300,
-                timeLeft: "2 days",
-              },
-            ].map((challenge, index) => (
-              <Card key={index}>
+            {challenges.slice(0, 2).map((challenge) => (
+              <Card key={challenge.challenge_id} className="flex flex-col h-full">
                 <CardHeader>
                   <CardTitle>{challenge.title}</CardTitle>
                   <CardDescription>{challenge.description}</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="flex-grow">
                   <div className="flex justify-between items-center mb-4">
                     <span className="flex items-center">
                       <Users className="w-4 h-4 mr-1" />
@@ -245,7 +241,7 @@ export default function Home() {
             Community Highlights
           </h2>
           <Tabs defaultValue="topProviders" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-3 mb-8">
               <TabsTrigger value="topProviders">Top Providers</TabsTrigger>
               <TabsTrigger value="recentReviews">Recent Reviews</TabsTrigger>
               <TabsTrigger value="skillLeaderboard">
@@ -292,7 +288,7 @@ export default function Home() {
                     completedTasks: 42,
                   },
                 ].map((provider, index) => (
-                  <Card key={index}>
+                  <Card key={index} className="flex flex-col h-full">
                     <CardHeader>
                       <CardTitle className="flex items-center">
                         <Avatar className="h-8 w-8 mr-2">
@@ -306,7 +302,7 @@ export default function Home() {
                       </CardTitle>
                       <CardDescription>{provider.skill}</CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="flex-grow">
                       <div className="flex justify-between items-center">
                         <span className="flex items-center">
                           <Star className="w-4 h-4 mr-1 text-yellow-500" />
@@ -352,7 +348,8 @@ export default function Home() {
                     service: "Video Editing",
                     rating: 5,
                     comment:
-                      "David transformed my raw footage into a professional-looking video. Highly recommended!",
+                
+"David transformed my raw footage into a professional-looking video. Highly recommended!",
                   },
                   {
                     reviewer: "Alex",
@@ -413,14 +410,14 @@ export default function Home() {
                     skillLevel: 89,
                   },
                 ].map((leaderboard, index) => (
-                  <Card key={index}>
+                  <Card key={index} className="flex flex-col h-full">
                     <CardHeader>
                       <CardTitle>{leaderboard.skill}</CardTitle>
                       <CardDescription>
                         Top performer: {leaderboard.topUser}
                       </CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="flex-grow">
                       <div className="flex items-center">
                         <div className="w-full bg-secondary rounded-full h-2.5 mr-2">
                           <div
@@ -441,9 +438,7 @@ export default function Home() {
         </div>
       </section>
 
-      {user ? (
-        ""
-      ) : (
+      {!user && (
         <section className="w-full py-12 md:py-24 lg:py-32 bg-gray-100 dark:bg-gray-800">
           <div className="container px-4 md:px-6">
             <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-8 text-center">
@@ -480,8 +475,12 @@ export default function Home() {
               </CardFooter>
             </Card>
           </div>
-        </section> 
+        </section>
       )}
+
+      <AddReminder />
+      <ReminderCheck />
     </div>
   );
 }
+

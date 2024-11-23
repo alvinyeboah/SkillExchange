@@ -1,42 +1,40 @@
 import { create } from 'zustand';
-import { fetchChallenges } from '@/lib/api';
+import { getChallenges } from '@/lib/api';
 
-interface UserChallenge {
-  challenge_id: number;
+interface Challenge {
+  challenge_id: string;
   title: string;
-  status: 'active' | 'completed';
-  progress: number;
   description: string;
-  reward_skillcoins: number;
-  start_date: string;
-  end_date: string;
+  reward: number;
+  participants: number;
+  timeLeft: string;
 }
 
 interface ChallengesState {
-  activeChallenges: UserChallenge[];
-  completedChallenges: UserChallenge[];
+  challenges: Challenge[];
   isLoading: boolean;
   error: string | null;
-  fetchUserChallenges: (userId: number) => Promise<void>;
+  fetchChallenges: () => Promise<void>;
 }
 
 export const useChallenges = create<ChallengesState>((set) => ({
-  activeChallenges: [],
-  completedChallenges: [],
+  challenges: [],
   isLoading: false,
   error: null,
 
-  fetchUserChallenges: async (userId: number) => {
+  fetchChallenges: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await fetchChallenges(userId);
-      set({
-        activeChallenges: response.filter((c: UserChallenge) => c.status === 'active'),
-        completedChallenges: response.filter((c: UserChallenge) => c.status === 'completed'),
-        isLoading: false,
+      const response = await getChallenges();
+      set({ 
+        challenges: response,
+        isLoading: false 
       });
     } catch (error: any) {
-      set({ error: error.message, isLoading: false });
+      set({ 
+        error: 'Failed to fetch challenges', 
+        isLoading: false 
+      });
     }
   },
 })); 

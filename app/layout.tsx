@@ -9,6 +9,7 @@ import { usePathname } from "next/navigation";
 import { ThemeProvider } from "@/components/providers/theme-provider"
 import { useEffect } from 'react'
 import { useAuth } from '@/hooks/use-auth'
+import { ReminderCheck } from '@/components/reminder-check'
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -45,9 +46,10 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {!isAuthPage && <Header />}
-          <main className="flex-grow">{children}</main>
+          <main className="flex-grow ">{children}</main>
           {!isAuthPage && <Footer />}
           <Toaster />
+          <ReminderCheck />
         </ThemeProvider>
       </body>
     </html>

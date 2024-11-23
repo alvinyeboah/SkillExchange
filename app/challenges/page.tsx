@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/hooks/use-auth'
 import { useChallengesStore } from '@/hooks/use-challenges-store'
+import { useReminders } from '@/hooks/use-reminders-store'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -27,6 +28,7 @@ export default function Challenges() {
     createChallenge,
     participateInChallenge
   } = useChallengesStore();
+  const { setReminder } = useReminders();
 
   const [newChallenge, setNewChallenge] = useState({
     title: '',
@@ -142,7 +144,7 @@ export default function Challenges() {
                     </span>
                     <span className="flex items-center">
                       <Clock className="w-4 h-4 mr-1" />
-                      {challenge.end_date}
+                      {new Date(challenge.end_date).toUTCString()}
                     </span>
                   </div>
                   <div className="mb-4">
@@ -211,14 +213,35 @@ export default function Challenges() {
                   <div>
                     <h4 className="font-semibold mb-2">Required Skills:</h4>
                     <div className="flex flex-wrap gap-2">
-                      {challenge.skills.map((skill, index) => (
+                      {challenge?.skills?.map((skill, index) => (
                         <Badge key={index} variant="outline">{skill}</Badge>
                       ))}
                     </div>
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Button className="w-full">Set Reminder</Button>
+                  <Button 
+                    className="w-full" 
+                    onClick={async () => {
+                      if (!user) {
+                        toast.error('Please login to set reminders');
+                        return;
+                      }
+                      try {
+                        await setReminder({
+                          userId: user.id,
+                          type: 'challenge',
+                          referenceId: challenge.challenge_id,
+                          title: challenge.title,
+                          datetime: challenge.start_date,
+                        });
+                      } catch (error) {
+                        console.error('Error setting reminder:', error);
+                      }
+                    }}
+                  >
+                    Set Reminder
+                  </Button>
                 </CardFooter>
               </Card>
             ))}
@@ -346,6 +369,16 @@ export default function Challenges() {
                     type="date"
                     value={newChallenge.start_date}
                     onChange={(e) => setNewChallenge({...newChallenge, start_date: e.target.value})}
+                    required
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="endDate">End Date</Label>
+                  <Input 
+                    id="endDate" 
+                    type="date"
+                    value={newChallenge.end_date}
+                    onChange={(e) => setNewChallenge({...newChallenge, end_date: e.target.value})}
                     required
                   />
                 </div>

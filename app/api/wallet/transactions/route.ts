@@ -1,7 +1,16 @@
-import { pool } from "@/lib/db";
+import pool  from "@/lib/db";
 import { authMiddleware } from "@/lib/middleware/authMiddleware";
-
 import { NextResponse } from "next/server";
+import { RowDataPacket } from "mysql2";
+
+interface Transaction extends RowDataPacket {
+  transaction_id: number;
+  from_user_id: number;
+  to_user_id: number;
+  amount: number;
+  created_at: Date;
+  description?: string;
+}
 
 export async function GET(req: Request) {
   const authResult = await authMiddleware(req);
@@ -10,7 +19,7 @@ export async function GET(req: Request) {
   const userId = req.headers.get('user-id');
 
   try {
-    const [transactions] = await pool.query(
+    const transactions = await pool.query<Transaction[]>(
       "SELECT * FROM Transactions WHERE from_user_id = ? OR to_user_id = ? ORDER BY created_at DESC",
       [userId, userId]
     );

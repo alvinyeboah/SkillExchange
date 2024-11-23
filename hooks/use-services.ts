@@ -1,26 +1,20 @@
 import { create } from 'zustand';
-import { fetchServices, createService } from '@/lib/api';
+import { getServices } from '@/lib/api';
 
-interface UserService {
-  service_id: number;
+interface Service {
+  service_id: string;
   title: string;
   description: string;
-  rating: number;
   skillcoin_price: number;
-  delivery_time: string;
+  provider_name: string;
+  profile_image?: string;
 }
 
 interface ServicesState {
-  services: UserService[];
+  services: Service[];
   isLoading: boolean;
   error: string | null;
-  fetchUserServices: (userId: number) => Promise<void>;
-  createNewService: (serviceData: {
-    title: string;
-    description: string;
-    skillcoinPrice: number;
-    deliveryTime: string;
-  }) => Promise<void>;
+  fetchServices: () => Promise<void>;
 }
 
 export const useServices = create<ServicesState>((set) => ({
@@ -28,26 +22,19 @@ export const useServices = create<ServicesState>((set) => ({
   isLoading: false,
   error: null,
 
-  fetchUserServices: async (userId: number) => {
+  fetchServices: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await fetchServices(userId);
-      set({ services: response, isLoading: false });
+      const response = await getServices();
+      set({ 
+        services: response,
+        isLoading: false 
+      });
     } catch (error: any) {
-      set({ error: error.message, isLoading: false });
-    }
-  },
-
-  createNewService: async (serviceData) => {
-    set({ isLoading: true, error: null });
-    try {
-      await createService(serviceData);
-      set((state) => ({
-        services: [...state.services, serviceData as any],
-        isLoading: false,
-      }));
-    } catch (error: any) {
-      set({ error: error.message, isLoading: false });
+      set({ 
+        error: 'Failed to fetch services', 
+        isLoading: false 
+      });
     }
   },
 }));

@@ -5,11 +5,15 @@ import { RowDataPacket } from 'mysql2'
 
 interface UserRow extends RowDataPacket {
   user_id: number
-  email: string
+  name: string
   username: string
-  role: string
+  email: string
   skillcoins: number
   created_at: Date
+  updated_at: Date
+  role: string
+  status: string
+  avatar_url: string
 }
 
 export async function GET(req: NextRequest) {
@@ -26,7 +30,7 @@ export async function GET(req: NextRequest) {
     }
 
     const [users] = await pool.query<UserRow[]>(
-      'SELECT user_id, email, username, role, skillcoins, created_at FROM Users WHERE user_id = ?',
+      'SELECT user_id, name, username, email, skillcoins, created_at, updated_at, role, status, avatar_url FROM Users WHERE user_id = ?',
       [payload.userId]
     ) as [UserRow[], any]
 
@@ -39,11 +43,15 @@ export async function GET(req: NextRequest) {
       authenticated: true,
       user: {
         id: user.user_id,
-        email: user.email,
+        name: user.name,
         username: user.username,
-        role: user.role,
+        email: user.email,
         skillcoins: user.skillcoins,
-        created_at: user.created_at
+        created_at: user.created_at,
+        updated_at: user.updated_at,
+        role: user.role,
+        status: user.status,
+        avatar_url: user.avatar_url
       }
     })
   } catch (error) {

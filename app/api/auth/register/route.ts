@@ -4,7 +4,7 @@ import bcrypt from 'bcrypt';
 
 export async function POST(req: Request) {
   try {
-    const { username, email, password } = await req.json();
+    const { username, email, password, name } = await req.json();
 
     // Check if the user already exists
     const [existingUser]: any = await pool.query('SELECT * FROM Users WHERE email = ?', [email]);
@@ -15,10 +15,19 @@ export async function POST(req: Request) {
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Set default avatar URL using a service like Gravatar or a default image
+    const defaultAvatarUrl = `https://api.dicebear.com/7.x/avatars/svg?seed=${username}`;
+
     // Insert the new user into the database
     await pool.query(
-      'INSERT INTO Users (username, email, password_hash) VALUES (?, ?, ?)',
-      [username, email, hashedPassword]
+      `INSERT INTO Users (
+        username, 
+        email, 
+        password_hash, 
+        name,
+        avatar_url
+      ) VALUES (?, ?, ?, ?, ?)`,
+      [username, email, hashedPassword, name, defaultAvatarUrl]
     );
 
     return NextResponse.json({ message: 'User registered successfully' }, { status: 201 });

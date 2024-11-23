@@ -8,7 +8,7 @@ export async function POST(req: Request) {
     const { email, password } = await req.json();
 
     const [users]: any = await pool.query(
-      'SELECT user_id, email, username, password_hash, role FROM Users WHERE email = ?',
+      'SELECT user_id, name, username, email, skillcoins, created_at, updated_at, role, status, avatar_url, password_hash FROM Users WHERE email = ?',
       [email]
     );
 
@@ -35,9 +35,15 @@ export async function POST(req: Request) {
       message: 'Login successful',
       user: {
         id: user.user_id,
-        email: user.email,
+        name: user.name,
         username: user.username,
-        role: user.role
+        email: user.email,
+        skillcoins: user.skillcoins,
+        created_at: user.created_at,
+        updated_at: user.updated_at,
+        role: user.role,
+        status: user.status,
+        avatar_url: user.avatar_url
       }
     }, { status: 200 });
 

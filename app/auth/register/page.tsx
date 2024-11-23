@@ -6,8 +6,10 @@ import { motion } from 'framer-motion'
 import { validateEmail, validatePassword } from '@/lib/utils'
 import { register } from '@/lib/api'
 import { toast } from 'sonner'
+import { useRouter } from 'next/navigation'
 
 export default function RegisterPage() {
+  const router = useRouter()
   const [email, setEmail] = useState('')
 
   const [username, setUsername] = useState('')
@@ -15,34 +17,52 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [errors, setErrors] = useState<{ [key: string]: string }>({})
 
+  const [name, setName] = useState('')
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newErrors: { [key: string]: string } = {};
+    setErrors({});
 
-    // Validation
-    if (!email.includes('@')) {
-      newErrors.email = 'Please enter a valid email address';
+    // Validate fields
+    const newErrors: { [key: string]: string } = {};
+    
+    if (!name) {
+      newErrors.name = 'Name is required';
     }
-    if (password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
-    }
-    if (username.length === 0) {
+    
+    if (!username) {
       newErrors.username = 'Username is required';
     }
+    
+    if (!email) {
+      newErrors.email = 'Email is required';
+    } else if (!validateEmail(email)) {
+      newErrors.email = 'Invalid email format';
+    }
+    
+    if (!password) {
+      newErrors.password = 'Password is required';
+    } else if (!validatePassword(password)) {
+      newErrors.password = 'Password must be at least 8 characters';
+    }
+    
+    if (password !== confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
 
-    if (Object.keys(newErrors).length === 0) {
-      try {
-        const response = await register({ email, password, username });
-        toast.success("Registration successful!")
-        window.location.href = '/auth/signin'; 
-
-      } catch (error: any) {
-        console.error('Registration error:', error.message);
-        toast.error("An error occurred during registration")
-        setErrors({ server: error.message }); 
-      }
-    } else {
+    if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
+      return;
+    }
+
+    try {
+      const response = await register({ email, password, username, name });
+      if (response) {
+        router.push('/auth/signin');
+        toast.success('Registration successful! Please sign in.');
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Registration failed');
     }
   };
 
@@ -86,6 +106,20 @@ export default function RegisterPage() {
                 placeholder="Enter your email"
               />
               {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+            </div>
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                Name
+              </label>
+              <input
+                type="text"
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 transition duration-200"
+                placeholder="Enter your name"
+              />
+              {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
             </div>
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">

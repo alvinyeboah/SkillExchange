@@ -16,7 +16,9 @@ import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
 
 export default function SettingsPage() {
-  const { user } = useAuth()
+  const { user, updateUser } = useAuth();
+  console.log(user)
+
   const { settings, isLoading, error, fetchSettings, updateSettings } = useSettings()
 
   useEffect(() => {
@@ -58,15 +60,12 @@ export default function SettingsPage() {
   const handleProfileUpdate = async (formData: FormData) => {
     if (!user?.id) return
     try {
-      // Handle profile image upload separately if needed
       const profileData = {
         fullName: formData.get('fullName') as string,
         username: formData.get('username') as string,
         bio: formData.get('bio') as string,
         skills: formData.get('skills') as string,
       }
-      
-      // Update profile data through your API
       await fetch(`/api/users/${user.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -109,6 +108,38 @@ export default function SettingsPage() {
     }
   }
 
+  const handleImageUpload = async (file: File) => {
+    if (!user?.id) return;
+    
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const response = await fetch(`/api/users/${user.id}/upload-image`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload image');
+      }
+
+      const data = await response.json();
+      
+      // Update local user state with new avatar URL
+      if (updateUser && user) {
+        updateUser({
+          ...user,
+          avatar_url: data.avatar_url,
+        });
+      }
+
+      toast.success('Profile image updated successfully');
+    } catch (error) {
+      toast.error('Failed to upload profile image');
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -126,6 +157,9 @@ export default function SettingsPage() {
       </div>
     )
   }
+
+  console.log(user, "this from the settings page");
+  
 
   return (
     <div className="container mx-auto py-10">
@@ -151,19 +185,33 @@ export default function SettingsPage() {
               <CardContent className="space-y-4">
                 <div className="flex items-center space-x-4">
                   <Avatar className="w-20 h-20">
-                    <AvatarImage src={user?.avatar || ''} alt="Profile" />
+                    <AvatarImage src={user?.avatar_url || ''} alt="Profile" />
                     <AvatarFallback>{user?.username?.charAt(0) || 'U'}</AvatarFallback>
                   </Avatar>
-                  <Button variant="outline" type="button" 
-                    onClick={() => document.getElementById('avatar-upload')?.click()}>
-                    Change Avatar
-                  </Button>
+                  <div className="flex flex-col space-y-2">
+                    <Button 
+                      variant="outline" 
+                      type="button"
+                      onClick={() => document.getElementById('avatar-upload')?.click()}
+                    >
+                      Change Avatar
+                    </Button>
+                    <p className="text-xs text-muted-foreground">
+                      Recommended: Square image, max 5MB
+                    </p>
+                  </div>
                   <input
                     id="avatar-upload"
                     name="avatar"
                     type="file"
                     className="hidden"
                     accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        handleImageUpload(file);
+                      }
+                    }}
                   />
                 </div>
                 <div className="space-y-2">

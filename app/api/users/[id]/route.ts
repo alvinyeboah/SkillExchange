@@ -8,7 +8,7 @@ export async function GET(
 ) {
   try {
     const [user] = await pool.query<RowDataPacket[]>(
-      "SELECT user_id, username, email, skillcoins, created_at FROM Users WHERE user_id = ?",
+      "SELECT user_id, username, email, avatar_url, skillcoins, created_at FROM Users WHERE user_id = ?",
       [params.id]
     );
 
