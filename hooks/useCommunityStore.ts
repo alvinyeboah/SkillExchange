@@ -6,6 +6,14 @@ interface CommunityStats {
     username: string;
     avatar: string;
   }>;
+  topProviders: Array<{
+    id: string;
+    username: string;
+    avatar_url: string;
+    skill: string;
+    avg_rating: number;
+    completedTasks:number;
+  }>;
 }
 
 interface CommunityStore {
@@ -16,14 +24,13 @@ interface CommunityStore {
 }
 
 export const useCommunityStore = create<CommunityStore>((set) => ({
-  communityStats: { activeUsers: [] },
+  communityStats: { activeUsers: [], topProviders: [] },
   isLoading: false,
   error: null,
   fetchCommunityStats: async () => {
     set({ isLoading: true });
     try {
-      // Replace with your actual API call
-      const response = await fetch('/api/community-stats');
+      const response = await fetch('/api/community/stats');
       const data = await response.json();
       set({ communityStats: data, error: null });
     } catch (err) {

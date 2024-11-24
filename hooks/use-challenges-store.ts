@@ -102,13 +102,16 @@ export const useChallengesStore = create<ChallengesState>((set, get) => ({
         body: JSON.stringify({ challenge_id: challengeId, user_id: userId }),
       });
 
-      if (!response.ok) throw new Error('Failed to join challenge');
-      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to join challenge');
+      }
+
       toast.success('Successfully joined the challenge');
       await get().fetchChallenges(); // Refresh challenges
     } catch (error: any) {
-      toast.error('Failed to join challenge');
-      throw error;
+      toast.error(error.message);
+      throw error; // Rethrow the error to handle it in the UI
     }
   },
 })); 

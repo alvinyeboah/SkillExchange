@@ -1,15 +1,8 @@
-"use client"
-import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
-import Footer from "@/components/footer";
-import Header from "@/components/navigation";
-import { Toaster } from "@/components/providers/toaster";
-import { usePathname } from "next/navigation";
-import { ThemeProvider } from "@/components/providers/theme-provider"
-import { useEffect } from 'react'
-import { useAuth } from '@/hooks/use-auth'
-import { ReminderCheck } from '@/components/reminder-check'
+import { Metadata } from "next";
+import MainLayout from "./MainLayout";
+import { ThemeProvider } from "@/components/providers/theme-provider";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -22,34 +15,103 @@ const geistMono = localFont({
   weight: "100 900",
 });
 
+export const metadata = {
+  title: {
+    default: "SkillCoin - Simplified Service Exchange Platform",
+    template: "%s | SkillCoin",
+  },
+  description:
+    "SkillCoin is a platform for exchanging services using virtual SkillCoins. Earn, spend, and collaborate in a community-driven economy.",
+  icons: {
+    icon: "/public/favicon.ico",
+    shortcut: "/public/favicon.ico",
+    apple: "/public/favicon.ico",
+    other: [
+      {
+        rel: "icon",
+        type: "image/x-icon",
+        url: "/public/favicon.ico",
+      },
+    ],
+  },
+  openGraph: {
+    title: "SkillCoin - Simplified Service Exchange Platform",
+    description:
+      "Exchange services and collaborate in a community-driven ecosystem with SkillCoin.",
+    url: "https://skillcoin.com",
+    siteName: "SkillCoin",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "SkillCoin - Simplified Service Exchange Platform",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SkillCoin - Simplified Service Exchange Platform",
+    description:
+      "SkillCoin is a platform for exchanging services using virtual SkillCoins. Earn, spend, and collaborate in a community-driven economy.",
+    images: ["/twitter-image.png"],
+    creator: "@SkillCoin",
+  },
+  keywords: [
+    "SkillCoin",
+    "service exchange",
+    "community-driven economy",
+    "virtual currency",
+    "collaboration",
+  ],
+  authors: [{ name: "SkillCoin Team" }],
+  creator: "SkillCoin Team",
+  publisher: "SkillCoin Inc.",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  metadataBase: new URL("https://skillcoin.com"),
+  alternates: {
+    canonical: "/",
+    languages: {
+      "en-US": "/en-US",
+      "fr-FR": "/fr-FR",
+    },
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+};
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const { checkAuth } = useAuth()
-  const pathname = usePathname()
-  const isAuthPage = pathname.startsWith('/auth')
-
-  useEffect(() => {
-    checkAuth()
-  }, [])
-
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
-          {!isAuthPage && <Header />}
-          <main className="flex-grow ">{children}</main>
-          {!isAuthPage && <Footer />}
-          <Toaster />
-          <ReminderCheck />
+          <MainLayout>{children}</MainLayout>
         </ThemeProvider>
       </body>
     </html>

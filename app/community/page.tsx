@@ -42,28 +42,21 @@ export default function CommunityPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Top-Rated Providers</CardTitle>
+            <CardTitle>Top Providers</CardTitle>
             <CardDescription>Users with highest ratings</CardDescription>
           </CardHeader>
           <CardContent>
             <ul className="space-y-2">
-              <li className="flex items-center space-x-2">
-                <Avatar>
-                  <AvatarImage src="/placeholder-avatar-3.jpg" alt="@topuser1" />
-                  <AvatarFallback>T1</AvatarFallback>
-                </Avatar>
-                <span>John Doe</span>
-                <Badge>4.9 ★</Badge>
-              </li>
-              <li className="flex items-center space-x-2">
-                <Avatar>
-                  <AvatarImage src="/placeholder-avatar-4.jpg" alt="@topuser2" />
-                  <AvatarFallback>T2</AvatarFallback>
-                </Avatar>
-                <span>Jane Smith</span>
-                <Badge>4.8 ★</Badge>
-              </li>
-              {/* Add more top-rated users */}
+              {communityStats.topProviders.map((provider) => (
+                <li key={provider.id} className="flex items-center space-x-2">
+                  <Avatar>
+                    <AvatarImage src={provider.avatar_url} alt={provider.username} />
+                    <AvatarFallback>{provider.username[0]}</AvatarFallback>
+                  </Avatar>
+                  <span>{provider.username}</span>
+                  <Badge>{provider.avg_rating} ★</Badge>
+                </li>
+              ))}
             </ul>
           </CardContent>
         </Card>
