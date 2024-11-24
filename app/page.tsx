@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -35,54 +36,145 @@ import { useAuth } from "@/hooks/use-auth";
 import { useServices } from "@/hooks/use-services";
 import { useChallenges } from "@/hooks/use-challenges";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { AddReminder } from '@/components/AddReminder';
 import { ReminderCheck } from "@/components/reminder-check";
-
+import { useCommunityStore } from "@/hooks/useCommunityStore";
 
 export default function Home() {
   const { user } = useAuth();
   const { services, isLoading: servicesLoading, fetchServices } = useServices();
-  const { challenges, isLoading: challengesLoading, fetchChallenges } = useChallenges();
+  const {
+    challenges,
+    isLoading: challengesLoading,
+    fetchChallenges,
+  } = useChallenges();
+  const { communityStats, isLoading: communityLoading, fetchCommunityStats } = useCommunityStore();
 
   useEffect(() => {
     fetchServices();
     fetchChallenges();
-  }, [fetchServices, fetchChallenges]);
+    fetchCommunityStats();
+  }, [fetchServices, fetchChallenges, fetchCommunityStats]);
 
-  if (servicesLoading || challengesLoading) {
+  if (servicesLoading || challengesLoading || communityLoading) {
     return <LoadingSpinner />;
   }
 
   return (
-    <div className="flex flex-col items-center  justify-center min-h-screen">
-      <section className="w-full py-12 md:py-24 lg:py-32  xl:py-48 bg-background">
-      <div className="container px-4 md:px-6 mx-auto">
-
-          <div className="flex flex-col items-center justify-center space-y-4 text-center">
-            <div className="space-y-2">
-              <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">
-                Welcome to SkillExchange
-              </h1>
-              <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400">
-                Trade services, earn SkillCoins, and grow your skills in our
-                vibrant community!
-              </p>
+    <div className="flex flex-col items-center justify-center min-h-screen">
+      <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-gradient-to-br from-primary via-primary-foreground to-background">
+        <div className="container px-4 md:px-6 mx-auto">
+          <div className="flex flex-col lg:flex-row items-center justify-between space-y-12 lg:space-y-0 lg:space-x-12">
+            <div className="space-y-8 text-center lg:text-left">
+              <div className="space-y-2">
+                <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl/none text-white">
+                  Welcome to{" "}
+                  <span className="text-yellow-400">SkillExchange</span>
+                </h1>
+                <p className="mx-auto lg:mx-0 max-w-[700px] text-black md:text-xl">
+                  Trade services, earn SkillCoins, and grow your skills in our
+                  vibrant community!
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row justify-center lg:justify-start space-y-4 sm:space-y-0 sm:space-x-4">
+                <Button
+                  asChild
+                  size="lg"
+                  className="bg-yellow-400 text-primary hover:bg-yellow-500"
+                >
+                  <Link href="/marketplace">
+                    Explore Marketplace
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  asChild
+                  className="bg-white text-primary text-black hover:bg-zinc-100"
+                >
+                  <Link href="/challenges">View Challenges</Link>
+                </Button>
+              </div>
             </div>
-            <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-              <Button asChild size="lg">
-                <Link href="/marketplace">Explore Marketplace</Link>
-              </Button>
-              <Button variant="outline" size="lg" asChild>
-                <Link href="/challenges">View Challenges</Link>
-              </Button>
+            <div className="w-full max-w-md">
+              <motion.div
+                className="grid grid-cols-2 gap-4"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+              >
+                <motion.div
+                  className="bg-white p-6 rounded-lg shadow-lg"
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <Zap className="w-12 h-12 mb-4 text-yellow-400" />
+                  <h3 className="text-xl text-black font-semibold mb-2">
+                    Earn SkillCoins
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Complete tasks and challenges to earn our platform's
+                    currency.
+                  </p>
+                </motion.div>
+                <motion.div
+                  className="bg-white p-6 rounded-lg shadow-lg"
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <Users className="w-12 h-12 mb-4 text-primary text-black" />
+                  <h3 className="text-xl font-semibold mb-2 text-black">Join Community</h3>
+                  <p className="text-sm text-gray-600">
+                    Connect with skilled individuals and expand your network.
+                  </p>
+                </motion.div>
+                <motion.div
+                  className="bg-white p-6 rounded-lg shadow-lg"
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <Trophy className="w-12 h-12 mb-4 text-primary text-black" />
+                  <h3 className="text-xl font-semibold mb-2 text-black">Win Challenges</h3>
+                  <p className="text-sm text-gray-600">
+                    Showcase your skills and compete in exciting challenges.
+                  </p>
+                </motion.div>
+                <motion.div
+                  className="bg-white p-6 rounded-lg shadow-lg"
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <ArrowRight className="w-12 h-12 mb-4 text-yellow-400" />
+                  <h3 className="text-xl font-semibold mb-2 text-black">Grow Skills</h3>
+                  <p className="text-sm text-gray-600">
+                    Learn from others and improve your abilities continuously.
+                  </p>
+                </motion.div>
+              </motion.div>
             </div>
           </div>
+          <motion.div
+            className="mt-12 flex justify-center space-x-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+          >
+            <Badge variant="secondary" className="text-lg py-2 px-4">
+              {communityStats.activeUsers?.length}+ Services
+            </Badge>
+            <Badge variant="secondary" className="text-lg py-2 px-4">
+              {challenges.length} Active Challenges
+            </Badge>
+            <Badge variant="secondary" className="text-lg py-2 px-4">
+              {communityStats.activeUsers
+              ?.length}+ Users
+            </Badge>
+          </motion.div>
         </div>
       </section>
 
       <section className="w-full py-12 md:py-24 lg:py-32 bg-gray-100 dark:bg-gray-800">
-      <div className="container px-4 md:px-6 mx-auto">
-
+        <div className="container px-4 md:px-6 mx-auto">
           <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-8 text-center">
             How It Works
           </h2>
@@ -147,8 +239,7 @@ export default function Home() {
       </section>
 
       <section className="w-full py-12 md:py-24 lg:py-32">
-      <div className="container px-4 md:px-6 mx-auto">
-
+        <div className="container px-4 md:px-6 mx-auto">
           <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-8 text-center">
             Featured Services
           </h2>
@@ -172,7 +263,9 @@ export default function Home() {
                           src={service?.avatar_url}
                           alt={service?.provider_name}
                         />
-                        <AvatarFallback>{service?.provider_name}</AvatarFallback>
+                        <AvatarFallback>
+                          {service?.provider_name}
+                        </AvatarFallback>
                       </Avatar>
                       <span className="text-sm">{service?.provider_name}</span>
                     </div>
@@ -195,14 +288,16 @@ export default function Home() {
       </section>
 
       <section className="w-full py-12 md:py-24 lg:py-32 bg-gray-100 dark:bg-gray-800">
-      <div className="container px-4 md:px-6 mx-auto">
-
+        <div className="container px-4 md:px-6 mx-auto">
           <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-8 text-center">
             Active Challenges
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {challenges.slice(0, 2).map((challenge) => (
-              <Card key={challenge.challenge_id} className="flex flex-col h-full">
+              <Card
+                key={challenge.challenge_id}
+                className="flex flex-col h-full"
+              >
                 <CardHeader>
                   <CardTitle>{challenge.title}</CardTitle>
                   <CardDescription>{challenge.description}</CardDescription>
@@ -240,8 +335,7 @@ export default function Home() {
       </section>
 
       <section className="w-full py-12 md:py-24 lg:py-32">
-      <div className="container px-4 md:px-6 mx-auto">
-
+        <div className="container px-4 md:px-6 mx-auto">
           <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-8 text-center">
             Community Highlights
           </h2>
@@ -255,55 +349,18 @@ export default function Home() {
             </TabsList>
             <TabsContent value="topProviders">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[
-                  {
-                    name: "Alice",
-                    skill: "Web Development",
-                    rating: 4.9,
-                    completedTasks: 50,
-                  },
-                  {
-                    name: "Bob",
-                    skill: "Graphic Design",
-                    rating: 4.8,
-                    completedTasks: 45,
-                  },
-                  {
-                    name: "Charlie",
-                    skill: "Content Writing",
-                    rating: 4.7,
-                    completedTasks: 40,
-                  },
-                  {
-                    name: "David",
-                    skill: "Video Editing",
-                    rating: 4.9,
-                    completedTasks: 55,
-                  },
-                  {
-                    name: "Emma",
-                    skill: "Data Analysis",
-                    rating: 4.8,
-                    completedTasks: 48,
-                  },
-                  {
-                    name: "Frank",
-                    skill: "Mobile App Development",
-                    rating: 4.7,
-                    completedTasks: 42,
-                  },
-                ].map((provider, index) => (
+                {communityStats.topProviders?.map((provider, index) => (
                   <Card key={index} className="flex flex-col h-full">
                     <CardHeader>
                       <CardTitle className="flex items-center">
                         <Avatar className="h-8 w-8 mr-2">
                           <AvatarImage
-                            src={`/avatars/0${index + 1}.png`}
-                            alt={provider.name}
+                            src={provider.avatar_url}
+                            alt={provider.username}
                           />
-                          <AvatarFallback>{provider.name[0]}</AvatarFallback>
+                          <AvatarFallback>{provider.username[0]}</AvatarFallback>
                         </Avatar>
-                        {provider.name}
+                        {provider.username}
                       </CardTitle>
                       <CardDescription>{provider.skill}</CardDescription>
                     </CardHeader>
@@ -311,7 +368,7 @@ export default function Home() {
                       <div className="flex justify-between items-center">
                         <span className="flex items-center">
                           <Star className="w-4 h-4 mr-1 text-yellow-500" />
-                          {provider.rating}
+                          {provider.avg_rating}
                         </span>
                         <span>{provider.completedTasks} tasks completed</span>
                       </div>
@@ -322,121 +379,12 @@ export default function Home() {
             </TabsContent>
             <TabsContent value="recentReviews">
               <ScrollArea className="h-[400px] w-full">
-                {[
-                  {
-                    reviewer: "John",
-                    provider: "Alice",
-                    service: "Web Development",
-                    rating: 5,
-                    comment:
-                      "Excellent work! Alice delivered the project ahead of schedule and exceeded my expectations.",
-                  },
-                  {
-                    reviewer: "Sarah",
-                    provider: "Bob",
-                    service: "Graphic Design",
-                    rating: 4,
-                    comment:
-                      "Great designs, but took a bit longer than expected. Overall, I'm satisfied with the results.",
-                  },
-                  {
-                    reviewer: "Mike",
-                    provider: "Charlie",
-                    service: "Content Writing",
-                    rating: 5,
-                    comment:
-                      "Charlie's writing is top-notch. The articles were engaging and well-researched.",
-                  },
-                  {
-                    reviewer: "Emily",
-                    provider: "David",
-                    service: "Video Editing",
-                    rating: 5,
-                    comment:
-                
-"David transformed my raw footage into a professional-looking video. Highly recommended!",
-                  },
-                  {
-                    reviewer: "Alex",
-                    provider: "Emma",
-                    service: "Data Analysis",
-                    rating: 4,
-                    comment:
-                      "Emma provided valuable insights from our data. The presentation could have been more polished.",
-                  },
-                  {
-                    reviewer: "Lisa",
-                    provider: "Frank",
-                    service: "Mobile App Development",
-                    rating: 5,
-                    comment:
-                      "Frank built an amazing app for our startup. Great communication throughout the process.",
-                  },
-                ].map((review, index) => (
-                  <div key={index} className="mb-4">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="font-semibold">
-                        {review.reviewer} reviewed {review.provider}
-                      </span>
-                      <div className="flex items-center">
-                        {Array.from({ length: review.rating }).map((_, i) => (
-                          <Star key={i} className="w-4 h-4 text-yellow-500" />
-                        ))}
-                      </div>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-2">
-                      {review.service}
-                    </p>
-                    <p className="text-sm">{review.comment}</p>
-                    <Separator className="mt-4" />
-                  </div>
-                ))}
+                {/* Recent reviews will be displayed here */}
               </ScrollArea>
             </TabsContent>
             <TabsContent value="skillLeaderboard">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[
-                  {
-                    skill: "Web Development",
-                    topUser: "Alice",
-                    skillLevel: 95,
-                  },
-                  { skill: "Graphic Design", topUser: "Bob", skillLevel: 92 },
-                  {
-                    skill: "Content Writing",
-                    topUser: "Charlie",
-                    skillLevel: 90,
-                  },
-                  { skill: "Video Editing", topUser: "David", skillLevel: 93 },
-                  { skill: "Data Analysis", topUser: "Emma", skillLevel: 91 },
-                  {
-                    skill: "Mobile App Development",
-                    topUser: "Frank",
-                    skillLevel: 89,
-                  },
-                ].map((leaderboard, index) => (
-                  <Card key={index} className="flex flex-col h-full">
-                    <CardHeader>
-                      <CardTitle>{leaderboard.skill}</CardTitle>
-                      <CardDescription>
-                        Top performer: {leaderboard.topUser}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="flex-grow">
-                      <div className="flex items-center">
-                        <div className="w-full bg-secondary rounded-full h-2.5 mr-2">
-                          <div
-                            className="bg-primary h-2.5 rounded-full"
-                            style={{ width: `${leaderboard.skillLevel}%` }}
-                          ></div>
-                        </div>
-                        <span className="text-sm font-medium">
-                          {leaderboard.skillLevel}
-                        </span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                {/* Skill leaderboard will be displayed here */}
               </div>
             </TabsContent>
           </Tabs>
@@ -445,8 +393,7 @@ export default function Home() {
 
       {!user && (
         <section className="w-full py-12 md:py-24 lg:py-32 bg-gray-100 dark:bg-gray-800">
-<div className="container px-4 md:px-6 mx-auto">
-
+          <div className="container px-4 md:px-6 mx-auto">
             <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-8 text-center">
               Get Started Today
             </h2>
@@ -484,9 +431,7 @@ export default function Home() {
         </section>
       )}
 
-      {/* <AddReminder /> */}
       <ReminderCheck />
     </div>
   );
 }
-

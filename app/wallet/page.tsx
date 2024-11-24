@@ -11,6 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Loader2, CreditCard, Gift, Users } from 'lucide-react'
+import coin from "@/public/coin.png";
+import Image from 'next/image'
+import { motion } from 'framer-motion'
+
 
 export default function Wallet() {
   const { user } = useAuth()
@@ -57,7 +61,20 @@ export default function Wallet() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-center h-32 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg">
-              <p className="text-5xl font-bold text-white">{isLoading ? <Loader2 className="animate-spin" /> : `${balance} SC`}</p>
+              <div className="flex items-center justify-center text-5xl font-bold text-white">
+                {isLoading ? <Loader2 className="animate-spin" /> : (
+                  <>
+                    <motion.div 
+                      whileHover={{ scale: 1.1 }} 
+                      transition={{ type: 'spring', stiffness: 300 }}
+                    >
+                      <Image width={65} height={65} src={coin.src} alt="SkillCoin Logo" className="items-center text-center inline" />
+                    </motion.div>
+                    {balance} 
+
+                  </>
+                )}
+              </div>
             </div>
           </CardContent>
           <CardFooter className="justify-between">

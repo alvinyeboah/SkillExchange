@@ -1,20 +1,24 @@
-"use client"
+"use client";
 
-import { useTheme } from "next-themes"
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Zap, Sun, Moon, Menu } from 'lucide-react'
-import { useAuth } from "@/hooks/use-auth"
-import { UserNav } from "./user-nav"
-import { NotificationsDropdown } from "./notifications-dropdown"
+import { useState } from "react";
+import { useTheme } from "next-themes";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Zap, Sun, Moon, Menu, X } from 'lucide-react';
+import { useAuth } from "@/hooks/use-auth";
+import { UserNav } from "./user-nav";
+import { NotificationsDropdown } from "./notifications-dropdown";
+import Image from "next/image";
+import logo from "@/public/logo.png";
 import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet"
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { AnimatePresence, motion } from "framer-motion";
 
 export function ThemeToggle() {
-  const { setTheme, theme } = useTheme()
+  const { setTheme, theme } = useTheme();
 
   return (
     <Button
@@ -27,22 +31,41 @@ export function ThemeToggle() {
       <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
       <span className="sr-only">Toggle theme</span>
     </Button>
-  )
+  );
 }
 
 export default function Header() {
-  const { user } = useAuth()
+  const { user } = useAuth();
+  const [isOpen, setIsOpen] = useState(false);
+
+  const closeMenu = () => setIsOpen(false);
+
+  const menuItems = [
+    { href: "/marketplace", label: "Marketplace" },
+    { href: "/challenges", label: "Challenges" },
+  ];
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <Link href="/" className="flex items-center space-x-2">
-          <Zap className="h-6 w-6 text-primary" />
-          <span className="font-bold text-xl">SkillExchange</span>
+        <Link href="/" className="flex items-center justify-center space-x-2">
+          <div className="items-center justify-center mt-1">
+            <Image src={logo} width={50} height={50} alt="Logo" />
+          </div>
+          <span className="font-bold text-xl flex items-center">
+            SkillExchange
+          </span>
         </Link>
         <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
-          <Link href="/marketplace" className="text-foreground/60 hover:text-foreground transition-colors">Marketplace</Link>
-          <Link href="/challenges" className="text-foreground/60 hover:text-foreground transition-colors">Challenges</Link>
+          {menuItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="text-foreground/60 hover:text-foreground transition-colors"
+            >
+              {item.label}
+            </Link>
+          ))}
         </nav>
         <div className="flex items-center space-x-4">
           <ThemeToggle />
@@ -54,23 +77,50 @@ export default function Header() {
               <Button variant="default">Sign In</Button>
             </Link>
           )}
-          <Sheet>
-            <SheetTrigger asChild>
+          <Popover open={isOpen} onOpenChange={setIsOpen}>
+            <PopoverTrigger asChild>
               <Button variant="ghost" size="icon" className="md:hidden">
-                <Menu className="h-6 w-6" />
-                <span className="sr-only">Open menu</span>
+                {isOpen ? (
+                  <X className="h-6 w-6" />
+                ) : (
+                  <Menu className="h-6 w-6" />
+                )}
+                <span className="sr-only">Toggle menu</span>
               </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-[200px] sm:w-[300px]">
-              <nav className="flex flex-col space-y-4 mt-8">
-                <Link href="/marketplace" className="text-foreground/60 hover:text-foreground transition-colors">Marketplace</Link>
-                <Link href="/challenges" className="text-foreground/60 hover:text-foreground transition-colors">Challenges</Link>
-              </nav>
-            </SheetContent>
-          </Sheet>
+            </PopoverTrigger>
+            <AnimatePresence>
+              {isOpen && (
+                <PopoverContent
+                  align="end"
+                  alignOffset={-8}
+                  className="w-[200px] p-0"
+                  forceMount
+                >
+                  <motion.nav
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.2 }}
+                    className="flex flex-col py-2"
+                  >
+                    {menuItems.map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className="px-4 py-2 text-sm hover:bg-accent hover:text-accent-foreground transition-colors"
+                        onClick={closeMenu}
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
+                  </motion.nav>
+                </PopoverContent>
+              )}
+            </AnimatePresence>
+          </Popover>
         </div>
       </div>
     </header>
-  )
+  );
 }
 

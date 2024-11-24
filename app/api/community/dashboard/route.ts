@@ -45,13 +45,19 @@ export async function GET() {
       LIMIT 10
     `);
 
+    // Get total skillcoins
+    const [[totalSkillcoins]] = await pool.query<RowDataPacket[]>(
+      `SELECT SUM(skillcoins) AS total_skillcoins FROM Users `
+    );
+
     return NextResponse.json(
       {
         total_users: users.total_users,
         total_services: services.total_services,
         active_challenges: challenges.active_challenges,
         popular_skills: popularSkills,
-        leaderboard: leaderboard
+        leaderboard: leaderboard,
+        total_skillcoins: totalSkillcoins.total_skillcoins
       },
       { status: 200 }
     );

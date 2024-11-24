@@ -19,10 +19,25 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Clock, Lightbulb, Trophy, Users, Zap } from "lucide-react";
+import {
+  Calendar,
+  CheckCircle,
+  Clock,
+  Flame,
+  Lightbulb,
+  Trophy,
+  Users,
+  Zap,
+} from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { useReminders } from "@/hooks/use-reminders-store";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export default function Challenges() {
   const { user } = useAuth();
@@ -36,7 +51,7 @@ export default function Challenges() {
     createChallenge,
     participateInChallenge,
   } = useChallengesStore();
-  const {setReminder} = useReminders();
+  const { setReminder } = useReminders();
 
   const [newChallenge, setNewChallenge] = useState({
     title: "",
@@ -89,7 +104,7 @@ export default function Challenges() {
       await participateInChallenge(challengeId, user.id);
       toast.success("Successfully joined the challenge!");
     } catch (error) {
-      toast.error("Failed to join challenge. Please try again.");
+      // toast.error("Failed to join challenge. Please try again.");
     }
   };
 
@@ -134,11 +149,43 @@ export default function Challenges() {
       </div>
 
       <Tabs defaultValue="active" className="mb-12">
-        <TabsList className="mb-8">
-          <TabsTrigger value="active">Active Challenges</TabsTrigger>
-          <TabsTrigger value="upcoming">Upcoming Challenges</TabsTrigger>
-          <TabsTrigger value="completed">Completed Challenges</TabsTrigger>
-        </TabsList>
+        <TooltipProvider>
+          <TabsList className="mb-8 grid grid-cols-3 sm:flex sm:space-x-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <TabsTrigger value="active" className="w-full sm:w-auto">
+                  <span className="hidden sm:inline">Active Challenges</span>
+                  <Flame className="sm:hidden" />
+                </TabsTrigger>
+              </TooltipTrigger>
+              <TooltipContent className="sm:hidden">
+                <p>Active Challenges</p>
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <TabsTrigger value="upcoming" className="w-full sm:w-auto">
+                  <span className="hidden sm:inline">Upcoming Challenges</span>
+                  <Calendar className="sm:hidden" />
+                </TabsTrigger>
+              </TooltipTrigger>
+              <TooltipContent className="sm:hidden">
+                <p>Upcoming Challenges</p>
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <TabsTrigger value="completed" className="w-full sm:w-auto">
+                  <span className="hidden sm:inline">Completed Challenges</span>
+                  <CheckCircle className="sm:hidden" />
+                </TabsTrigger>
+              </TooltipTrigger>
+              <TooltipContent className="sm:hidden">
+                <p>Completed Challenges</p>
+              </TooltipContent>
+            </Tooltip>
+          </TabsList>
+        </TooltipProvider>
 
         <TabsContent value="active">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
