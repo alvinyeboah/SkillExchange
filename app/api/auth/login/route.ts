@@ -23,7 +23,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: 'Invalid credentials' }, { status: 401 });
     }
 
-    // Generate token using Node.js JWT
+    // Generating token using Node.js JWT
     const token = signJWT({
       userId: user.user_id,
       email: user.email,
@@ -38,6 +38,8 @@ export async function POST(req: Request) {
         name: user.name,
         username: user.username,
         email: user.email,
+        bio: user.bio,
+        skills: user.skills,
         skillcoins: user.skillcoins,
         created_at: user.created_at,
         updated_at: user.updated_at,

@@ -37,7 +37,8 @@ export async function GET() {
       SELECT 
         u.user_id,
         u.username,
-        u.skillcoins as points
+        u.skillcoins,
+        u.avatar_url
       FROM Users u
       WHERE u.status = 'active'
       ORDER BY u.skillcoins DESC
@@ -56,7 +57,7 @@ export async function GET() {
     );
   } catch (error: any) {
     return NextResponse.json(
-      { message: "Failed to fetch dashboard stats", error: error.message },
+      { message: "Failed to fetch  dashboard stats", error: error.message },
       { status: 500 }
     );
   }

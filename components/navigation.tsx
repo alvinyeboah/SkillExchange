@@ -3,14 +3,17 @@
 import { useTheme } from "next-themes"
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Zap, Search, Sun, Moon, Menu } from 'lucide-react'
-import { Input } from './ui/input'
+import { Zap, Sun, Moon, Menu } from 'lucide-react'
 import { useAuth } from "@/hooks/use-auth"
 import { UserNav } from "./user-nav"
 import { NotificationsDropdown } from "./notifications-dropdown"
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@/components/ui/sheet"
 
-
-function ThemeToggle() {
+export function ThemeToggle() {
   const { setTheme, theme } = useTheme()
 
   return (
@@ -31,25 +34,17 @@ export default function Header() {
   const { user } = useAuth()
 
   return (
-    <header className="sticky top-0 z-50 px-6 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center space-x-2">
-          <Zap className="h-6 w-6" />
+          <Zap className="h-6 w-6 text-primary" />
           <span className="font-bold text-xl">SkillExchange</span>
         </Link>
         <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
-          <Link href="/marketplace">Marketplace</Link>
-          <Link href="/dashboard">Dashboard</Link>
-          <Link href="/wallet">Wallet</Link>
-          <Link href="/challenges">Challenges</Link>
+          <Link href="/marketplace" className="text-foreground/60 hover:text-foreground transition-colors">Marketplace</Link>
+          <Link href="/challenges" className="text-foreground/60 hover:text-foreground transition-colors">Challenges</Link>
         </nav>
         <div className="flex items-center space-x-4">
-          <form className="hidden lg:block">
-            <div className="relative">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search" className="pl-8 w-64" />
-            </div>
-          </form>
           <ThemeToggle />
           {user && <NotificationsDropdown />}
           {user ? (
@@ -59,9 +54,20 @@ export default function Header() {
               <Button variant="default">Sign In</Button>
             </Link>
           )}
-          <Button variant="ghost" size="icon" className="md:hidden">
-            <Menu className="h-6 w-6" />
-          </Button>
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="md:hidden">
+                <Menu className="h-6 w-6" />
+                <span className="sr-only">Open menu</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[200px] sm:w-[300px]">
+              <nav className="flex flex-col space-y-4 mt-8">
+                <Link href="/marketplace" className="text-foreground/60 hover:text-foreground transition-colors">Marketplace</Link>
+                <Link href="/challenges" className="text-foreground/60 hover:text-foreground transition-colors">Challenges</Link>
+              </nav>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
     </header>

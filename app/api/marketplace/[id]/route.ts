@@ -3,15 +3,16 @@ import pool from "@/lib/db";
 import { RowDataPacket } from "mysql2";
 import { Service } from "@/types/service";
 
-export async function GET(
-  req: Request,
-  context: { params: { id: string } }
-) {
-
+export async function GET(req: Request, { params }: { params: { id: string } }) {
   try {
+    const serviceId = await params.id;
+
     const [service] = await pool.query<RowDataPacket[]>(
-      "SELECT * FROM Services WHERE service_id = ?",
-      [context.params.id]
+      `SELECT Services.*, Users.user_id, Users.name, Users.email, Users.avatar_url 
+       FROM Services 
+       LEFT JOIN Users ON Services.user_id = Users.user_id 
+       WHERE service_id = ?`,
+      [serviceId]
     );
 
     if (service.length === 0) {
@@ -21,7 +22,17 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(service[0] as Service, { status: 200 });
+    const serviceData = {
+      ...service[0],
+      user: {
+        user_id: service[0].user_id,
+        name: service[0].name,
+        email: service[0].email,
+        avatar_url: service[0].avatar_url
+      }
+    };
+
+    return NextResponse.json(serviceData as Service & { user: any }, { status: 200 });
   } catch (error: any) {
     return NextResponse.json(
       { message: "Failed to fetch service", error: error.message },
@@ -34,7 +45,6 @@ export async function PUT(
   req: Request,
   { params }: { params: { id: string } }
 ) {
-
   try {
     const { title, description, skillcoin_price, delivery_time } =
       await req.json();

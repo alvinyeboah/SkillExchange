@@ -11,6 +11,8 @@ import { Loader2 } from 'lucide-react'
 
 export default function Dashboard() {
   const { stats, isLoading, error, fetchDashboardStats } = useDashboardStore()
+  console.log(stats, "stas");
+  
 
   useEffect(() => {
     fetchDashboardStats()
@@ -108,12 +110,12 @@ export default function Dashboard() {
                     <div className="flex items-center">
                       <span className="font-bold mr-4 w-4">{index + 1}</span>
                       <Avatar className="h-10 w-10 mr-4">
-                        <AvatarImage src={user.avatar} />
+                        <AvatarImage src={user.avatar_url} />
                         <AvatarFallback>{user.username}</AvatarFallback>
                       </Avatar>
                       <span>{user.username}</span>
                     </div>
-                    <Badge variant="secondary">{user.points} points</Badge>
+                    <Badge variant="secondary">{user.skillcoins} points</Badge>
                   </li>
                 ))}
               </ul>

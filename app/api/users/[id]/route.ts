@@ -7,9 +7,11 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    const userId = await params.id;
+
     const [user] = await pool.query<RowDataPacket[]>(
-      "SELECT user_id, username, email, avatar_url, skillcoins, created_at FROM Users WHERE user_id = ?",
-      [params.id]
+      "SELECT user_id, username, name, email, avatar_url, skillcoins, created_at, bio FROM Users WHERE user_id = ?",
+      [userId]
     );
 
     if (user.length === 0) {
@@ -30,10 +32,10 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { username, email } = await req.json();
+    const { username, email, bio } = await req.json();
     const [result] = await pool.query<ResultSetHeader>(
-      "UPDATE Users SET username = ?, email = ? WHERE user_id = ?",
-      [username, email, params.id]
+      "UPDATE Users SET username = ?, email = ?, bio = ? WHERE user_id = ?",
+      [username, email, bio, params.id]
     );
 
     if (result.affectedRows === 0) {
@@ -93,7 +95,6 @@ export async function PATCH(
     await connection.beginTransaction();
 
     try {
-      // Update user's skillcoins
       const [result] = await connection.query<ResultSetHeader>(
         "UPDATE Users SET skillcoins = skillcoins + ? WHERE user_id = ?",
         [skillcoins_adjustment, params.id]

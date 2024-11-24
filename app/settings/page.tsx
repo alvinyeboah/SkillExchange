@@ -17,7 +17,7 @@ import { Loader2 } from 'lucide-react'
 
 export default function SettingsPage() {
   const { user, updateUser } = useAuth();
-  console.log(user)
+  
 
   const { settings, isLoading, error, fetchSettings, updateSettings } = useSettings()
 
@@ -65,6 +65,7 @@ export default function SettingsPage() {
         username: formData.get('username') as string,
         bio: formData.get('bio') as string,
         skills: formData.get('skills') as string,
+        email: formData.get('email') as string
       }
       await fetch(`/api/users/${user.id}`, {
         method: 'PUT',
@@ -157,10 +158,7 @@ export default function SettingsPage() {
       </div>
     )
   }
-
-  console.log(user, "this from the settings page");
   
-
   return (
     <div className="container mx-auto py-10">
       <h1 className="text-3xl font-bold mb-6">Settings</h1>
@@ -245,6 +243,14 @@ export default function SettingsPage() {
                     name="skills"
                     placeholder="Enter your skills (comma-separated)"
                     defaultValue={user?.skills?.join(', ') || ''}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input 
+                    id="email" 
+                    name="email"
+                    defaultValue={user?.email || ''}
                   />
                 </div>
               </CardContent>

@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { getChallenges } from '@/lib/api';
 
 interface Challenge {
-  challenge_id: string;
+  challenge_id: number;
   title: string;
   description: string;
   reward: number;
@@ -22,7 +22,7 @@ export const useChallenges = create<ChallengesState>((set) => ({
   isLoading: false,
   error: null,
 
-  fetchChallenges: async () => {
+  fetchChallenges: async (): Promise<void> => {
     set({ isLoading: true, error: null });
     try {
       const response = await getChallenges();

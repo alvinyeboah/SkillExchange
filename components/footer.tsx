@@ -38,7 +38,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="mt-8 pt-8 border-t border-gray-700 text-center text-sm">
-          <p>&copy; 2023 SkillExchange. All rights reserved.</p>
+          <p>&copy; 2024 SkillExchange. Alvin Yeboah. All rights reserved.</p>
         </div>
       </div>
     </footer>

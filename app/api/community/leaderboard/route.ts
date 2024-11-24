@@ -3,14 +3,13 @@ import pool from "@/lib/db";
 import { RowDataPacket } from "mysql2";
 
 export async function GET(req: Request) {
-
-
   try {
     const [leaderboard] = await pool.query<RowDataPacket[]>(`
       SELECT 
         Users.user_id, 
         Users.username, 
         Users.skillcoins AS total_skillcoins,
+        Users.avatar_url AS avatar_url,
         AVG(Ratings.rating_value) AS avg_rating,
         COUNT(Ratings.rating_id) AS total_ratings
       FROM Users

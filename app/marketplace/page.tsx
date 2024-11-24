@@ -5,14 +5,15 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useMarketplace } from '@/hooks/use-marketplace'
 import { toast } from 'sonner'
-import { Search, Filter, Clock, Coins, Star } from 'lucide-react'
+import { Search, Filter, Clock, Coins, Star, TrendingUp, Award, Users, Zap } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 export default function Marketplace() {
   const { 
@@ -26,7 +27,10 @@ export default function Marketplace() {
     setSearchTerm,
     setSelectedCategory
   } = useMarketplace()
+
   
+  
+  const router = useRouter()
   const [newListing, setNewListing] = useState({ 
     title: '', 
     description: '', 
@@ -80,7 +84,108 @@ export default function Marketplace() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-4xl font-bold mb-8 text-center">Skill Marketplace</h1>
+      <header className="text-center mb-12">
+        <h1 className="text-4xl font-bold mb-4">Skill Marketplace</h1>
+        <p className="text-xl text-gray-600 dark:text-gray-300">Discover, share, and grow your skills</p>
+      </header>
+
+      <section className="mb-16">
+        <h2 className="text-2xl font-semibold mb-6">Marketplace Highlights</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <TrendingUp className="w-5 h-5 mr-2 text-blue-500" />
+                Top Skills
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2">
+                <li className="flex justify-between items-center">
+                  <span>Web Development</span>
+                  <Badge>Hot</Badge>
+                </li>
+                <li className="flex justify-between items-center">
+                  <span>Data Science</span>
+                  <Badge variant="outline">Trending</Badge>
+                </li>
+                <li className="flex justify-between items-center">
+                  <span>UI/UX Design</span>
+                  <Badge variant="secondary">Popular</Badge>
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Award className="w-5 h-5 mr-2 text-yellow-500" />
+                Top Earners
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2">
+                {[
+                  { name: "Alice Smith", coins: 5000, avatar: "/avatars/alice.jpg" },
+                  { name: "Bob Johnson", coins: 4500, avatar: "/avatars/bob.jpg" },
+                  { name: "Carol Williams", coins: 4000, avatar: "/avatars/carol.jpg" },
+                ].map((user, index) => (
+                  <li key={index} className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <Avatar className="h-8 w-8 mr-2">
+                        <AvatarImage src={user.avatar} />
+                        <AvatarFallback>{user.name[0]}</AvatarFallback>
+                      </Avatar>
+                      <span>{user.name}</span>
+                    </div>
+                    <Badge variant="outline" className="ml-2">{user.coins} SC</Badge>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Users className="w-5 h-5 mr-2 text-green-500" />
+                Community Stats
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span>Active Users</span>
+                  <span className="font-semibold">10,000+</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>Services Offered</span>
+                  <span className="font-semibold">5,000+</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>Skills Exchanged</span>
+                  <span className="font-semibold">25,000+</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Zap className="w-5 h-5 mr-2 text-purple-500" />
+                Quick Actions
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <Button className="w-full" variant="outline">Post a Service</Button>
+                <Button className="w-full" variant="outline">Find a Mentor</Button>
+                <Button className="w-full" variant="outline">Join a Skill Group</Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
       <Tabs defaultValue="browse" className="space-y-6">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="browse">Browse Services</TabsTrigger>
@@ -110,12 +215,14 @@ export default function Marketplace() {
                 <SelectItem value="technology">Technology</SelectItem>
                 <SelectItem value="design">Design</SelectItem>
                 <SelectItem value="writing">Writing</SelectItem>
+                <SelectItem value="marketing">Marketing</SelectItem>
+                <SelectItem value="business">Business</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredServices.map((service) => (
-              <Card key={service.service_id} className="flex flex-col">
+            {filteredServices.map((service, index) => (
+              <Card key={service.service_id || index} className="flex flex-col">
                 <CardHeader>
                   <CardTitle className="text-xl">{service.title}</CardTitle>
                   <Badge variant="secondary">{service.category}</Badge>
@@ -134,10 +241,10 @@ export default function Marketplace() {
                   </div>
                   <div className="flex items-center">
                     <Avatar className="h-8 w-8 mr-2">
-                      <AvatarImage src={service?.user?.avatar} />
+                      <AvatarImage src={service?.user.avatar_url} />
                       <AvatarFallback>{service?.user?.name[0]}</AvatarFallback>
                     </Avatar>
-                    <span className="text-sm font-medium">{service?.user?.username}</span>
+                    <span className="text-sm font-medium">{service?.user?.name}</span>
                     <Badge variant="secondary" className="ml-auto flex items-center">
                       <Star className="w-3 h-3 mr-1 fill-current" />
                       {service?.user?.rating}
@@ -145,7 +252,9 @@ export default function Marketplace() {
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Button className="w-full">Request Service</Button>
+                  <Button className="w-full" onClick={() => router.push(`/marketplace/${service.service_id}`)}>
+                    View Details
+                  </Button>
                 </CardFooter>
               </Card>
             ))}
@@ -187,6 +296,8 @@ export default function Marketplace() {
                       <SelectItem value="technology">Technology</SelectItem>
                       <SelectItem value="design">Design</SelectItem>
                       <SelectItem value="writing">Writing</SelectItem>
+                      <SelectItem value="marketing">Marketing</SelectItem>
+                      <SelectItem value="business">Business</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -219,6 +330,45 @@ export default function Marketplace() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <section className="mt-16">
+        <h2 className="text-2xl font-semibold mb-6">How It Works</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <div className="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-2">1</div>
+                Browse Services
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>Explore a wide range of skills and services offered by our community members. Use filters to find exactly what you need.</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <div className="bg-green-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-2">2</div>
+                Request or Offer
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>Request services that match your needs or offer your own skills to help others. Negotiate terms directly with other users.</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <div className="bg-purple-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-2">3</div>
+                Exchange Skills
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>Complete the service exchange, rate your experience, and earn or spend SkillCoins. Build your reputation in the community.</p>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
     </div>
   )
 }

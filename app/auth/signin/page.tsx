@@ -6,6 +6,11 @@ import { useAuth } from '@/hooks/use-auth'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { ThemeToggle } from '@/components/navigation'
 
 export default function SignInPage() {
   const router = useRouter()
@@ -31,75 +36,72 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row">
+    <div className="min-h-screen flex flex-col md:flex-row bg-background">
       <motion.div 
         initial={{ opacity: 0, x: -50 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5 }}
-        className="md:w-1/2 bg-teal-50 text-teal-900 flex flex-col justify-center p-12"
+        className="md:w-1/2 bg-primary/10 text-primary flex flex-col justify-center p-12"
       >
-        <h1 className="text-4xl font-bold mb-6">Welcome Back!</h1>
-        <p className="text-xl mb-8">Sign in to access your account and continue your journey with us.</p>
+        <h1 className="text-4xl font-bold mb-6">Welcome Back to SkillExchange!</h1>
+        <p className="text-xl mb-8">Sign in to access your account and continue your skill-trading journey.</p>
         <ul className="list-disc list-inside space-y-2">
-          <li>Resume where you left off</li>
-          <li>Access your personalized dashboard</li>
-          <li>Connect with your network</li>
-          <li>Explore new features and content</li>
+          <li>Check your SkillCoin balance</li>
+          <li>Browse the latest skill offerings</li>
+          <li>Participate in ongoing challenges</li>
+          <li>Connect with your network of skilled individuals</li>
         </ul>
       </motion.div>
       <motion.div 
         initial={{ opacity: 0, x: 50 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5 }}
-        className="md:w-1/2 bg-white flex items-center justify-center p-12"
+        className="md:w-1/2 flex items-center justify-center p-12"
       >
-        <div className="w-full max-w-md">
-          <h2 className="text-3xl font-semibold text-gray-800 mb-6 text-center">Sign In</h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                Email
-              </label>
-              <input
-                type="email"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 transition duration-200"
-                placeholder="Enter your email"
-              />
-              {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <CardTitle className="text-3xl font-semibold">Sign In</CardTitle>
+              <ThemeToggle />
             </div>
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                Password
-              </label>
-              <input
-                type="password"
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 transition duration-200"
-                placeholder="Enter your password"
-              />
-              {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
-            </div>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              type="submit"
-              className="w-full bg-teal-600 text-white py-2 rounded-md font-semibold hover:bg-teal-700 transition duration-300"
-            >
-              Sign In
-            </motion.button>
-          </form>
-          <p className="mt-4 text-center text-sm text-gray-600">
-            Don't have an account?{' '}
-            <Link href="/auth/register" className="text-teal-600 hover:underline">
-              Register
-            </Link>
-          </p>
-        </div>
+            <CardDescription>Access your SkillExchange account</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                />
+                {errors.email && <p className="text-destructive text-xs">{errors.email}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                />
+                {errors.password && <p className="text-destructive text-xs">{errors.password}</p>}
+              </div>
+            </form>
+          </CardContent>
+          <CardFooter className="flex flex-col space-y-4">
+            <Button className="w-full" type="submit" onClick={handleSubmit}>Sign In</Button>
+            <p className="text-sm text-muted-foreground text-center">
+              Don't have an account?{' '}
+              <Link href="/auth/register" className="text-primary hover:underline">
+                Register
+              </Link>
+            </p>
+          </CardFooter>
+        </Card>
       </motion.div>
     </div>
   )

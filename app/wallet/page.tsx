@@ -91,10 +91,11 @@ export default function Wallet() {
             <CardDescription>Support the community or other users</CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="community" className="w-full">
+            <Tabs defaultValue="user" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="community">Community</TabsTrigger>
-                <TabsTrigger value="user">User</TabsTrigger>
+              <TabsTrigger value="user">User</TabsTrigger>
+
+                <TabsTrigger disabled value="community">Community</TabsTrigger>
               </TabsList>
               <TabsContent value="community">
                 <form onSubmit={handleDonationSubmit} className="space-y-4">

@@ -18,12 +18,10 @@ export async function GET(req: Request) {
       );
     }
 
-    // Start a transaction
     const connection = await pool.getConnection();
     await connection.beginTransaction();
 
     try {
-      // Fetch user data including skillcoins
       const [users] = await connection.query<RowDataPacket[]>(
         "SELECT user_id, username, email, skillcoins FROM Users WHERE user_id = ?",
         [userId]
@@ -34,6 +32,7 @@ export async function GET(req: Request) {
         return NextResponse.json({ message: "User not found" }, { status: 404 });
       }
 
+      
       const user = users[0];
 
       // Fetch transaction history
@@ -51,7 +50,7 @@ export async function GET(req: Request) {
       );
 
       await connection.commit();
-      
+
       return NextResponse.json({
         balance: user.skillcoins,
         user: {

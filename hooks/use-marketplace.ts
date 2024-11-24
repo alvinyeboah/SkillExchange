@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { getServices, createService } from '@/lib/api';
+import { getServices, createService, getServicesById } from '@/lib/api';
+import { toast } from 'sonner';
 
 interface MarketplaceService {
   service_id: number;
@@ -7,11 +8,10 @@ interface MarketplaceService {
   description: string;
   skillcoin_price: number;
   delivery_time: string;
+  user_id: number;
   user: {
-    user_id: number;
-    username: string;
     name: string;
-    avatar: string;
+    avatar_url: string;
     rating: number;
   };
   category: string;
@@ -25,6 +25,7 @@ interface MarketplaceState {
   searchTerm: string;
   selectedCategory: string;
   fetchServices: () => Promise<void>;
+  fetchServiceById: (serviceId: string) => Promise<MarketplaceService | null>;
   createNewService: (serviceData: {
     title: string;
     description: string;
@@ -48,6 +49,8 @@ export const useMarketplace = create<MarketplaceState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await getServices();
+      if (!Array.isArray(response)) throw new Error('Unable to fetch services. Please try again later.');
+
       set({ 
         services: response,
         filteredServices: response,
@@ -55,6 +58,20 @@ export const useMarketplace = create<MarketplaceState>((set, get) => ({
       });
     } catch (error: any) {
       set({ error: error.message, isLoading: false });
+      toast.error(`Service fetch failed: ${error.message}`);
+    }
+  },
+
+  fetchServiceById: async (serviceId: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const service = await getServicesById(serviceId);
+      set({ isLoading: false });
+      return service;
+    } catch (error: any) {
+      set({ error: error.message, isLoading: false });
+      toast.error(`Service fetch failed: ${error.message}`);
+      return null;
     }
   },
 
@@ -63,8 +80,10 @@ export const useMarketplace = create<MarketplaceState>((set, get) => ({
     try {
       await createService(serviceData);
       await get().fetchServices();
+      toast.success('Service created successfully!');
     } catch (error: any) {
       set({ error: error.message, isLoading: false });
+      toast.error(`Service creation failed: ${error.message}`);
     }
   },
 
@@ -95,7 +114,7 @@ function filterServices(
     
     const matchesCategory = 
       category === 'all' || 
-      service.category.toLowerCase() === category.toLowerCase();
+      service.category?.toLowerCase() === category?.toLowerCase();
 
     return matchesSearch && matchesCategory;
   });

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { getDashboardStats } from '@/lib/api';
+import { User } from './use-auth';
 
 interface DashboardStats {
   total_users: number;
@@ -9,7 +10,7 @@ interface DashboardStats {
     skill: string;
     usage_count: number;
   }>;
-  leaderboard: { id: string; username: string; avatar: string; points: number }[];
+  leaderboard: User[];
 }
 
 interface DashboardState {

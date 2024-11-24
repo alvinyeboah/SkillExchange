@@ -7,7 +7,7 @@ interface Service {
   description: string;
   skillcoin_price: number;
   provider_name: string;
-  profile_image?: string;
+  avatar_url?: string;
 }
 
 interface ServicesState {

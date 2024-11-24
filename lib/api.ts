@@ -1,3 +1,4 @@
+import {toast} from "sonner";
 const BASE_URL = '/api'; 
 
 export async function login(userData: {email: string, password: string}) {
@@ -91,10 +92,9 @@ export async function getAnalytics() {
   }
 }
 
-// Fetch All Services
 export async function getServices() {
   try {
-    const response = await fetch(`${BASE_URL}/services`, {
+    const response = await fetch(`${BASE_URL}/marketplace`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -104,6 +104,26 @@ export async function getServices() {
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.message || 'Failed to fetch services');
+    }
+
+    return response.json();
+  } catch (error: any) {
+    throw new Error(error.message || 'Network error');
+  }
+}
+
+export async function getServicesById(serviceId: string) {
+  try {
+    const response = await fetch(`${BASE_URL}/marketplace/${serviceId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to fetch service');
     }
 
     return response.json();
@@ -210,14 +230,23 @@ export async function addServiceReview(serviceId: string, reviewData: { ratingVa
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to add review');
+      throw new Error(errorData.message || 'Failed to add review. Please try again later.');
     }
 
+    toast.success('Review added successfully!'); // Success message
     return response.json();
   } catch (error: any) {
+    toast.error(`Review submission failed: ${error.message || 'Network error'}`); // Descriptive toast message
     throw new Error(error.message || 'Network error');
   }
 }
+
+// Utility function for handling fetch errors
+const handleFetchError = (error: any, defaultMessage: string) => {
+  const message = error.message || defaultMessage;
+  toast.error(message);
+  return new Error(message);
+};
 
 // Fetch Challenges
 export async function fetchChallenges(userId: number) {
@@ -231,12 +260,12 @@ export async function fetchChallenges(userId: number) {
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to fetch challenges');
+      throw new Error(errorData.message || 'Failed to fetch challenges. Please try again later.');
     }
 
     return response.json();
   } catch (error: any) {
-    throw new Error(error.message || 'Network error');
+    return handleFetchError(error, 'Challenge fetch failed');
   }
 }
 
@@ -252,12 +281,12 @@ export async function fetchTransactions(userId: number) {
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to fetch transactions');
+      throw new Error(errorData.message || 'Failed to fetch transactions. Please try again later.');
     }
 
     return response.json();
   } catch (error: any) {
-    throw new Error(error.message || 'Network error');
+    return handleFetchError(error, 'Transaction fetch failed');
   }
 }
 

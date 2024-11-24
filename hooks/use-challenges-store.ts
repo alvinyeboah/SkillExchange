@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { toast } from 'sonner';
+import { ChallengeStatus } from '@/lib/constants';
 
 interface Challenge {
   challenge_id: number;
@@ -47,7 +48,7 @@ export const useChallengesStore = create<ChallengesState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await fetch('/api/challenges');
-      if (!response.ok) throw new Error('Failed to fetch challenges');
+      if (!response.ok) throw new Error('Unable to fetch challenges. Please try again later.');
       
       const challenges: Challenge[] = await response.json();
       
@@ -59,7 +60,7 @@ export const useChallengesStore = create<ChallengesState>((set, get) => ({
       });
     } catch (error: any) {
       set({ error: error.message, isLoading: false });
-      toast.error('Failed to fetch challenges');
+      toast.error(`Challenges fetch failed: ${error.message}`);
     }
   },
 
