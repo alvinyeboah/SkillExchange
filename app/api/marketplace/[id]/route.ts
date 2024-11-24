@@ -3,7 +3,8 @@ import pool from "@/lib/db";
 import { RowDataPacket } from "mysql2";
 import { Service } from "@/types/service";
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const serviceId = await params.id;
 
@@ -41,10 +42,8 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   }
 }
 
-export async function PUT(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const { title, description, skillcoin_price, delivery_time } =
       await req.json();
@@ -67,10 +66,8 @@ export async function PUT(
   }
 }
 
-export async function DELETE(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     // Delete the service from the database
     await pool.query("DELETE FROM Services WHERE service_id = ?", [params.id]);

@@ -6,7 +6,8 @@ import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CalendarDays, MapPin, Star, Award, TrendingUp, Users, MessageCircle } from "lucide-react"
 
-export default function ProfilePage({ params }: { params: { username: string } }) {
+export default async function ProfilePage(props: { params: Promise<{ username: string }> }) {
+  const params = await props.params;
   const user = {
     name: "John Doe",
     username: params.username,

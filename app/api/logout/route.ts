@@ -13,4 +13,4 @@ export async function POST() {
   response.headers.set('Set-Cookie', cookie);
 
   return response;
-}
+} 

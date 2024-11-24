@@ -3,10 +3,8 @@ import pool from "@/lib/db";
 import { authMiddleware } from "@/lib/middleware/authMiddleware";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 
-export async function POST(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+export async function POST(req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const authResult = await authMiddleware(req);
   if (authResult instanceof Response) return authResult;
 
