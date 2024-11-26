@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -38,6 +38,36 @@ import { useChallenges } from "@/hooks/use-challenges";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { ReminderCheck } from "@/components/reminder-check";
 import { useCommunityStore } from "@/hooks/useCommunityStore";
+import { ShimmerText } from "@/components/shimmer-text";
+
+const RotatingText = ({ items }: { items: string[] }) => {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setIndex((prevIndex) => (prevIndex + 1) % items.length);
+    }, 2000);
+    return () => clearInterval(timer);
+  }, [items.length]);
+
+  return (
+    <div className="h-20 overflow-hidden">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={index}
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: -20, opacity: 0 }}
+          transition={{ duration: 0.5 }}
+          className="text-primary font-bold"
+        >
+          {items[index]}
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
+};
+
 
 export default function Home() {
   const { user } = useAuth();
@@ -59,27 +89,41 @@ export default function Home() {
     return <LoadingSpinner />;
   }
 
+  const rotatingItems = ["Skills", "Knowledge", "Experiences", "Talents"];
+
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen">
-      <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-gradient-to-br from-primary via-primary-foreground to-background">
-        <div className="container px-4 md:px-6 mx-auto">
+      <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-gradient-to-br from-background via-background to-primary/10 dark:from-background dark:via-background dark:to-primary/20 relative overflow-hidden">
+        <div className="absolute inset-0 bg-grid-pattern opacity-10 dark:opacity-5" />
+        <div className="container px-4 md:px-6 mx-auto relative z-10">
           <div className="flex flex-col lg:flex-row items-center justify-between space-y-12 lg:space-y-0 lg:space-x-12">
             <div className="space-y-8 text-center lg:text-left">
-              <div className="space-y-2">
-                <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl/none text-white">
-                  Welcome to{" "}
-                  <span className="text-yellow-400">SkillExchange</span>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="space-y-2"
+              >
+                <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl/none">
+                  <ShimmerText>
+                    Exchange Your <RotatingText items={rotatingItems} />
+                  </ShimmerText>
                 </h1>
-                <p className="mx-auto lg:mx-0 max-w-[700px] text-black md:text-xl">
-                  Trade services, earn SkillCoins, and grow your skills in our
-                  vibrant community!
+                <p className="mx-auto lg:mx-0 max-w-[700px] text-muted-foreground md:text-xl">
+                  Join SkillExchange: Trade services, earn SkillCoins, and grow in our vibrant community!
                 </p>
-              </div>
-              <div className="flex flex-col sm:flex-row justify-center lg:justify-start space-y-4 sm:space-y-0 sm:space-x-4">
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="flex flex-col sm:flex-row justify-center lg:justify-start space-y-4 sm:space-y-0 sm:space-x-4"
+              >
                 <Button
                   asChild
                   size="lg"
-                  className="bg-yellow-400 text-primary hover:bg-yellow-500"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-300 ease-in-out transform hover:scale-105"
                 >
                   <Link href="/marketplace">
                     Explore Marketplace
@@ -90,11 +134,11 @@ export default function Home() {
                   variant="outline"
                   size="lg"
                   asChild
-                  className="bg-white text-primary text-black hover:bg-zinc-100"
+                  className="bg-background text-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-300 ease-in-out transform hover:scale-105"
                 >
                   <Link href="/challenges">View Challenges</Link>
                 </Button>
-              </div>
+              </motion.div>
             </div>
             <div className="w-full max-w-md">
               <motion.div
@@ -103,53 +147,26 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
               >
-                <motion.div
-                  className="bg-white p-6 rounded-lg shadow-lg"
-                  whileHover={{ scale: 1.05 }}
-                  transition={{ type: "spring", stiffness: 300 }}
-                >
-                  <Zap className="w-12 h-12 mb-4 text-yellow-400" />
-                  <h3 className="text-xl text-black font-semibold mb-2">
-                    Earn SkillCoins
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    Complete tasks and challenges to earn our platform's
-                    currency.
-                  </p>
-                </motion.div>
-                <motion.div
-                  className="bg-white p-6 rounded-lg shadow-lg"
-                  whileHover={{ scale: 1.05 }}
-                  transition={{ type: "spring", stiffness: 300 }}
-                >
-                  <Users className="w-12 h-12 mb-4 text-primary text-black" />
-                  <h3 className="text-xl font-semibold mb-2 text-black">Join Community</h3>
-                  <p className="text-sm text-gray-600">
-                    Connect with skilled individuals and expand your network.
-                  </p>
-                </motion.div>
-                <motion.div
-                  className="bg-white p-6 rounded-lg shadow-lg"
-                  whileHover={{ scale: 1.05 }}
-                  transition={{ type: "spring", stiffness: 300 }}
-                >
-                  <Trophy className="w-12 h-12 mb-4 text-primary text-black" />
-                  <h3 className="text-xl font-semibold mb-2 text-black">Win Challenges</h3>
-                  <p className="text-sm text-gray-600">
-                    Showcase your skills and compete in exciting challenges.
-                  </p>
-                </motion.div>
-                <motion.div
-                  className="bg-white p-6 rounded-lg shadow-lg"
-                  whileHover={{ scale: 1.05 }}
-                  transition={{ type: "spring", stiffness: 300 }}
-                >
-                  <ArrowRight className="w-12 h-12 mb-4 text-yellow-400" />
-                  <h3 className="text-xl font-semibold mb-2 text-black">Grow Skills</h3>
-                  <p className="text-sm text-gray-600">
-                    Learn from others and improve your abilities continuously.
-                  </p>
-                </motion.div>
+                {[
+                  { icon: Zap, title: "Earn SkillCoins", description: "Complete tasks and challenges to earn our platform's currency." },
+                  { icon: Users, title: "Join Community", description: "Connect with skilled individuals and expand your network." },
+                  { icon: Trophy, title: "Win Challenges", description: "Showcase your skills and compete in exciting challenges." },
+                  { icon: TrendingUp, title: "Grow Skills", description: "Learn from others and improve your abilities continuously." },
+                ].map((item, index) => (
+                  <motion.div
+                    key={item.title}
+                    className="bg-card p-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out floating"
+                    whileHover={{ scale: 1.05 }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    style={{ animationDelay: `${index * 0.1}s` }}
+                  >
+                    <item.icon className="w-12 h-12 mb-4 text-primary" />
+                    <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
+                    <p className="text-sm text-muted-foreground">{item.description}</p>
+                  </motion.div>
+                ))}
               </motion.div>
             </div>
           </div>
@@ -159,16 +176,22 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
           >
-            <Badge variant="secondary" className="text-lg py-2 px-4">
-              {communityStats.activeUsers?.length}+ Services
-            </Badge>
-            <Badge variant="secondary" className="text-lg py-2 px-4">
-              {challenges.length} Active Challenges
-            </Badge>
-            <Badge variant="secondary" className="text-lg py-2 px-4">
-              {communityStats.activeUsers
-              ?.length}+ Users
-            </Badge>
+            {[
+              { label: "Services", value: communityStats.activeUsers?.length },
+              { label: "Active Challenges", value: challenges.length },
+              { label: "Users", value: communityStats.activeUsers?.length },
+            ].map((stat, index) => (
+              <motion.div
+                key={stat.label}
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 0.5 + index * 0.1 }}
+              >
+                <Badge variant="secondary" className="text-lg py-2 px-4">
+                  {stat.value}+ {stat.label}
+                </Badge>
+              </motion.div>
+            ))}
           </motion.div>
         </div>
       </section>
