@@ -16,10 +16,6 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname()
   const isAuthPage = pathname.startsWith('/auth')
 
-  useEffect(() => {
-    checkAuth()
-  }, [])
-
   return (
     <>
       {!isAuthPage && <Header />}
