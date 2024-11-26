@@ -7,6 +7,7 @@ export async function GET(req: Request) {
   const authResult = await authMiddleware(req);
   if (authResult instanceof Response) return authResult;
 
+  let connection;
   try {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get("userId");
@@ -18,7 +19,7 @@ export async function GET(req: Request) {
       );
     }
 
-    const connection = await pool.getConnection();
+    connection = await pool.getConnection();
     await connection.beginTransaction();
 
     try {
@@ -29,10 +30,12 @@ export async function GET(req: Request) {
 
       if (users.length === 0) {
         await connection.rollback();
-        return NextResponse.json({ message: "User not found" }, { status: 404 });
+        return NextResponse.json(
+          { message: "User not found" },
+          { status: 404 }
+        );
       }
 
-      
       const user = users[0];
 
       // Fetch transaction history
@@ -51,31 +54,35 @@ export async function GET(req: Request) {
 
       await connection.commit();
 
-      return NextResponse.json({
-        balance: user.skillcoins,
-        user: {
-          id: user.user_id,
-          username: user.username,
-          email: user.email
+      return NextResponse.json(
+        {
+          balance: user.skillcoins,
+          user: {
+            id: user.user_id,
+            username: user.username,
+            email: user.email,
+          },
+          transactions,
         },
-        transactions
-      }, { status: 200 });
+        { status: 200 }
+      );
     } catch (error) {
       await connection.rollback();
       throw error;
-    } finally {
-      connection.release();
     }
   } catch (error: any) {
     return NextResponse.json(
       { message: "Failed to fetch wallet", error: error.message },
       { status: 500 }
     );
+  } finally {
+    if (connection) {
+      connection.release();
+    }
   }
 }
 
 export async function POST(req: Request) {
-
   try {
     const { from_user_id, to_user_id, service_id, skillcoins_transferred } =
       await req.json();

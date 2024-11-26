@@ -7,6 +7,7 @@ export async function GET(req: Request) {
   const authResult = await authMiddleware(req);
   if (authResult instanceof Response) return authResult;
 
+  let connection;
   try {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get("userId");
@@ -18,14 +19,13 @@ export async function GET(req: Request) {
       );
     }
 
-    // Fetch user settings
-    const [settings] = await pool.query<RowDataPacket[]>(
+    connection = await pool.getConnection();
+    const [settings] = await connection.query<RowDataPacket[]>(
       "SELECT * FROM UserSettings WHERE user_id = ?",
       [userId]
     );
 
     if (settings.length === 0) {
-      // Create default settings if none exist
       await pool.query(
         "INSERT INTO UserSettings (user_id) VALUES (?)",
         [userId]
@@ -43,6 +43,10 @@ export async function GET(req: Request) {
       { message: "Failed to fetch settings", error: error.message },
       { status: 500 }
     );
+  } finally {
+    if (connection) {
+      connection.release();
+    }
   }
 }
 

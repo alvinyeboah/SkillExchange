@@ -5,10 +5,12 @@ import { RowDataPacket, ResultSetHeader } from "mysql2";
 export async function GET(req: NextRequest, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
 
+  let connection;
   try {
     const { id: serviceId } = params;
+    connection = await pool.getConnection();
 
-    const [reviews] = await pool.query<RowDataPacket[]>(
+    const [reviews] = await connection.query<RowDataPacket[]>(
       `
       SELECT 
         Ratings.rating_id, 
@@ -30,12 +32,17 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
       { message: "Failed to fetch reviews", error: error.message },
       { status: 500 }
     );
+  } finally {
+    if (connection) {
+      connection.release();
+    }
   }
 }
 
 export async function POST(req: NextRequest, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
 
+  let connection;
   try {
     const { id: serviceId } = params;
     const { user_id, rating_value, review } = await req.json();
@@ -48,8 +55,9 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
       );
     }
 
+    connection = await pool.getConnection();
     // Insert review into database
-    const [result] = await pool.query<ResultSetHeader>(
+    const [result] = await connection.query<ResultSetHeader>(
       "INSERT INTO Ratings (service_id, user_id, rating_value, review) VALUES (?, ?, ?, ?)",
       [serviceId, user_id, rating_value, review]
     );
@@ -63,5 +71,9 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
       { message: "Failed to add review", error: error.message },
       { status: 500 }
     );
+  } finally {
+    if (connection) {
+      connection.release();
+    }
   }
 }

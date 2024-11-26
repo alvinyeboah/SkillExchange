@@ -7,11 +7,13 @@ export async function POST(req: Request) {
   const authResult = await authMiddleware(req);
   if (authResult instanceof Response) return authResult;
 
+  let connection;
   try {
     const { challenge_id, user_id } = await req.json();
+    connection = await pool.getConnection();
 
     // Check if challenge exists and is active
-    const [[challenge]] = await pool.query<RowDataPacket[]>(
+    const [[challenge]] = await connection.query<RowDataPacket[]>(
       `SELECT * FROM Challenges 
        WHERE challenge_id = ? 
        AND start_date <= CURRENT_DATE() 
@@ -27,7 +29,7 @@ export async function POST(req: Request) {
     }
 
     // Check if user is already participating
-    const [[existing]] = await pool.query<RowDataPacket[]>(
+    const [[existing]] = await connection.query<RowDataPacket[]>(
       `SELECT * FROM ChallengeParticipation 
        WHERE challenge_id = ? AND user_id = ?`,
       [challenge_id, user_id]
@@ -41,7 +43,7 @@ export async function POST(req: Request) {
     }
 
     // Add participation
-    await pool.query(
+    await connection.query(
       `INSERT INTO ChallengeParticipation (
         challenge_id, user_id, progress, joined_at
       ) VALUES (?, ?, ?, CURRENT_TIMESTAMP)`,
@@ -57,5 +59,9 @@ export async function POST(req: Request) {
       { message: "Failed to join challenge", error: error.message },
       { status: 500 }
     );
+  } finally {
+    if (connection) {
+      connection.release();
+    }
   }
 }

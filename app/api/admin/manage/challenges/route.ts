@@ -11,8 +11,10 @@ export async function GET(req: Request) {
   const roleResult = roleMiddleware(req, ["admin"]);
   if (roleResult instanceof Response) return roleResult;
 
+  let connection;
   try {
-    const [challenges] = await pool.query<RowDataPacket[]>(
+    connection = await pool.getConnection();
+    const [challenges] = await connection.query<RowDataPacket[]>(
       "SELECT challenge_id, title, reward_skillcoins, start_date, end_date, created_at FROM Challenges ORDER BY start_date DESC"
     );
 
@@ -22,14 +24,20 @@ export async function GET(req: Request) {
       { message: "Failed to fetch challenges", error: error.message },
       { status: 500 }
     );
+  } finally {
+    if (connection) {
+      connection.release();
+    }
   }
 }
 
 export async function DELETE(req: Request) {
+  let connection;
   try {
     const { challenge_id } = await req.json();
+    connection = await pool.getConnection();
 
-    const [result] = await pool.query<ResultSetHeader>(
+    const [result] = await connection.query<ResultSetHeader>(
       "DELETE FROM Challenges WHERE challenge_id = ?",
       [challenge_id]
     );
@@ -50,5 +58,9 @@ export async function DELETE(req: Request) {
       { message: "Failed to delete challenge", error: error.message },
       { status: 500 }
     );
+  } finally {
+    if (connection) {
+      connection.release();
+    }
   }
 }

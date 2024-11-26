@@ -6,8 +6,10 @@ export async function GET(req: Request) {
   const authResult = await authMiddleware(req);
   if (authResult instanceof Response) return authResult;
 
+  let connection;
   try {
-    const [transactions] = await pool.query(
+    connection = await pool.getConnection();
+    const transactions = await connection.query(
       "SELECT * FROM Transactions ORDER BY transaction_date DESC"
     );
 
@@ -17,17 +19,21 @@ export async function GET(req: Request) {
       { message: "Failed to fetch transactions", error: error.message },
       { status: 500 }
     );
+  } finally {
+    if (connection) {
+      connection.release();
+    }
   }
 }
 
 export async function POST(req: Request) {
-
+  let connection;
   try {
-    const { from_user_id, to_user_id, service_id, skillcoins_transferred } =
-      await req.json();
+    const { from_user_id, to_user_id, service_id, skillcoins_transferred } = await req.json();
+    connection = await pool.getConnection();
 
     // Insert a new transaction
-    await pool.query(
+    await connection.query(
       "INSERT INTO Transactions (from_user_id, to_user_id, service_id, skillcoins_transferred) VALUES (?, ?, ?, ?)",
       [from_user_id, to_user_id, service_id, skillcoins_transferred]
     );
@@ -41,5 +47,9 @@ export async function POST(req: Request) {
       { message: "Failed to create transaction", error: error.message },
       { status: 500 }
     );
+  } finally {
+    if (connection) {
+      connection.release();
+    }
   }
 }
