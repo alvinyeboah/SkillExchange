@@ -11,8 +11,10 @@ export async function GET(req: Request) {
   const roleResult = roleMiddleware(req, ["admin"]);
   if (roleResult instanceof Response) return roleResult;
 
+  let connection;
   try {
-    const [services] = await pool.query<RowDataPacket[]>(
+    connection = await pool.getConnection();
+    const [services] = await connection.query<RowDataPacket[]>(
       "SELECT service_id, title, description, skillcoin_price, delivery_time, created_at FROM Services ORDER BY created_at DESC"
     );
 
@@ -22,14 +24,20 @@ export async function GET(req: Request) {
       { message: "Failed to fetch services", error: error.message },
       { status: 500 }
     );
+  } finally {
+    if (connection) {
+      connection.release();
+    }
   }
 }
 
 export async function DELETE(req: Request) {
+  let connection;
   try {
     const { service_id } = await req.json();
+    connection = await pool.getConnection();
 
-    const [result] = await pool.query<ResultSetHeader>(
+    const [result] = await connection.query<ResultSetHeader>(
       "DELETE FROM Services WHERE service_id = ?",
       [service_id]
     );
@@ -50,5 +58,9 @@ export async function DELETE(req: Request) {
       { message: "Failed to delete service", error: error.message },
       { status: 500 }
     );
+  } finally {
+    if (connection) {
+      connection.release();
+    }
   }
 }

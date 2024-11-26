@@ -11,8 +11,10 @@ export async function GET(req: Request) {
   const roleResult = roleMiddleware(req, ["admin"]);
   if (roleResult instanceof Response) return roleResult;
 
+  let connection;
   try {
-    const [users] = await pool.query<RowDataPacket[]>(
+    connection = await pool.getConnection();
+    const [users] = await connection.query<RowDataPacket[]>(
       "SELECT user_id, username, email, avatar_url, skillcoins, created_at FROM Users ORDER BY created_at DESC"
     );
 
@@ -22,6 +24,10 @@ export async function GET(req: Request) {
       { message: "Failed to fetch users", error: error.message },
       { status: 500 }
     );
+  } finally {
+    if (connection) {
+      connection.release();
+    }
   }
 }
 
@@ -32,10 +38,12 @@ export async function DELETE(req: Request) {
   const roleResult = roleMiddleware(req, ["admin"]);
   if (roleResult instanceof Response) return roleResult;
 
+  let connection;
   try {
     const { user_id } = await req.json();
+    connection = await pool.getConnection();
 
-    const [result] = await pool.query<ResultSetHeader>(
+    const [result] = await connection.query<ResultSetHeader>(
       "DELETE FROM Users WHERE user_id = ?",
       [user_id]
     );
@@ -53,5 +61,9 @@ export async function DELETE(req: Request) {
       { message: "Failed to delete user", error: error.message },
       { status: 500 }
     );
+  } finally {
+    if (connection) {
+      connection.release();
+    }
   }
 }

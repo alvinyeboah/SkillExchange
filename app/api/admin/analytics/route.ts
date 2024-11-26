@@ -11,14 +11,16 @@ export async function GET(req: Request) {
   const roleResult = roleMiddleware(req, ["admin"]);
   if (roleResult instanceof Response) return roleResult;
 
+  let connection;
   try {
-    const [[totalUsers]] = await pool.query<RowDataPacket[]>(
+    connection = await pool.getConnection();
+    const [[totalUsers]] = await connection.query<RowDataPacket[]>(
       `SELECT COUNT(*) AS total_users FROM Users`
     );
-    const [[totalServices]] = await pool.query<RowDataPacket[]>(
+    const [[totalServices]] = await connection.query<RowDataPacket[]>(
       `SELECT COUNT(*) AS total_services FROM Services`
     );
-    const [[totalChallenges]] = await pool.query<RowDataPacket[]>(
+    const [[totalChallenges]] = await connection.query<RowDataPacket[]>(
       `SELECT COUNT(*) AS total_challenges FROM Challenges`
     );
 
@@ -35,5 +37,9 @@ export async function GET(req: Request) {
       { message: "Failed to fetch analytics", error: error.message },
       { status: 500 }
     );
+  } finally {
+    if (connection) {
+      connection.release();
+    }
   }
 }

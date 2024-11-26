@@ -24,11 +24,13 @@ type FormattedService = Omit<Service, 'name' | 'avatar_url'> & {
 };
 
 export async function GET(req: Request) {
-  // const authResult = await authMiddleware(req);
-  // if (authResult instanceof Response) return authResult;
+  const authResult = await authMiddleware(req);
+  if (authResult instanceof Response) return authResult;
 
+  let connection;
   try {
-    const [services]: [ any,any] = await pool.query(
+    connection = await pool.getConnection();
+    const [services]: [any, any] = await connection.query(
       `SELECT 
         s.*, 
         u.name, 
@@ -39,13 +41,13 @@ export async function GET(req: Request) {
     );
 
     // Format the services to include user object
-    const formattedServices: FormattedService[] = services.map((service:any) => ({
+    const formattedServices: FormattedService[] = services.map((service: any) => ({
       service_id: service.service_id,
       user_id: service.user_id,
       title: service.title,
       description: service.description,
       skillcoin_price: service.skillcoin_price,
-      category:service.category,
+      category: service.category,
       delivery_time: service.delivery_time,
       user: {
         name: service.name || '',  // Provide default values
@@ -60,6 +62,10 @@ export async function GET(req: Request) {
       { message: "Failed to fetch services", error: error.message },
       { status: 500 }
     );
+  } finally {
+    if (connection) {
+      connection.release();
+    }
   }
 }
 

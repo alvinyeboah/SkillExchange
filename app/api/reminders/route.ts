@@ -21,16 +21,29 @@ export async function GET(req: Request) {
       return NextResponse.json({ message: 'User ID is required' }, { status: 400 });
     }
 
-    const [reminders] = await pool.query<RowDataPacket[]>(
-      `SELECT * FROM Reminders WHERE user_id = ? ORDER BY datetime ASC`,
-      [userId]
-    );
+    let connection;
+    try {
+      connection = await pool.getConnection();
+      const [reminders] = await connection.query<RowDataPacket[]>(
+        `SELECT * FROM Reminders WHERE user_id = ? ORDER BY datetime ASC`,
+        [userId]
+      );
 
-    return NextResponse.json(reminders);
+      return NextResponse.json(reminders);
+    } catch (error: any) {
+      console.error('Error fetching reminders:', error);
+      return NextResponse.json(
+        { message: 'Failed to fetch reminders', error: error.message },
+        { status: 500 }
+      );
+    } finally {
+      if (connection) {
+        connection.release();
+      }
+    }
   } catch (error: any) {
-    console.error('Error fetching reminders:', error);
     return NextResponse.json(
-      { message: 'Failed to fetch reminders', error: error.message },
+      { message: "Failed to fetch reminders", error: error.message },
       { status: 500 }
     );
   }

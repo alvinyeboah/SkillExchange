@@ -55,8 +55,10 @@ export async function PUT(req: Request, props: { params: Promise<{ id: string }>
 
 export async function DELETE(req: Request, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
+  let connection;
   try {
-    const [result] = await pool.query<ResultSetHeader>(
+    connection = await pool.getConnection();
+    const [result] = await connection.query<ResultSetHeader>(
       "DELETE FROM Users WHERE user_id = ?",
       [params.id]
     );
@@ -74,16 +76,19 @@ export async function DELETE(req: Request, props: { params: Promise<{ id: string
       { message: "Failed to delete user", error: error.message },
       { status: 500 }
     );
+  } finally {
+    if (connection) {
+      connection.release();
+    }
   }
 }
 
 export async function PATCH(req: Request, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
+  let connection;
   try {
     const { skillcoins_adjustment } = await req.json();
-    
-    // Start a transaction
-    const connection = await pool.getConnection();
+    connection = await pool.getConnection();
     await connection.beginTransaction();
 
     try {
@@ -108,13 +113,15 @@ export async function PATCH(req: Request, props: { params: Promise<{ id: string 
     } catch (error) {
       await connection.rollback();
       throw error;
-    } finally {
-      connection.release();
     }
   } catch (error: any) {
     return NextResponse.json(
       { message: "Failed to update balance", error: error.message },
       { status: 500 }
     );
+  } finally {
+    if (connection) {
+      connection.release();
+    }
   }
 }

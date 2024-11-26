@@ -17,9 +17,11 @@ export async function GET(req: Request) {
   if (authResult instanceof Response) return authResult;
 
   const userId = req.headers.get('user-id');
-
+  let connection;
+  
   try {
-    const transactions = await pool.query<Transaction[]>(
+    connection = await pool.getConnection();
+    const transactions = await connection.query<Transaction[]>(
       "SELECT * FROM Transactions WHERE from_user_id = ? OR to_user_id = ? ORDER BY created_at DESC",
       [userId, userId]
     );
@@ -30,5 +32,9 @@ export async function GET(req: Request) {
       { message: "Failed to fetch transactions", error: error.message },
       { status: 500 }
     );
+  } finally {
+    if (connection) {
+      connection.release();
+    }
   }
 } 
