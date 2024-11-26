@@ -22,12 +22,11 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <>
-      <Header />
-      
+      {!isAuthPage && <Header />}
           <main className="flex-grow ">{children}</main>
           <Toaster />
           <ReminderCheck />
-      <Footer />
+      {!isAuthPage && <Footer />}
     </>
   );
 };

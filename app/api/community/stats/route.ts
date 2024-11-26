@@ -3,8 +3,8 @@ import pool from "@/lib/db";
 import { authMiddleware } from "@/lib/middleware/authMiddleware";
 
 export async function GET(req: Request) {
-  const authResult = await authMiddleware(req);
-  if (authResult instanceof Response) return authResult;
+  // const authResult = await authMiddleware(req);
+  // if (authResult instanceof Response) return authResult;
 
   try {
     const [activeUsers] = await pool.query(

@@ -24,8 +24,8 @@ type FormattedService = Omit<Service, 'name' | 'avatar_url'> & {
 };
 
 export async function GET(req: Request) {
-  const authResult = await authMiddleware(req);
-  if (authResult instanceof Response) return authResult;
+  // const authResult = await authMiddleware(req);
+  // if (authResult instanceof Response) return authResult;
 
   try {
     const [services]: [ any,any] = await pool.query(
