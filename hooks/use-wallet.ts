@@ -57,47 +57,54 @@ export const useWallet = create<WalletState>((set, get) => ({
   handleDonation: async (userId: number, amount: number, recipientId: number | null) => {
     set({ isLoading: true, error: null });
     try {
-      // Create the transaction
-      const transactionResponse = await fetch('/api/transactions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          from_user_id: userId,
-          to_user_id: recipientId,
-          skillcoins_transferred: amount,
-          description: recipientId ? 'User Donation' : 'Community Donation'
-        })
-      });
+        // Check if the user has enough balance
+        const currentBalance = get().balance;
+        if (amount > currentBalance) {
+            throw new Error('Insufficient balance to make this donation');
+        }
 
-      if (!transactionResponse.ok) {
-        throw new Error('Failed to create transaction');
-      }
-
-      // Update sender's balance
-      await fetch(`/api/users/${userId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          skillcoins_adjustment: -amount
-        })
-      });
-
-      // If sending to a user, update their balance
-      if (recipientId) {
-        await fetch(`/api/users/${recipientId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            skillcoins_adjustment: amount
-          })
+        // Create the transaction with service_id set to 0
+        const transactionResponse = await fetch('/api/transactions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                from_user_id: userId,
+                to_user_id: recipientId,
+                skillcoins_transferred: amount,
+                service_id: null, // Always send service_id as 0 for donations
+                description: recipientId ? 'User Donation' : 'Community Donation'
+            })
         });
-      }
 
-      // Refresh wallet data
-      await get().fetchWallet(userId);
+        if (!transactionResponse.ok) {
+            throw new Error('Failed to create transaction');
+        }
+
+        // Update sender's balance
+        await fetch(`/api/users/${userId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                skillcoins_adjustment: -amount
+            })
+        });
+
+        // If sending to a user, update their balance
+        if (recipientId) {
+            await fetch(`/api/users/${recipientId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    skillcoins_adjustment: amount
+                })
+            });
+        }
+
+        // Refresh wallet data
+        await get().fetchWallet(userId);
     } catch (error: any) {
-      set({ error: error.message, isLoading: false });
-      throw error;
+        set({ error: error.message, isLoading: false });
+        throw error;
     }
   },
 
