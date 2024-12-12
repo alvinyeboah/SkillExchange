@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,14 +30,13 @@ import { useServices } from "@/hooks/use-services";
 import { useAuth } from "@/hooks/use-auth";
 
 interface ServiceDetailsPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
-export default function ServiceDetailsPage({
-  params,
-}: ServiceDetailsPageProps) {
+export default function ServiceDetailsPage(props: ServiceDetailsPageProps) {
+  const params = use(props.params);
   const { id } = params;
   const { services } = useServices();
   const { user } = useAuth();
