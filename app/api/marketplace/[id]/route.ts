@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { RowDataPacket } from "mysql2";
 import { Service } from "@/types/service";
 
-export async function GET(request: Request, props: { params: Promise<{ id: string }> }) {
+export async function GET(request: NextRequest, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
   try {
     const serviceId = params.id;
@@ -42,7 +42,7 @@ export async function GET(request: Request, props: { params: Promise<{ id: strin
   }
 }
 
-export async function PUT(request: Request, props: { params: Promise<{ id: string }> }) {
+export async function PUT(request: NextRequest, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
   try {
     const { title, description, skillcoin_price, delivery_time } =
