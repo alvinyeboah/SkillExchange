@@ -133,7 +133,15 @@ export async function getServicesById(serviceId: string) {
 }
 
 // Create a Service
-export async function createService(serviceData: { title: string; description: string; skillcoinPrice: number; deliveryTime: string }) {
+export async function createService(serviceData: {
+  title: string;
+  description: string;
+  skillcoinPrice: number;
+  deliveryTime: string;
+  tags?: string[];
+  requirements?: string;
+  revisions?: number;
+}) {
   try {
     const response = await fetch(`${BASE_URL}/services`, {
       method: 'POST',
@@ -144,8 +152,8 @@ export async function createService(serviceData: { title: string; description: s
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to create service');
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to create service');
     }
 
     return response.json();
@@ -325,6 +333,177 @@ export async function getChallenges() {
       throw new Error(errorData.message || 'Failed to fetch challenges');
     }
 
+    return response.json();
+  } catch (error: any) {
+    throw new Error(error.message || 'Network error');
+  }
+}
+
+// Service Requests
+export async function createServiceRequest(requestData: {
+  service_id: number;
+  requester_id: number;
+  provider_id: number;
+  requirements?: string;
+}) {
+  try {
+    const response = await fetch(`${BASE_URL}/service-requests`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestData),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to create service request');
+    }
+
+    return response.json();
+  } catch (error: any) {
+    throw new Error(error.message || 'Network error');
+  }
+}
+
+// Challenge Submissions
+export async function createChallengeSubmission(submissionData: {
+  challenge_id: number;
+  user_id: number;
+  content: string;
+  submission_url?: string;
+}) {
+  try {
+    const response = await fetch(`${BASE_URL}/challenges/submissions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(submissionData),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to create challenge submission');
+    }
+
+    return response.json();
+  } catch (error: any) {
+    throw new Error(error.message || 'Network error');
+  }
+}
+
+// Achievements
+export async function earnAchievement(achievementData: {
+  user_id: number;
+  achievement_id: number;
+}) {
+  try {
+    const response = await fetch(`${BASE_URL}/achievements`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(achievementData),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to earn achievement');
+    }
+
+    return response.json();
+  } catch (error: any) {
+    throw new Error(error.message || 'Network error');
+  }
+}
+
+// Communities
+export async function createCommunity(communityData: {
+  name: string;
+  description: string;
+  creator_id: number;
+}) {
+  try {
+    const response = await fetch(`${BASE_URL}/communities`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(communityData),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to create community');
+    }
+
+    return response.json();
+  } catch (error: any) {
+    throw new Error(error.message || 'Network error');
+  }
+}
+
+// Fetch functions for each feature
+export async function getServiceRequests(userId: number) {
+  try {
+    const response = await fetch(`${BASE_URL}/service-requests?userId=${userId}`);
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to fetch service requests');
+    }
+    return response.json();
+  } catch (error: any) {
+    throw new Error(error.message || 'Network error');
+  }
+}
+
+export async function getChallengeSubmissions(challengeId: number) {
+  try {
+    const response = await fetch(`${BASE_URL}/challenges/${challengeId}/submissions`);
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to fetch challenge submissions');
+    }
+    return response.json();
+  } catch (error: any) {
+    throw new Error(error.message || 'Network error');
+  }
+}
+
+export async function getUserAchievements(userId: number) {
+  try {
+    const response = await fetch(`${BASE_URL}/achievements?userId=${userId}`);
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to fetch achievements');
+    }
+    return response.json();
+  } catch (error: any) {
+    throw new Error(error.message || 'Network error');
+  }
+}
+
+export async function getCommunities() {
+  try {
+    const response = await fetch(`${BASE_URL}/communities`);
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to fetch communities');
+    }
+    return response.json();
+  } catch (error: any) {
+    throw new Error(error.message || 'Network error');
+  }
+}
+
+export async function getCommunityPosts(communityId: number) {
+  try {
+    const response = await fetch(`${BASE_URL}/communities/${communityId}/posts`);
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to fetch community posts');
+    }
     return response.json();
   } catch (error: any) {
     throw new Error(error.message || 'Network error');

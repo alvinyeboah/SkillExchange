@@ -55,7 +55,7 @@ export function UserNav({ user }: { user: { name?: string; email: string; avatar
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem onClick={() => router.push('/profile')}>
+          <DropdownMenuItem onClick={() => router.push('/settings')}>
             Profile
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => router.push('/dashboard')}>
@@ -64,9 +64,9 @@ export function UserNav({ user }: { user: { name?: string; email: string; avatar
           <DropdownMenuItem onClick={() => router.push('/wallet')}>
             Wallet
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => router.push('/settings')}>
+          {/* <DropdownMenuItem onClick={() => router.push('/settings')}>
             Settings
-          </DropdownMenuItem>
+          </DropdownMenuItem> */}
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout}>

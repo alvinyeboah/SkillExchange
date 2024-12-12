@@ -2,35 +2,52 @@ import { NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { authMiddleware } from "@/lib/middleware/authMiddleware";
 import { roleMiddleware } from "@/lib/middleware/roleMiddleware";
+import { withConnection } from "@/lib/db";
+import { validateRequest } from "@/lib/middleware/validateRequest";
+import { z } from "zod";
+import { RowDataPacket, OkPacket, FieldPacket } from 'mysql2';
 
-// Define types for better type safety
-type Service = {
-  service_id:any;
+// Define interface that extends RowDataPacket for type safety with mysql2
+interface ServiceRow extends RowDataPacket {
+  service_id: number;
   user_id: number;
   title: string;
   description: string;
-  category:string;
+  category: string;
   skillcoin_price: number;
   delivery_time: number;
-  name?: string;  // From Users table
-  avatar_url?: string;  // From Users table
-};
+  name: string | null;
+  avatar_url: string | null;
+}
 
-type FormattedService = Omit<Service, 'name' | 'avatar_url'> & {
+type FormattedService = {
+  service_id: number;
+  user_id: number;
+  title: string;
+  description: string;
+  category: string;
+  skillcoin_price: number;
+  delivery_time: number;
   user: {
     name: string;
     avatar_url: string;
   };
 };
 
-export async function GET(req: Request) {
-  const authResult = await authMiddleware(req);
-  if (authResult instanceof Response) return authResult;
+const marketplaceSchema = z.object({
+  title: z.string().min(1),
+  description: z.string().min(1),
+  price: z.number().positive(),
+});
+
+export async function GET(req: Request): Promise<Response> {
+  // const authResult = await authMiddleware(req);
+  // if (authResult instanceof Response) return authResult;
 
   let connection;
   try {
     connection = await pool.getConnection();
-    const [services]: [any, any] = await connection.query(
+    const [services]: [ServiceRow[], FieldPacket[]] = await connection.query(
       `SELECT 
         s.*, 
         u.name, 
@@ -41,7 +58,7 @@ export async function GET(req: Request) {
     );
 
     // Format the services to include user object
-    const formattedServices: FormattedService[] = services.map((service: any) => ({
+    const formattedServices: FormattedService[] = services.map((service) => ({
       service_id: service.service_id,
       user_id: service.user_id,
       title: service.title,
@@ -50,14 +67,14 @@ export async function GET(req: Request) {
       category: service.category,
       delivery_time: service.delivery_time,
       user: {
-        name: service.name || '',  // Provide default values
-        avatar_url: service.avatar_url || ''
-      }
+        name: service.name || "",
+        avatar_url: service.avatar_url || "",
+      },
     }));
 
-    return NextResponse.json(formattedServices, { status: 200 });
+    return NextResponse.json(formattedServices);
   } catch (error: any) {
-    console.error('Error fetching services:', error);
+    console.error("Error fetching services:", error);
     return NextResponse.json(
       { message: "Failed to fetch services", error: error.message },
       { status: 500 }
@@ -69,27 +86,29 @@ export async function GET(req: Request) {
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: Request): Promise<Response> {
   const roleResult = roleMiddleware(req, ["admin"]);
   if (roleResult instanceof Response) return roleResult;
 
+  // Validate request
+  const validationResult = await validateRequest(marketplaceSchema)(req);
+  if (validationResult) return validationResult;
+
   try {
-    const { user_id, title, description, skillcoin_price, delivery_time } =
-      await req.json();
+    const result = await withConnection(pool, async (connection) => {
+      const body = await req.json();
+      const [queryResult]: [OkPacket, FieldPacket[]] = await connection.query(
+        "INSERT INTO marketplace (title, description, price) VALUES (?, ?, ?)",
+        [body.title, body.description, body.price]
+      );
+      return queryResult;
+    });
 
-    const [result] = await pool.query(
-      "INSERT INTO Services (user_id, title, description, skillcoin_price, delivery_time) VALUES (?, ?, ?, ?, ?)",
-      [user_id, title, description, skillcoin_price, delivery_time]
-    );
-
-    return NextResponse.json(
-      { message: "Service created successfully" },
-      { status: 201 }
-    );
+    return NextResponse.json(result);
   } catch (error: any) {
-    console.error('Error creating service:', error);
+    console.error("Error creating marketplace item:", error);
     return NextResponse.json(
-      { message: "Failed to create service", error: error.message },
+      { message: "Failed to create marketplace item", error: error.message },
       { status: 500 }
     );
   }

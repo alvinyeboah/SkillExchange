@@ -1,67 +1,45 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { verifyJWTEdge } from './lib/jwt-edge';
+import { verifyJWT } from './lib/jwt';
+import { rateLimiter } from './lib/middleware/rateLimiter';
 
-const protectedPaths = [
-  '/dashboard',
-  '/profile',
-  '/settings',
-  '/wallet',
-  '/marketplace',
-  '/challenges',
-  '/community'
-];
-
-const authPaths = ['/auth/signin', '/auth/register'];
-const publicApiRoutes = ['/api/auth/login', '/api/auth/register', '/api/auth/check'];
+const securityHeaders = {
+  'Content-Security-Policy': "default-src 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';",
+  'X-Frame-Options': 'DENY',
+  'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains'
+};
 
 export async function middleware(request: NextRequest) {
+  // Rate limiting check
+  const rateLimitResult = await rateLimiter({
+    windowMs: 15 * 60 * 1000,
+    max: 100
+  })(request);
+
+  if (rateLimitResult) return rateLimitResult;
+
+  const response = await handleRequest(request);
+  
+  // Add security headers
+  Object.entries(securityHeaders).forEach(([key, value]) => {
+    response.headers.set(key, value);
+  });
+
+  return response;
+}
+
+async function handleRequest(request: NextRequest): Promise<NextResponse> {
   const currentPath = request.nextUrl.pathname;
   
-  // Allow public API routes
-  if (publicApiRoutes.includes(currentPath)) {
-    return NextResponse.next();
+  // Example logic to handle the request
+  if (currentPath === '/some-path') {
+    return NextResponse.json({ message: 'Handled specific path' });
   }
 
-  // Get and verify auth token
-  const authToken = request.cookies.get('authToken');
-  const payload = authToken?.value ? await verifyJWTEdge(authToken.value) : null;
-  const isValidSession = !!payload;
-
-  // Handle auth paths (signin/register)
-  if (authPaths.includes(currentPath)) {
-    if (isValidSession) {
-      return NextResponse.redirect(new URL('/dashboard', request.url));
-    }
-    return NextResponse.next();
-  }
-
-  // Handle protected paths
-  if (protectedPaths.includes(currentPath)) {
-    if (!isValidSession) {
-      const signinUrl = new URL('/auth/signin', request.url);
-      signinUrl.searchParams.set('callbackUrl', currentPath);
-      return NextResponse.redirect(signinUrl);
-    }
-  }
-
-  // Add user info to headers for protected routes
-  if (isValidSession && payload) {
-    const requestHeaders = new Headers(request.headers);
-    requestHeaders.set('user', JSON.stringify({
-      userId: payload.userId,
-      email: payload.email,
-      role: payload.role,
-      username: payload.username
-    }));
-    
-    return NextResponse.next({
-      request: {
-        headers: requestHeaders,
-      },
-    });
-  }
-
+  // Default response if no specific path is handled
   return NextResponse.next();
 }
 

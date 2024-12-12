@@ -18,6 +18,7 @@ export default function SignInPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [errors, setErrors] = useState<{ [key: string]: string }>({})
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     if (user) {
@@ -28,6 +29,7 @@ export default function SignInPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setErrors({})
+    setLoading(true)
     
     try {
       await login(email, password)
@@ -35,9 +37,10 @@ export default function SignInPage() {
       router.push('/')
       router.refresh()
     } catch (error: any) {
-      console.error('Login error:', error)
       setErrors({ server: error.message })
       toast.error(error.message || "An error occurred during login")
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -99,7 +102,9 @@ export default function SignInPage() {
             </form>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
-            <Button className="w-full" type="submit" onClick={handleSubmit}>Sign In</Button>
+            <Button className="w-full" type="submit" onClick={handleSubmit} disabled={loading}>
+              {loading ? 'Loading...' : 'Sign In'}
+            </Button>
             <p className="text-sm text-muted-foreground text-center">
               Don't have an account?{' '}
               <Link href="/auth/register" className="text-primary hover:underline">
