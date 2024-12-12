@@ -1,12 +1,12 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { RowDataPacket } from "mysql2";
 import { Service } from "@/types/service";
 
-export async function GET(req: Request, props: { params: Promise<{ id: string }> }) {
+export async function GET(request: NextRequest, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
   try {
-    const serviceId = await params.id;
+    const serviceId = params.id;
 
     const [service] = await pool.query<RowDataPacket[]>(
       `SELECT Services.*, Users.user_id, Users.name, Users.email, Users.avatar_url 
@@ -16,7 +16,7 @@ export async function GET(req: Request, props: { params: Promise<{ id: string }>
       [serviceId]
     );
 
-    if (service.length === 0) {
+    if (!Array.isArray(service) || service.length === 0) {
       return NextResponse.json(
         { message: "Service not found" },
         { status: 404 }
@@ -42,11 +42,11 @@ export async function GET(req: Request, props: { params: Promise<{ id: string }>
   }
 }
 
-export async function PUT(req: Request, props: { params: Promise<{ id: string }> }) {
+export async function PUT(request: NextRequest, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
   try {
     const { title, description, skillcoin_price, delivery_time } =
-      await req.json();
+      await request.json();
 
     // Update the service in the database
     await pool.query(
@@ -66,7 +66,7 @@ export async function PUT(req: Request, props: { params: Promise<{ id: string }>
   }
 }
 
-export async function DELETE(req: Request, props: { params: Promise<{ id: string }> }) {
+export async function DELETE(request: Request, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
   try {
     // Delete the service from the database

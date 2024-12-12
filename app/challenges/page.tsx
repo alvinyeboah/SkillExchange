@@ -38,6 +38,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { ChallengeSubmissionForm } from "@/components/forms/challenge-submission";
+import { useChallenges } from "@/hooks/use-challenges";
 
 export default function Challenges() {
   const { user } = useAuth();
@@ -52,6 +54,7 @@ export default function Challenges() {
     participateInChallenge,
   } = useChallengesStore();
   const { setReminder } = useReminders();
+  const { challenges, getChallenges } = useChallenges();
 
   const [newChallenge, setNewChallenge] = useState({
     title: "",
@@ -65,8 +68,9 @@ export default function Challenges() {
   });
 
   useEffect(() => {
+    getChallenges();
     fetchChallenges();
-  }, [fetchChallenges]);
+  }, [getChallenges, fetchChallenges]);
 
   const handleNewChallengeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

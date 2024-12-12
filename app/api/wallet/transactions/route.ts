@@ -1,6 +1,6 @@
 import pool  from "@/lib/db";
 import { authMiddleware } from "@/lib/middleware/authMiddleware";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { RowDataPacket } from "mysql2";
 
 interface Transaction extends RowDataPacket {
@@ -12,7 +12,7 @@ interface Transaction extends RowDataPacket {
   description?: string;
 }
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   const authResult = await authMiddleware(req);
   if (authResult instanceof Response) return authResult;
 

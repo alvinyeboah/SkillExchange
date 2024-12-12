@@ -13,14 +13,14 @@ export async function POST(req: Request) {
     );
 
     if (users.length === 0) {
-      return NextResponse.json({ message: 'Invalid credentials' }, { status: 401 });
+      return NextResponse.json({ message: 'User not found' }, { status: 401 });
     }
 
     const user = users[0];
     const isPasswordValid = await bcrypt.compare(password, user.password_hash);
     
     if (!isPasswordValid) {
-      return NextResponse.json({ message: 'Invalid credentials' }, { status: 401 });
+      return NextResponse.json({ message: 'Invalid Password' }, { status: 401 });
     }
 
     // Generating token using Node.js JWT
@@ -61,7 +61,6 @@ export async function POST(req: Request) {
 
     return response;
   } catch (error: any) {
-    console.error('Login error:', error);
     return NextResponse.json({
       message: 'Login failed',
       error: error.message

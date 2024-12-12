@@ -62,8 +62,16 @@ export default function Dashboard() {
   } = useDashboardStore();
 
   useEffect(() => {
-    fetchDashboardStats();
-    fetchActivityData();
+    const fetchData = async () => {
+      try {
+        await fetchDashboardStats();
+        await fetchActivityData();
+      } catch (err) {
+        console.error('Error fetching dashboard data:', err);
+      }
+    };
+
+    fetchData();
   }, [fetchDashboardStats, fetchActivityData]);
 
   if (isLoading) {
@@ -206,7 +214,7 @@ export default function Dashboard() {
           <CardContent>
             <ScrollArea className="h-[300px] pr-4">
               <ul className="space-y-4">
-                {stats?.popular_skills.map((skill) => (
+                {stats?.popular_skills?.map((skill) => (
                   <li
                     key={skill.skill}
                     className="flex justify-between items-center"

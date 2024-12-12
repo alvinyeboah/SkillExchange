@@ -33,6 +33,7 @@ interface MarketplaceState {
     deliveryTime: string;
     category: string;
   }) => Promise<void>;
+  requestService: (serviceId: number) => Promise<void>;
   setSearchTerm: (term: string) => void;
   setSelectedCategory: (category: string) => void;
 }
@@ -84,6 +85,25 @@ export const useMarketplace = create<MarketplaceState>((set, get) => ({
     } catch (error: any) {
       set({ error: error.message, isLoading: false });
       toast.error(`Service creation failed: ${error.message}`);
+    }
+  },
+
+  requestService: async (serviceId: number) => {
+    try {
+      const response = await fetch(`/api/marketplace/${serviceId}/request`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to request service');
+      }
+
+      toast.success('Service requested successfully!');
+    } catch (error: any) {
+      toast.error(`Service request failed: ${error.message}`);
     }
   },
 

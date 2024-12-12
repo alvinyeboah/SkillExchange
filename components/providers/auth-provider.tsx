@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { usePathname, useRouter } from 'next/navigation';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { checkAuth, isInitialized, user } = useAuth();
@@ -10,9 +11,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    if (!isInitialized) {
-      checkAuth();
-    }
+    const checkAuthentication = async () => {
+      if (!isInitialized) {
+        await checkAuth();
+      }
+    };
+    checkAuthentication();
   }, [isInitialized, checkAuth]);
 
   useEffect(() => {
@@ -25,7 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [isInitialized, user, pathname, router]);
 
   if (!isInitialized) {
-    return null; // Or a loading spinner
+    return <LoadingSpinner />;
   }
 
   return <>{children}</>;

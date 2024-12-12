@@ -16,6 +16,15 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname()
   const isAuthPage = pathname.startsWith('/auth')
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      checkAuth()
+    }, 5 * 60 * 1000) // Check every 5 minutes
+
+    return () => clearInterval(interval)
+  }, [checkAuth])
+
+
   return (
     <>
       {!isAuthPage && <Header />}

@@ -101,15 +101,21 @@ export const useAuth = create<AuthState>()(
 
       checkAuth: async () => {
         try {
-          const response = await fetch('/api/auth/check')
+          const response = await fetch('/api/auth/check');
           if (response.ok) {
-            const { user } = await response.json()
-            set({ user, isInitialized: true })
+            const { user } = await response.json();
+            set({ user, isInitialized: true });
           } else {
-            set({ user: null, isInitialized: true })
+            // Clear everything if authentication fails
+            set({ user: null, isInitialized: true });
+            localStorage.removeItem('auth-storage');
+            window.location.href = '/auth/signin';
           }
         } catch {
-          set({ user: null, isInitialized: true })
+          // Clear everything on error
+          set({ user: null, isInitialized: true });
+          localStorage.removeItem('auth-storage');
+          window.location.href = '/auth/signin';
         }
       },
 
@@ -150,7 +156,12 @@ export const useAuth = create<AuthState>()(
     }),
     {
       name: 'auth-storage',
-      partialize: (state) => ({ user: state.user })
+      partialize: (state) => ({ user: state.user }),
+      onRehydrateStorage: () => (state) => {
+        if (state?.user) {
+          state.checkAuth()
+        }
+      }
     }
   )
 )

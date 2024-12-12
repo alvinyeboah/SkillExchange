@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { authMiddleware } from "@/lib/middleware/authMiddleware";
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   const authResult = await authMiddleware(req);
   if (authResult instanceof Response) return authResult;
 
@@ -26,7 +26,7 @@ export async function GET(req: Request) {
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   let connection;
   try {
     const { from_user_id, to_user_id, service_id, skillcoins_transferred } = await req.json();

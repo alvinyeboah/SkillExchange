@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import pool  from '@/lib/db';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
 import { authMiddleware } from '@/lib/middleware/authMiddleware';
@@ -9,7 +9,7 @@ function formatDateForMySQL(dateString: string): string {
 }
 
 // GET /api/reminders
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   try {
     const authResult = await authMiddleware(req);
     if (authResult instanceof Response) return authResult;
@@ -50,7 +50,7 @@ export async function GET(req: Request) {
 }
 
 // POST /api/reminders
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const authResult = await authMiddleware(req);
   if (authResult instanceof Response) return authResult;
@@ -82,7 +82,7 @@ export async function POST(req: Request) {
 }
 
 // DELETE /api/reminders/:id
-export async function DELETE(req: Request) {
+export async function DELETE(req: NextRequest) {
   try {
     const authResult = await authMiddleware(req);
     if (authResult instanceof Response) return authResult;

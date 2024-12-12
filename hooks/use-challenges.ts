@@ -1,11 +1,11 @@
-import { create } from 'zustand';
-import { getChallenges } from '@/lib/api';
+import { create } from "zustand";
+import { getChallenges as fetchChallengesApi } from "@/lib/api";
 
 interface Challenge {
   challenge_id: number;
   title: string;
   description: string;
-  reward: number;
+  reward_skillcoins: number;
   participants: number;
   timeLeft: string;
 }
@@ -14,7 +14,7 @@ interface ChallengesState {
   challenges: Challenge[];
   isLoading: boolean;
   error: string | null;
-  fetchChallenges: () => Promise<void>;
+  getChallenges: () => Promise<void>;
 }
 
 export const useChallenges = create<ChallengesState>((set) => ({
@@ -22,19 +22,13 @@ export const useChallenges = create<ChallengesState>((set) => ({
   isLoading: false,
   error: null,
 
-  fetchChallenges: async (): Promise<void> => {
+  getChallenges: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await getChallenges();
-      set({ 
-        challenges: response,
-        isLoading: false 
-      });
+      const response = await fetchChallengesApi();
+      set({ challenges: response, isLoading: false });
     } catch (error: any) {
-      set({ 
-        error: 'Failed to fetch challenges', 
-        isLoading: false 
-      });
+      set({ error: "Failed to fetch challenges", isLoading: false });
     }
   },
-})); 
+}));

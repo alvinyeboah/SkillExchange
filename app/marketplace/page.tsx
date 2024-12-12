@@ -14,6 +14,10 @@ import { useMarketplace } from '@/hooks/use-marketplace'
 import { toast } from 'sonner'
 import { Search, Filter, Clock, Coins, Star, TrendingUp, Award, Users, Zap } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { ServiceForm } from '@/components/forms/service-form';
+import { useServices } from '@/hooks/use-services';
+import Image from 'next/image';
+import coin from "@/public/coin.png"
 
 export default function Marketplace() {
   const { 
@@ -28,8 +32,8 @@ export default function Marketplace() {
     setSelectedCategory
   } = useMarketplace()
 
-  
-  
+  const { services, fetchServices: fetchServicesFromServices } = useServices();
+
   const router = useRouter()
   const [newListing, setNewListing] = useState({ 
     title: '', 
@@ -41,7 +45,8 @@ export default function Marketplace() {
 
   useEffect(() => {
     fetchServices()
-  }, [fetchServices])
+    fetchServicesFromServices()
+  }, [fetchServices, fetchServicesFromServices])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -231,7 +236,10 @@ export default function Marketplace() {
                   <p className="mb-4 text-sm text-gray-600 dark:text-gray-300">{service.description}</p>
                   <div className="flex justify-between items-center mb-4 text-sm">
                     <span className="flex items-center">
-                      <Coins className="w-4 h-4 mr-1" />
+                      <Image
+                      alt='skillcoin-image'
+                      src={coin}
+                      />
                       {service.skillcoin_price} SkillCoins
                     </span>
                     <span className="flex items-center">

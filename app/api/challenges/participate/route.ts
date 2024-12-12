@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { RowDataPacket } from "mysql2";
 import { authMiddleware } from "@/lib/middleware/authMiddleware";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   const authResult = await authMiddleware(req);
   if (authResult instanceof Response) return authResult;
 

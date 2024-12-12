@@ -9,7 +9,7 @@ export async function POST(req: Request) {
     // Check if the user already exists
     const [existingUser]: any = await pool.query('SELECT * FROM Users WHERE email = ?', [email]);
     if (existingUser.length > 0) {
-      return NextResponse.json({ message: 'User already exists' }, { status: 400 });
+      return NextResponse.json({ message: "Email already exists" }, { status: 409 });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
     const defaultAvatarUrl = `https://api.dicebear.com/7.x/avatars/svg?seed=${username}`;
@@ -27,6 +27,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ message: 'User registered successfully' }, { status: 201 });
   } catch (error: any) {
-    return NextResponse.json({ message: 'Registration failed', error: error.message }, { status: 500 });
+    console.error(error);
+    return NextResponse.json({ message: error.message }, { status: 400 });
   }
 }
