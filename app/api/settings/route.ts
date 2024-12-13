@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { RowDataPacket } from "mysql2";
 import { authMiddleware } from "@/lib/middleware/authMiddleware";
+import { withConnection } from "@/lib/db";
 
 export async function GET(req: NextRequest) {
   const authResult = await authMiddleware(req);
   if (authResult instanceof Response) return authResult;
 
-  let connection;
   try {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get("userId");
@@ -19,21 +19,25 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    connection = await pool.getConnection();
-    const [settings] = await connection.query<RowDataPacket[]>(
-      "SELECT * FROM UserSettings WHERE user_id = ?",
-      [userId]
-    );
-
-    if (settings.length === 0) {
-      await pool.query(
-        "INSERT INTO UserSettings (user_id) VALUES (?)",
-        [userId]
-      );
-      const [newSettings] = await pool.query<RowDataPacket[]>(
+    const [settings] = await withConnection(pool, async (connection) => {
+      return await connection.query<RowDataPacket[]>(
         "SELECT * FROM UserSettings WHERE user_id = ?",
         [userId]
       );
+    });
+
+    if (settings.length === 0) {
+      await withConnection(pool, async (connection) => {
+        await connection.query("INSERT INTO UserSettings (user_id) VALUES (?)", [
+          userId,
+        ]);
+      });
+      const [newSettings] = await withConnection(pool, async (connection) => {
+        return await connection.query<RowDataPacket[]>(
+          "SELECT * FROM UserSettings WHERE user_id = ?",
+          [userId]
+        );
+      });
       return NextResponse.json(newSettings[0], { status: 200 });
     }
 
@@ -43,10 +47,6 @@ export async function GET(req: NextRequest) {
       { message: "Failed to fetch settings", error: error.message },
       { status: 500 }
     );
-  } finally {
-    if (connection) {
-      connection.release();
-    }
   }
 }
 
@@ -65,35 +65,36 @@ export async function PUT(req: NextRequest) {
       profileVisibility,
       showOnlineStatus,
       allowMessagesFromStrangers,
-      dataUsageConsent
+      dataUsageConsent,
     } = await req.json();
 
-    // Update user settings
-    await pool.query(
-      `UPDATE UserSettings SET 
-        email_notifications = ?,
-        push_notifications = ?,
-        sms_notifications = ?,
-        notification_frequency = ?,
-        language = ?,
-        profile_visibility = ?,
-        show_online_status = ?,
-        allow_messages_from_strangers = ?,
-        data_usage_consent = ?
-      WHERE user_id = ?`,
-      [
-        emailNotifications,
-        pushNotifications,
-        smsNotifications,
-        notificationFrequency,
-        language,
-        profileVisibility,
-        showOnlineStatus,
-        allowMessagesFromStrangers,
-        dataUsageConsent,
-        userId
-      ]
-    );
+    await withConnection(pool, async (connection) => {
+      await connection.query(
+        `UPDATE UserSettings SET 
+          email_notifications = ?,
+          push_notifications = ?,
+          sms_notifications = ?,
+          notification_frequency = ?,
+          language = ?,
+          profile_visibility = ?,
+          show_online_status = ?,
+          allow_messages_from_strangers = ?,
+          data_usage_consent = ?
+        WHERE user_id = ?`,
+        [
+          emailNotifications,
+          pushNotifications,
+          smsNotifications,
+          notificationFrequency,
+          language,
+          profileVisibility,
+          showOnlineStatus,
+          allowMessagesFromStrangers,
+          dataUsageConsent,
+          userId,
+        ]
+      );
+    });
 
     return NextResponse.json(
       { message: "Settings updated successfully" },

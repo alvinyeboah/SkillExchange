@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyToken } from '@/lib/auth'
-import pool from '@/lib/db'
+import pool, { withConnection } from '@/lib/db'
 import { RowDataPacket } from 'mysql2'
 
 interface UserRow extends RowDataPacket {
@@ -37,9 +37,7 @@ export async function GET(req: NextRequest) {
       return response
     }
 
-    let connection;
-    try {
-      connection = await pool.getConnection();
+    return await withConnection(pool, async (connection) => {
       const [users] = await connection.query<UserRow[]>(
         'SELECT user_id, name, username, email, skillcoins, created_at, updated_at, role, status, avatar_url FROM Users WHERE user_id = ?',
         [payload.userId]
@@ -73,9 +71,7 @@ export async function GET(req: NextRequest) {
           avatar_url: user.avatar_url
         }
       });
-    } finally {
-      if (connection) connection.release();
-    }
+    });
   } catch (error) {
     console.error('Auth check error:', error);
     const response = NextResponse.json({ 

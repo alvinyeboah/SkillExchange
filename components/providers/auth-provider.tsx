@@ -23,7 +23,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (isInitialized) {
       const isAuthPage = pathname.startsWith('/auth/');
       if (user && isAuthPage) {
-        router.push('/dashboard');
+        router.push('/');
       }
     }
   }, [isInitialized, user, pathname, router]);

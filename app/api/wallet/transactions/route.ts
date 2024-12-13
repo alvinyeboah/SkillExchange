@@ -1,4 +1,4 @@
-import pool  from "@/lib/db";
+import pool, { withConnection } from "@/lib/db";
 import { authMiddleware } from "@/lib/middleware/authMiddleware";
 import { NextRequest, NextResponse } from "next/server";
 import { RowDataPacket } from "mysql2";
@@ -17,24 +17,20 @@ export async function GET(req: NextRequest) {
   if (authResult instanceof Response) return authResult;
 
   const userId = req.headers.get('user-id');
-  let connection;
   
   try {
-    connection = await pool.getConnection();
-    const transactions = await connection.query<Transaction[]>(
-      "SELECT * FROM Transactions WHERE from_user_id = ? OR to_user_id = ? ORDER BY created_at DESC",
-      [userId, userId]
-    );
+    return await withConnection(pool, async (connection) => {
+      const transactions = await connection.query<Transaction[]>(
+        "SELECT * FROM Transactions WHERE from_user_id = ? OR to_user_id = ? ORDER BY created_at DESC",
+        [userId, userId]
+      );
 
-    return NextResponse.json(transactions);
+      return NextResponse.json(transactions);
+    });
   } catch (error: any) {
     return NextResponse.json(
       { message: "Failed to fetch transactions", error: error.message },
       { status: 500 }
     );
-  } finally {
-    if (connection) {
-      connection.release();
-    }
   }
 } 

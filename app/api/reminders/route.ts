@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import pool  from '@/lib/db';
+import pool, { withConnection } from '@/lib/db';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
 import { authMiddleware } from '@/lib/middleware/authMiddleware';
 
@@ -21,26 +21,14 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ message: 'User ID is required' }, { status: 400 });
     }
 
-    let connection;
-    try {
-      connection = await pool.getConnection();
+    return await withConnection(pool, async (connection) => {
       const [reminders] = await connection.query<RowDataPacket[]>(
         `SELECT * FROM Reminders WHERE user_id = ? ORDER BY datetime ASC`,
         [userId]
       );
 
       return NextResponse.json(reminders);
-    } catch (error: any) {
-      console.error('Error fetching reminders:', error);
-      return NextResponse.json(
-        { message: 'Failed to fetch reminders', error: error.message },
-        { status: 500 }
-      );
-    } finally {
-      if (connection) {
-        connection.release();
-      }
-    }
+    });
   } catch (error: any) {
     return NextResponse.json(
       { message: "Failed to fetch reminders", error: error.message },
@@ -53,25 +41,25 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const authResult = await authMiddleware(req);
-  if (authResult instanceof Response) return authResult;
-
+    if (authResult instanceof Response) return authResult;
 
     const { userId, type, referenceId, title, datetime } = await req.json();
-
     const formattedDatetime = formatDateForMySQL(datetime);
 
-    const [result] = await pool.query<ResultSetHeader>(
-      `INSERT INTO Reminders (user_id, type, reference_id, title, datetime, notified)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [userId, type, referenceId, title, formattedDatetime, false] // Set notified to false by default
-    );
+    return await withConnection(pool, async (connection) => {
+      const [result] = await connection.query<ResultSetHeader>(
+        `INSERT INTO Reminders (user_id, type, reference_id, title, datetime, notified)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [userId, type, referenceId, title, formattedDatetime, false] // Set notified to false by default
+      );
 
-    const [newReminder] = await pool.query<RowDataPacket[]>(
-      'SELECT * FROM Reminders WHERE id = ?',
-      [result.insertId]
-    );
+      const [newReminder] = await connection.query<RowDataPacket[]>(
+        'SELECT * FROM Reminders WHERE id = ?',
+        [result.insertId]
+      );
 
-    return NextResponse.json(newReminder[0], { status: 201 });
+      return NextResponse.json(newReminder[0], { status: 201 });
+    });
   } catch (error: any) {
     console.error('Error creating reminder:', error);
     return NextResponse.json(
@@ -86,19 +74,21 @@ export async function DELETE(req: NextRequest) {
   try {
     const authResult = await authMiddleware(req);
     if (authResult instanceof Response) return authResult;
-  
-  const { id } = await req.json();
 
-    const [result] = await pool.query<ResultSetHeader>(
-      'DELETE FROM Reminders WHERE id = ?',
-      [id]
-    );
+    const { id } = await req.json();
 
-    if (result.affectedRows === 0) {
-      return NextResponse.json({ message: 'Reminder not found' }, { status: 404 });
-    }
+    return await withConnection(pool, async (connection) => {
+      const [result] = await connection.query<ResultSetHeader>(
+        'DELETE FROM Reminders WHERE id = ?',
+        [id]
+      );
 
-    return NextResponse.json({ message: 'Reminder deleted successfully' }, { status: 200 });
+      if (result.affectedRows === 0) {
+        return NextResponse.json({ message: 'Reminder not found' }, { status: 404 });
+      }
+
+      return NextResponse.json({ message: 'Reminder deleted successfully' }, { status: 200 });
+    });
   } catch (error: any) {
     console.error('Error deleting reminder:', error);
     return NextResponse.json(
