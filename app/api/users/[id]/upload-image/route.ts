@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import pool from "@/lib/db";
+import pool, { withConnection } from "@/lib/db";
 import { authMiddleware } from "@/lib/middleware/authMiddleware";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 
@@ -25,15 +25,17 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
     // Upload to Cloudinary
     const avatar_url = await uploadToCloudinary(buffer);
     
-    // Update database with new avatar URL
-    await pool.query(
-      "UPDATE Users SET avatar_url = ? WHERE user_id = ?",
-      [avatar_url, params.id]
-    );
+    return await withConnection(pool, async (connection) => {
+      // Update database with new avatar URL
+      await connection.query(
+        "UPDATE Users SET avatar_url = ? WHERE user_id = ?",
+        [avatar_url, params.id]
+      );
 
-    return NextResponse.json({ 
-      message: "Image uploaded successfully",
-      avatar_url
+      return NextResponse.json({ 
+        message: "Image uploaded successfully",
+        avatar_url
+      });
     });
   } catch (error: any) {
     console.error('Upload error:', error);

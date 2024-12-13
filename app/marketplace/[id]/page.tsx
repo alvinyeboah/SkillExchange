@@ -1,8 +1,6 @@
-"use client";
-
-import { useEffect, useState, use } from "react";
-import { useParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
+'use client'
+import { use } from "react"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -10,54 +8,68 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useMarketplace } from "@/hooks/use-marketplace";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import {
-  Clock,
-  Coins,
-  MessageSquare,
-  Star,
-  ThumbsUp,
-  Award,
-} from "lucide-react";
-import { ServiceRequestForm } from "@/components/forms/service-request";
-import { useServices } from "@/hooks/use-services";
-import { useAuth } from "@/hooks/use-auth";
+} from "@/components/ui/card"
+import { useServices } from "@/hooks/use-services"
+import { useAuth } from "@/hooks/use-auth"
+import { ServiceRequestForm } from "@/components/forms/service-request"
+import Link from "next/link"
 
 interface ServiceDetailsPageProps {
   params: Promise<{
-    id: string;
-  }>;
+    id: string
+  }>
 }
 
 export default function ServiceDetailsPage(props: ServiceDetailsPageProps) {
-  const params = use(props.params);
-  const { id } = params;
-  const { services } = useServices();
-  const { user } = useAuth();
-  const service = services.find((s) => s.service_id === Number(id));
+  const params = use(props.params)
+  const { id } = params
+  const { services } = useServices()
+  const { user } = useAuth()
+  const service = services.find((s) => s.service_id === Number(id))
 
-  if (!service) return <div>Loading...</div>;
+  if (!service) return <div>Loading...</div>
 
   return (
     <div className="container mx-auto p-6">
       <h1 className="text-2xl font-bold mb-6">{service.title}</h1>
-      <p>{service.description}</p>
+      <p className="mb-6">{service.description}</p>
 
-      {user && (
-        <div className="mt-6">
-          <h2 className="text-xl font-semibold mb-4">Request This Service</h2>
-          <ServiceRequestForm
-            serviceId={service.service_id}
-            providerId={service.user_id}
-          />
-        </div>
-      )}
+      <Card className="w-full max-w-md mx-auto">
+        <CardHeader>
+          <CardTitle>Request This Service</CardTitle>
+          <CardDescription>
+            {user
+              ? "Fill out the form below to request this service."
+              : "Sign in to request this service."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {user ? (
+            <ServiceRequestForm
+              serviceId={service.service_id}
+              providerId={service.user_id}
+            />
+          ) : (
+            <div className="text-center">
+              <p className="mb-4">You need to be signed in to request services.</p>
+              <Link href="auth/signin">
+                <Button>Sign In</Button>
+              </Link>
+            </div>
+          )}
+        </CardContent>
+        {!user && (
+          <CardFooter className="justify-center">
+            <p className="text-sm text-muted-foreground">
+              Don't have an account?{" "}
+              <Link href="auth/register" className="text-primary hover:underline">
+                Sign up
+              </Link>
+            </p>
+          </CardFooter>
+        )}
+      </Card>
     </div>
-  );
+  )
 }
+

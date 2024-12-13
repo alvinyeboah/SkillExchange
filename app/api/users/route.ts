@@ -1,21 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
 import { authMiddleware } from "@/lib/middleware/authMiddleware";
+import { withConnection } from "@/lib/db";
 
 export async function GET(req: NextRequest) {
   const authResult = await authMiddleware(req);
   if (authResult instanceof Response) return authResult;
 
   try {
-    // Fetch users with basic info
-    const [users] = await pool.query(
-      `SELECT 
-        user_id,
-        username,
-        email
-       FROM Users 
-       ORDER BY username ASC`
-    );
+    // Use withConnection to handle the database connection
+    const [users] = await withConnection(pool, async (connection) => {
+      return await connection.query(
+        `SELECT 
+          user_id,
+          username,
+          email
+         FROM Users 
+         ORDER BY username ASC`
+      );
+    });
 
     return NextResponse.json(users, { status: 200 });
   } catch (error: any) {

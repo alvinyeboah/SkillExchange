@@ -1,22 +1,27 @@
 import { NextResponse } from "next/server";
-import pool from "@/lib/db";
+import pool, { withConnection } from "@/lib/db";
 import { RowDataPacket, ResultSetHeader } from "mysql2";
 
-export async function GET(req: Request, props: { params: Promise<{ id: string }> }) {
+export async function GET(
+  req: Request,
+  props: { params: Promise<{ id: string }> }
+) {
   const params = await props.params;
   try {
-    const userId = await params.id;
+    const userId = params.id;
 
-    const [user] = await pool.query<RowDataPacket[]>(
-      "SELECT user_id, username, name, email, avatar_url, skillcoins, created_at, bio FROM Users WHERE user_id = ?",
-      [userId]
-    );
+    return await withConnection(pool, async (connection) => {
+      const [user] = await connection.query<RowDataPacket[]>(
+        "SELECT user_id, username, name, email, avatar_url, skillcoins, created_at, bio FROM Users WHERE user_id = ?",
+        [userId]
+      );
 
-    if (user.length === 0) {
-      return NextResponse.json({ message: "User not found" }, { status: 404 });
-    }
+      if (user.length === 0) {
+        return NextResponse.json({ message: "User not found" }, { status: 404 });
+      }
 
-    return NextResponse.json(user[0], { status: 200 });
+      return NextResponse.json(user[0], { status: 200 });
+    });
   } catch (error: any) {
     return NextResponse.json(
       { message: "Failed to fetch user", error: error.message },
@@ -25,26 +30,31 @@ export async function GET(req: Request, props: { params: Promise<{ id: string }>
   }
 }
 
-export async function PUT(req: Request, props: { params: Promise<{ id: string }> }) {
+export async function PUT(
+  req: Request,
+  props: { params: Promise<{ id: string }> }
+) {
   const params = await props.params;
   try {
     const { username, email, bio } = await req.json();
-    const [result] = await pool.query<ResultSetHeader>(
-      "UPDATE Users SET username = ?, email = ?, bio = ? WHERE user_id = ?",
-      [username, email, bio, params.id]
-    );
-
-    if (result.affectedRows === 0) {
-      return NextResponse.json(
-        { message: "User not found or no changes made" },
-        { status: 404 }
+    return await withConnection(pool, async (connection) => {
+      const [result] = await connection.query<ResultSetHeader>(
+        "UPDATE Users SET username = ?, email = ?, bio = ? WHERE user_id = ?",
+        [username, email, bio, params.id]
       );
-    }
 
-    return NextResponse.json(
-      { message: "User updated successfully" },
-      { status: 200 }
-    );
+      if (result.affectedRows === 0) {
+        return NextResponse.json(
+          { message: "User not found or no changes made" },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json(
+        { message: "User updated successfully" },
+        { status: 200 }
+      );
+    });
   } catch (error: any) {
     return NextResponse.json(
       { message: "Failed to update user", error: error.message },
@@ -53,45 +63,45 @@ export async function PUT(req: Request, props: { params: Promise<{ id: string }>
   }
 }
 
-export async function DELETE(req: Request, props: { params: Promise<{ id: string }> }) {
+export async function DELETE(
+  req: Request,
+  props: { params: Promise<{ id: string }> }
+) {
   const params = await props.params;
-  let connection;
   try {
-    connection = await pool.getConnection();
-    const [result] = await connection.query<ResultSetHeader>(
-      "DELETE FROM Users WHERE user_id = ?",
-      [params.id]
-    );
+    return await withConnection(pool, async (connection) => {
+      const [result] = await connection.query<ResultSetHeader>(
+        "DELETE FROM Users WHERE user_id = ?",
+        [params.id]
+      );
 
-    if (result.affectedRows === 0) {
-      return NextResponse.json({ message: "User not found" }, { status: 404 });
-    }
+      if (result.affectedRows === 0) {
+        return NextResponse.json({ message: "User not found" }, { status: 404 });
+      }
 
-    return NextResponse.json(
-      { message: "User deleted successfully" },
-      { status: 200 }
-    );
+      return NextResponse.json(
+        { message: "User deleted successfully" },
+        { status: 200 }
+      );
+    });
   } catch (error: any) {
     return NextResponse.json(
       { message: "Failed to delete user", error: error.message },
       { status: 500 }
     );
-  } finally {
-    if (connection) {
-      connection.release();
-    }
   }
 }
 
-export async function PATCH(req: Request, props: { params: Promise<{ id: string }> }) {
+export async function PATCH(
+  req: Request,
+  props: { params: Promise<{ id: string }> }
+) {
   const params = await props.params;
-  let connection;
   try {
     const { skillcoins_adjustment } = await req.json();
-    connection = await pool.getConnection();
-    await connection.beginTransaction();
+    return await withConnection(pool, async (connection) => {
+      await connection.beginTransaction();
 
-    try {
       const [result] = await connection.query<ResultSetHeader>(
         "UPDATE Users SET skillcoins = skillcoins + ? WHERE user_id = ?",
         [skillcoins_adjustment, params.id]
@@ -110,18 +120,11 @@ export async function PATCH(req: Request, props: { params: Promise<{ id: string 
         { message: "Balance updated successfully" },
         { status: 200 }
       );
-    } catch (error) {
-      await connection.rollback();
-      throw error;
-    }
+    });
   } catch (error: any) {
     return NextResponse.json(
       { message: "Failed to update balance", error: error.message },
       { status: 500 }
     );
-  } finally {
-    if (connection) {
-      connection.release();
-    }
   }
 }

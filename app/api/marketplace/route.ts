@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
-import pool from "@/lib/db";
+import pool, { withConnection } from "@/lib/db";
 import { authMiddleware } from "@/lib/middleware/authMiddleware";
 import { roleMiddleware } from "@/lib/middleware/roleMiddleware";
-import { withConnection } from "@/lib/db";
 import { validateRequest } from "@/lib/middleware/validateRequest";
 import { z } from "zod";
 import { RowDataPacket, OkPacket, FieldPacket } from 'mysql2';
 
-// Define interface that extends RowDataPacket for type safety with mysql2
 interface ServiceRow extends RowDataPacket {
   service_id: number;
   user_id: number;
@@ -44,45 +42,41 @@ export async function GET(req: Request): Promise<Response> {
   // const authResult = await authMiddleware(req);
   // if (authResult instanceof Response) return authResult;
 
-  let connection;
   try {
-    connection = await pool.getConnection();
-    const [services]: [ServiceRow[], FieldPacket[]] = await connection.query(
-      `SELECT 
-        s.*, 
-        u.name, 
-        u.avatar_url 
-      FROM Services s
-      JOIN Users u ON s.user_id = u.user_id
-      ORDER BY s.created_at DESC`
-    );
+    return await withConnection(pool, async (connection) => {
+      const [services]: [ServiceRow[], FieldPacket[]] = await connection.query(
+        `SELECT 
+          s.*, 
+          u.name, 
+          u.avatar_url 
+        FROM Services s
+        JOIN Users u ON s.user_id = u.user_id
+        ORDER BY s.created_at DESC`
+      );
 
-    // Format the services to include user object
-    const formattedServices: FormattedService[] = services.map((service) => ({
-      service_id: service.service_id,
-      user_id: service.user_id,
-      title: service.title,
-      description: service.description,
-      skillcoin_price: service.skillcoin_price,
-      category: service.category,
-      delivery_time: service.delivery_time,
-      user: {
-        name: service.name || "",
-        avatar_url: service.avatar_url || "",
-      },
-    }));
+      // Format the services to include user object
+      const formattedServices: FormattedService[] = services.map((service) => ({
+        service_id: service.service_id,
+        user_id: service.user_id,
+        title: service.title,
+        description: service.description,
+        skillcoin_price: service.skillcoin_price,
+        category: service.category,
+        delivery_time: service.delivery_time,
+        user: {
+          name: service.name || "",
+          avatar_url: service.avatar_url || "",
+        },
+      }));
 
-    return NextResponse.json(formattedServices);
+      return NextResponse.json(formattedServices);
+    });
   } catch (error: any) {
     console.error("Error fetching services:", error);
     return NextResponse.json(
       { message: "Failed to fetch services", error: error.message },
       { status: 500 }
     );
-  } finally {
-    if (connection) {
-      connection.release();
-    }
   }
 }
 
@@ -95,16 +89,14 @@ export async function POST(req: Request): Promise<Response> {
   if (validationResult) return validationResult;
 
   try {
-    const result = await withConnection(pool, async (connection) => {
+    return await withConnection(pool, async (connection) => {
       const body = await req.json();
       const [queryResult]: [OkPacket, FieldPacket[]] = await connection.query(
         "INSERT INTO marketplace (title, description, price) VALUES (?, ?, ?)",
         [body.title, body.description, body.price]
       );
-      return queryResult;
+      return NextResponse.json(queryResult);
     });
-
-    return NextResponse.json(result);
   } catch (error: any) {
     console.error("Error creating marketplace item:", error);
     return NextResponse.json(
