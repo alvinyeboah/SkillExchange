@@ -54,7 +54,10 @@ export default function Challenges() {
     participateInChallenge,
   } = useChallengesStore();
   const { setReminder } = useReminders();
-  const { challenges, getChallenges } = useChallenges();
+  console.log(activeChallenges, "activeChallenges");
+  console.log(upcomingChallenges, "upcomingChallenges");
+  console.log(completedChallenges, "completedChallenges");
+  
 
   const [newChallenge, setNewChallenge] = useState({
     title: "",
@@ -62,15 +65,15 @@ export default function Challenges() {
     reward_skillcoins: "",
     difficulty: "",
     category: "",
-    skills: "",
+    skills: "", // Keep as string for form input
     start_date: "",
     end_date: "",
   });
 
+
   useEffect(() => {
-    getChallenges();
     fetchChallenges();
-  }, [getChallenges, fetchChallenges]);
+  }, [fetchChallenges]);
 
   const handleNewChallengeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,7 +82,7 @@ export default function Challenges() {
         ...newChallenge,
         reward_skillcoins: parseInt(newChallenge.reward_skillcoins),
         skills: newChallenge.skills.split(",").map((skill) => skill.trim()),
-        status: "upcoming",
+        // status: "upcoming",
       });
 
       setNewChallenge({
@@ -108,8 +111,26 @@ export default function Challenges() {
       await participateInChallenge(challengeId, user.id);
       toast.success("Successfully joined the challenge!");
     } catch (error) {
-      // toast.error("Failed to join challenge. Please try again.");
+      toast.error("Failed to join challenge. Please try again.");
     }
+  };
+
+  const renderSkillsBadges = (skills: string[] | string | undefined) => {
+    if (!skills) return null;
+    
+    const skillsArray = Array.isArray(skills) 
+      ? skills 
+      : skills.split(",").map(skill => skill.trim());
+
+    return (
+      <div className="flex flex-wrap gap-2">
+        {skillsArray.map((skill, index) => (
+          <Badge key={index} variant="outline">
+            {skill}
+          </Badge>
+        ))}
+      </div>
+    );
   };
 
   if (isLoading) {
@@ -234,13 +255,7 @@ export default function Challenges() {
                   </div>
                   <div className="mb-4">
                     <h4 className="font-semibold mb-2">Required Skills:</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {challenge.skills.map((skill, index) => (
-                        <Badge key={index} variant="outline">
-                          {skill}
-                        </Badge>
-                      ))}
-                    </div>
+                    {renderSkillsBadges(challenge.skills)}
                   </div>
                   <div>
                     <h4 className="font-semibold mb-2">Top Participants:</h4>
@@ -317,13 +332,7 @@ export default function Challenges() {
                   </div>
                   <div>
                     <h4 className="font-semibold mb-2">Required Skills:</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {challenge?.skills?.map((skill, index) => (
-                        <Badge key={index} variant="outline">
-                          {skill}
-                        </Badge>
-                      ))}
-                    </div>
+                    {renderSkillsBadges(challenge.skills)}
                   </div>
                 </CardContent>
                 <CardFooter>
@@ -408,13 +417,7 @@ export default function Challenges() {
                     </div>
                     <div>
                       <h4 className="font-semibold mb-2">Required Skills:</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {challenge.skills.map((skill, index) => (
-                          <Badge key={index} variant="outline">
-                            {skill}
-                          </Badge>
-                        ))}
-                      </div>
+                      {renderSkillsBadges(challenge.skills)}
                     </div>
                   </CardContent>
                   <CardFooter>

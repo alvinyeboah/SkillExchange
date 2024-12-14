@@ -30,10 +30,10 @@ import { FeatureCards } from "@/components/feature-cards"
 import { ParticleBackground } from "@/components/particlebackground"
 import { GlowingButton } from "@/components/glowingButton"
 import { SkillCoinCounter } from "@/components/skillcoinCounter"
+import { useRouter } from "next/navigation"
 
 const RotatingText = ({ items }: { items: string[] }) => {
   const [index, setIndex] = useState(0)
-
   useEffect(() => {
     const timer = setInterval(() => {
       setIndex((prevIndex) => (prevIndex + 1) % items.length)
@@ -60,7 +60,8 @@ const RotatingText = ({ items }: { items: string[] }) => {
 }
 
 export default function Home() {
-  const { user } = useAuth()
+  const { user } = useAuth();
+  const router = useRouter();
   const { services, isLoading: servicesLoading, fetchServices } = useServices()
   const {
     challenges,
@@ -260,7 +261,9 @@ export default function Home() {
                     </div>
                   </CardContent>
                   <CardFooter>
-                    <Button className="w-full bg-primary/80 hover:bg-primary">
+                    <Button className="w-full bg-primary/80 hover:bg-primary"  onClick={() =>
+                      router.push(`/marketplace/${service.service_id}`)
+                    }>
                       Request Service
                     </Button>
                   </CardFooter>

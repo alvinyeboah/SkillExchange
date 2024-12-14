@@ -95,7 +95,6 @@ export default function Dashboard() {
 
   const processData = (data: Activity[]): ChartDataPoint[] => {
     const activityCounts: Record<string, ChartDataPoint> = {};
-    
     data?.forEach((item) => {
       const date = new Date(item.created_at);
       const hour = date.getHours();
@@ -111,12 +110,12 @@ export default function Dashboard() {
       
       activityCounts[formattedHour][item.activity_type]++;
     });
-
-    // Convert to array and sort by hour
     return Object.values(activityCounts).sort((a, b) => {
       return parseInt(a.hour) - parseInt(b.hour);
     });
   };
+  console.log(activityData, "here");
+  
   const chartData = processData(activityData);
 
   return (

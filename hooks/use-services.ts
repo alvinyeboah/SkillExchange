@@ -5,6 +5,8 @@ interface Service {
   service_id: any;
   title: string;
   description: string;
+  category: string;
+  delivery_time:number;
   skillcoin_price: number;
   provider_name: string;
   user_id: any;

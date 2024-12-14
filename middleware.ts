@@ -1,50 +1,65 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
-import { verifyJWT } from './lib/jwt';
-import { rateLimiter } from './lib/middleware/rateLimiter';
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { verifyJWT } from "./lib/jwt";
 
-const securityHeaders = {
-  'Content-Security-Policy': "default-src 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';",
-  'X-Frame-Options': 'DENY',
-  'X-Content-Type-Options': 'nosniff',
-  'Referrer-Policy': 'strict-origin-when-cross-origin',
-  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
-  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains'
-};
+const protectedRoutes = [
+  "/dashboard",
+  "/wallet",
+  // Add other protected routes here
+];
+
+const authRoutes = ["/auth/signin", "/auth/signup"];
 
 export async function middleware(request: NextRequest) {
-  // Rate limiting check
-  const rateLimitResult = await rateLimiter({
-    windowMs: 15 * 60 * 1000,
-    max: 100
-  })(request);
-
-  if (rateLimitResult) return rateLimitResult;
-
-  const response = await handleRequest(request);
+  const { pathname } = request.nextUrl;
+  const authToken = request.cookies.get("authToken")?.value;
   
-  // Add security headers
-  Object.entries(securityHeaders).forEach(([key, value]) => {
-    response.headers.set(key, value);
-  });
+  const isProtectedRoute = protectedRoutes.some(
+    (route) => pathname.startsWith(route) || pathname === route
+  );
+  const isAuthRoute = authRoutes.some((route) => pathname === route);
 
-  return response;
-}
+  // Check protected routes first
+  if (isProtectedRoute) {
+    // If no token exists, redirect to sign in
+    if (!authToken) {
+      const redirectUrl = new URL("/auth/signin", request.url);
+      redirectUrl.searchParams.set("from", pathname);
+      redirectUrl.searchParams.set(
+        "message",
+        "Please sign in to access this page"
+      );
+      return NextResponse.redirect(redirectUrl);
+    }
 
-async function handleRequest(request: NextRequest): Promise<NextResponse> {
-  const currentPath = request.nextUrl.pathname;
-  
-  // Example logic to handle the request
-  if (currentPath === '/some-path') {
-    return NextResponse.json({ message: 'Handled specific path' });
+    // Verify token validity
+    try {
+      await verifyJWT(authToken);
+    } catch (error) {
+      const redirectUrl = new URL("/auth/signin", request.url);
+      redirectUrl.searchParams.set("from", pathname);
+      redirectUrl.searchParams.set(
+        "message",
+        "Your session has expired. Please sign in again"
+      );
+      return NextResponse.redirect(redirectUrl);
+    }
   }
 
-  // Default response if no specific path is handled
+  // Handle auth routes - redirect to dashboard if already authenticated
+  if (isAuthRoute && authToken) {
+    try {
+      await verifyJWT(authToken);
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    } catch (error) {
+      // If token is invalid, allow access to auth routes
+      return NextResponse.next();
+    }
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|public).*)',
-  ],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 };

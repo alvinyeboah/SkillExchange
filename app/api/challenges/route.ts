@@ -6,7 +6,7 @@ export async function GET(req: Request) {
   try {
     return await withConnection(pool, async (connection) => {
       const [challenges] = await connection.query<RowDataPacket[]>(
-        "SELECT challenge_id, title, reward_skillcoins, start_date, end_date, created_at FROM Challenges ORDER BY start_date DESC"
+        "SELECT challenge_id, title,difficulty,category,skills, status reward_skillcoins, start_date, end_date, created_at FROM Challenges ORDER BY start_date DESC"
       );
 
       return NextResponse.json(challenges, { status: 200 });
