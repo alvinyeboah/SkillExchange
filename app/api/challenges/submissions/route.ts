@@ -1,15 +1,17 @@
 import { NextResponse } from "next/server";
-import pool from "@/lib/db";
+import pool, { withConnection } from "@/lib/db";
 import { ResultSetHeader } from "mysql2";
 
 export async function POST(req: Request) {
   try {
     const { challenge_id, user_id, content, submission_url } = await req.json();
 
-    const [result] = await pool.query<ResultSetHeader>(
-      "INSERT INTO ChallengeSubmissions (challenge_id, user_id, content, submission_url) VALUES (?, ?, ?, ?)",
-      [challenge_id, user_id, content, submission_url]
-    );
+    const [result] = await withConnection(pool, async (connection) => {
+      return await connection.query<ResultSetHeader>(
+        "INSERT INTO ChallengeSubmissions (challenge_id, user_id, content, submission_url) VALUES (?, ?, ?, ?)",
+        [challenge_id, user_id, content, submission_url]
+      );
+    }, "create submission");
 
     return NextResponse.json(
       {

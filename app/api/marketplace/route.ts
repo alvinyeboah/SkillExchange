@@ -70,7 +70,7 @@ export async function GET(req: Request): Promise<Response> {
       }));
 
       return NextResponse.json(formattedServices);
-    });
+    }, "get services");
   } catch (error: any) {
     console.error("Error fetching services:", error);
     return NextResponse.json(
@@ -79,7 +79,6 @@ export async function GET(req: Request): Promise<Response> {
     );
   }
 }
-
 export async function POST(req: Request): Promise<Response> {
   const roleResult = roleMiddleware(req, ["admin"]);
   if (roleResult instanceof Response) return roleResult;
@@ -92,15 +91,18 @@ export async function POST(req: Request): Promise<Response> {
     return await withConnection(pool, async (connection) => {
       const body = await req.json();
       const [queryResult]: [OkPacket, FieldPacket[]] = await connection.query(
-        "INSERT INTO marketplace (title, description, price) VALUES (?, ?, ?)",
-        [body.title, body.description, body.price]
+        "INSERT INTO Services (title, description, skillcoin_price, category, delivery_time) VALUES (?, ?, ?, ?, ?)",
+        [body.title, body.description, body.price, body.category, body.delivery_time]
       );
-      return NextResponse.json(queryResult);
-    });
+      return NextResponse.json(
+        { message: "Service created successfully", serviceId: queryResult.insertId },
+        { status: 201 }
+      );
+    }, "post service");
   } catch (error: any) {
-    console.error("Error creating marketplace item:", error);
+    console.error("Error creating service:", error);
     return NextResponse.json(
-      { message: "Failed to create marketplace item", error: error.message },
+      { message: "Failed to create service", error: error.message },
       { status: 500 }
     );
   }

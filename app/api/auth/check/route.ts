@@ -71,7 +71,7 @@ export async function GET(req: NextRequest) {
           avatar_url: user.avatar_url
         }
       });
-    });
+    }, "Get Check");
   } catch (error) {
     console.error('Auth check error:', error);
     const response = NextResponse.json({ 

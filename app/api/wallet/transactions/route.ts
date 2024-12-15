@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
       );
 
       return NextResponse.json(transactions);
-    });
+    }, "get wallet transaction");
   } catch (error: any) {
     return NextResponse.json(
       { message: "Failed to fetch transactions", error: error.message },

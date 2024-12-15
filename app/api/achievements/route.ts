@@ -15,7 +15,7 @@ export async function POST(req: Request) {
       if (!result.affectedRows) {
         throw new Error("Failed to insert achievement");
       }
-    });
+    }, "Post Achievement");
 
     return NextResponse.json(
       { message: "Achievement earned successfully" }, 

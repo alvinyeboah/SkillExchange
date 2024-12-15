@@ -21,7 +21,7 @@ export async function GET(
       }
 
       return NextResponse.json(user[0], { status: 200 });
-    });
+    }, "get users");
   } catch (error: any) {
     return NextResponse.json(
       { message: "Failed to fetch user", error: error.message },
@@ -54,7 +54,7 @@ export async function PUT(
         { message: "User updated successfully" },
         { status: 200 }
       );
-    });
+    }, "put users");
   } catch (error: any) {
     return NextResponse.json(
       { message: "Failed to update user", error: error.message },
@@ -83,7 +83,7 @@ export async function DELETE(
         { message: "User deleted successfully" },
         { status: 200 }
       );
-    });
+    }, "delete user");
   } catch (error: any) {
     return NextResponse.json(
       { message: "Failed to delete user", error: error.message },
@@ -120,7 +120,7 @@ export async function PATCH(
         { message: "Balance updated successfully" },
         { status: 200 }
       );
-    });
+    }, "patch user");
   } catch (error: any) {
     return NextResponse.json(
       { message: "Failed to update balance", error: error.message },

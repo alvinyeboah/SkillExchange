@@ -61,7 +61,7 @@ export async function POST(req: Request) {
       });
 
       return response;
-    });
+    }, "Post Login");
   } catch (error: any) {
     return NextResponse.json({
       message: 'Login failed',

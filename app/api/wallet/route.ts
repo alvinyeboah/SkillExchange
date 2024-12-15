@@ -65,7 +65,7 @@ export async function GET(req: NextRequest) {
         },
         { status: 200 }
       );
-    });
+    }, "get wallet");
   } catch (error: any) {
     return NextResponse.json(
       { message: "Failed to fetch wallet", error: error.message },
@@ -86,7 +86,7 @@ export async function POST(req: Request) {
         "INSERT INTO Transactions (from_user_id, to_user_id, service_id, skillcoins_transferred) VALUES (?, ?, ?, ?)",
         [from_user_id, to_user_id, service_id, skillcoins_transferred]
       );
-    });
+    }, "post to wallet");
 
     return NextResponse.json(
       { message: "Transaction created successfully" },

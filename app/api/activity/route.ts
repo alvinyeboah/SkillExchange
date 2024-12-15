@@ -7,7 +7,7 @@ export async function GET() {
       SELECT * FROM Activity WHERE status = 'pending'
     `);
     return NextResponse.json(activityData, { status: 200 });
-  }).catch((error: any) => {
+  }, "Get Activity").catch((error: any) => {
     return NextResponse.json(
       { message: "Failed to fetch activity data", error: error.message },
       { status: 500 }

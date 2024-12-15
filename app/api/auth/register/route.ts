@@ -13,7 +13,7 @@ export async function POST(req: Request) {
         [email]
       );
       return result;
-    });
+    }, "check for existing user");
 
     if (existingUser.length > 0) {
       return NextResponse.json(
@@ -37,7 +37,7 @@ export async function POST(req: Request) {
         ) VALUES (?, ?, ?, ?, ?, ?)`,
         [username, email, hashedPassword, name, defaultAvatarUrl, ""]
       );
-    });
+    }, "post register");
 
     return NextResponse.json(
       { message: "User registered successfully" },

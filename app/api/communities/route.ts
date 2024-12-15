@@ -19,7 +19,7 @@ export async function POST(req: Request) {
         },
         { status: 201 }
       );
-    });
+    }, "post community");
   } catch (error: any) {
     return NextResponse.json(
       { message: "Failed to create community", error: error.message },

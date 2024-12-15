@@ -13,7 +13,7 @@ export async function GET(req: Request, props: { params: Promise<{ id: string }>
         "SELECT * FROM Transactions WHERE from_user_id = ? OR to_user_id = ? ORDER BY transaction_date DESC",
         [userId, userId]
       );
-    });
+    }, "Transaction get individual");
 
     return NextResponse.json(transactions, { status: 200 });
   } catch (error: any) {

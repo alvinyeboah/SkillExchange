@@ -21,7 +21,7 @@ export async function GET(req: Request) {
       `);
 
       return NextResponse.json(leaderboard, { status: 200 });
-    });
+    }, "get leaderboards");
   } catch (error: any) {
     return NextResponse.json(
       { message: "Failed to fetch leaderboard", error: error.message },

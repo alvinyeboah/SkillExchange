@@ -34,7 +34,7 @@ export async function POST(req: Request) {
         { message: "Service created successfully", serviceId: result.insertId },
         { status: 201 }
       );
-    });
+    }, " service posting");
   } catch (error: any) {
     return NextResponse.json(
       { message: "Failed to create service", error: error.message },

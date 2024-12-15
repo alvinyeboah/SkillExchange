@@ -28,10 +28,11 @@ export async function GET(req: NextRequest) {
       );
 
       return NextResponse.json(reminders);
-    });
+    }, "Reminders Get");
   } catch (error: any) {
+    console.error('Error fetching reminders:', error);
     return NextResponse.json(
-      { message: "Failed to fetch reminders", error: error.message },
+      { message: 'Failed to fetch reminders', error: error.message },
       { status: 500 }
     );
   }
@@ -59,7 +60,7 @@ export async function POST(req: NextRequest) {
       );
 
       return NextResponse.json(newReminder[0], { status: 201 });
-    });
+    }, "Reminders Post");
   } catch (error: any) {
     console.error('Error creating reminder:', error);
     return NextResponse.json(
@@ -88,7 +89,7 @@ export async function DELETE(req: NextRequest) {
       }
 
       return NextResponse.json({ message: 'Reminder deleted successfully' }, { status: 200 });
-    });
+    }, "delete reminder");
   } catch (error: any) {
     console.error('Error deleting reminder:', error);
     return NextResponse.json(
@@ -96,4 +97,4 @@ export async function DELETE(req: NextRequest) {
       { status: 500 }
     );
   }
-} 
+}

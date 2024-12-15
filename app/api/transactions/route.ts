@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
       return await connection.query(
         "SELECT * FROM Transactions ORDER BY transaction_date DESC"
       );
-    });
+    }, " get transactions");
 
     return NextResponse.json(transactions, { status: 200 });
   } catch (error: any) {
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
         "INSERT INTO Transactions (from_user_id, to_user_id, service_id, skillcoins_transferred) VALUES (?, ?, ?, ?)",
         [from_user_id, to_user_id, service_id, skillcoins_transferred]
       );
-    });
+    }, "post transactions");
 
     return NextResponse.json(
       { message: "Transaction created successfully" },

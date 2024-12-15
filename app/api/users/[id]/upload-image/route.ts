@@ -36,7 +36,7 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
         message: "Image uploaded successfully",
         avatar_url
       });
-    });
+    }, "uploading user image");
   } catch (error: any) {
     console.error('Upload error:', error);
     return NextResponse.json(

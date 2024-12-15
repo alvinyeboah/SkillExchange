@@ -14,11 +14,12 @@ export async function GET(req: NextRequest) {
         `SELECT 
           user_id,
           username,
+          avatar_url,
           email
          FROM Users 
          ORDER BY username ASC`
       );
-    });
+    }, "get user");
 
     return NextResponse.json(users, { status: 200 });
   } catch (error: any) {

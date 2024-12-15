@@ -15,23 +15,28 @@ const pool = mysql.createPool({
 export default pool;
 export async function withConnection<T>(
   pool: mysql.Pool,
-  operation: (connection: mysql.PoolConnection) => Promise<T>
+  operation: (connection: mysql.PoolConnection) => Promise<T>,
+  label: string
 ): Promise<T> {
   let connection: mysql.PoolConnection | null = null;
   try {
+    console.log(`[${label}] - Attempting to get a database connection.`);
     connection = await pool.getConnection();
+    console.log(`[${label}] - Connection acquired.`);
     return await operation(connection);
   } catch (error) {
-    console.error("Database error:", error); // Log errors
+    console.error(`[${label}] - Database error:`, error); // Log errors with label
     throw error instanceof Error
       ? error
-      : new Error("Database operation failed: " + String(error));
+      : new Error(`[${label}] - Database operation failed: ${String(error)}`);
   } finally {
     if (connection) {
       connection.release();
+      console.log(`[${label}] - Connection released.`);
     }
   }
 }
+
 
 // Graceful shutdown
 process.on("SIGINT", async () => {

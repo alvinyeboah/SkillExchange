@@ -1,8 +1,21 @@
 import { create } from 'zustand';
 import { toast } from 'sonner';
 
-interface Challenge {
+interface User {
+  id: number;
+  username: string;
+  avatar_url: string;
+}
+
+interface Participant {
   challenge_id: number;
+  user_id: number;
+  progress: number;
+  joined_at: string;
+}
+
+// Base challenge type for creation
+interface BaseChallenge {
   title: string;
   description?: string;
   reward_skillcoins: number;
@@ -10,9 +23,14 @@ interface Challenge {
   category?: string;
   start_date: string;
   end_date: string;
-  participants?: number;
+  skills?: string[] | string;
+}
+
+// Extended challenge type with additional data
+interface Challenge extends BaseChallenge {
+  challenge_id: number;
+  participantsCount: number;
   progress?: number;
-  skills?: string[] | string;  // Updated to handle both string and array
   winner?: {
     name: string;
     avatar: string;
@@ -23,7 +41,6 @@ interface Challenge {
     progress: number;
   }[];
 }
-
 interface ChallengesState {
   challenges: Challenge[];
   activeChallenges: Challenge[];
@@ -33,19 +50,16 @@ interface ChallengesState {
   error: string | null;
   setChallenges: (challenges: Challenge[]) => void;
   fetchChallenges: () => Promise<void>;
-  createChallenge: (challenge: Omit<Challenge, 'challenge_id'>) => Promise<void>;
+  createChallenge: (challenge: BaseChallenge) => Promise<void>;
   participateInChallenge: (challengeId: number, userId: number) => Promise<void>;
 }
 
-// Helper function to normalize skills string to array
 const normalizeSkills = (skills: string | string[] | undefined): string[] => {
   if (!skills) return [];
   if (Array.isArray(skills)) return skills;
-  // Handle both comma-separated formats: with or without spaces
   return skills.split(/\s*,\s*/);
 };
 
-// Helper function to determine challenge status based on dates
 const getChallengeStatus = (startDate: string, endDate: string) => {
   const now = new Date();
   const start = new Date(startDate);
@@ -56,7 +70,6 @@ const getChallengeStatus = (startDate: string, endDate: string) => {
   return 'active';
 };
 
-// Helper function to sort challenges by start date
 const sortByStartDate = (a: Challenge, b: Challenge) => 
   new Date(a.start_date).getTime() - new Date(b.start_date).getTime();
 
@@ -69,14 +82,12 @@ export const useChallengesStore = create<ChallengesState>((set, get) => ({
   error: null,
 
   setChallenges: (challenges) => {
-    // Filter and sort challenges based on their dates
     const active: Challenge[] = [];
     const upcoming: Challenge[] = [];
     const completed: Challenge[] = [];
 
     challenges.forEach(challenge => {
       const status = getChallengeStatus(challenge.start_date, challenge.end_date);
-      // Normalize skills to array format
       challenge.skills = normalizeSkills(challenge.skills);
       
       switch (status) {
@@ -105,13 +116,58 @@ export const useChallengesStore = create<ChallengesState>((set, get) => ({
     set({ isLoading: true, error: null });
 
     try {
-      const response = await fetch('/api/challenges');
-      if (!response.ok) {
-        throw new Error('Failed to fetch challenges');
+      // Fetch all data in parallel
+      const [challengesResponse, participantsResponse, usersResponse] = await Promise.all([
+        fetch('/api/challenges'),
+        fetch('/api/challenges/participate'),
+        fetch('/api/users')
+      ]);
+
+      if (!challengesResponse.ok || !participantsResponse.ok || !usersResponse.ok) {
+        throw new Error('Failed to fetch data');
       }
 
-      const challenges: Challenge[] = await response.json();
-      setChallenges(challenges);
+      const [challenges, participants, users]: [BaseChallenge[], Participant[], User[]] = await Promise.all([
+        challengesResponse.json(),
+        participantsResponse.json(),
+        usersResponse.json()
+      ]);
+
+      // Create a map of users for quick lookup
+      const userMap = new Map(users.map(user => [user.id, user]));
+
+      // Process challenges with participant data
+      const processedChallenges: Challenge[] = challenges.map(challenge => {
+        // Get participants for this challenge
+        const challengeParticipants = participants.filter(
+          p => p.challenge_id === (challenge as Challenge).challenge_id
+        );
+
+        // Get unique participants count
+        const uniqueParticipants = new Set(challengeParticipants.map(p => p.user_id));
+        
+        // Get top 3 participants sorted by progress
+        const topParticipants = challengeParticipants
+          .sort((a, b) => b.progress - a.progress)
+          .slice(0, 3)
+          .map(p => {
+            const user = userMap.get(p.user_id);
+            return {
+              name: user?.username || 'Unknown User',
+              avatar: user?.avatar_url || '',
+              progress: p.progress
+            };
+          });
+
+        return {
+          ...challenge,
+          challenge_id: (challenge as Challenge).challenge_id,
+          participantsCount: uniqueParticipants.size,
+          topParticipants
+        };
+      });
+
+      setChallenges(processedChallenges);
       set({ isLoading: false });
     } catch (error: any) {
       set({ 
@@ -126,7 +182,7 @@ export const useChallengesStore = create<ChallengesState>((set, get) => ({
     }
   },
 
-  createChallenge: async (challenge) => {
+  createChallenge: async (challenge: BaseChallenge) => {
     set({ isLoading: true, error: null });
 
     try {
@@ -137,7 +193,6 @@ export const useChallengesStore = create<ChallengesState>((set, get) => ({
         },
         body: JSON.stringify({
           ...challenge,
-          // Join skills array with commas (no spaces) to match API format
           skills: Array.isArray(challenge.skills) ? challenge.skills.join(',') : challenge.skills
         }),
       });
@@ -146,13 +201,9 @@ export const useChallengesStore = create<ChallengesState>((set, get) => ({
         throw new Error('Failed to create challenge');
       }
 
-      const newChallenge: Challenge = await response.json();
-      const { challenges } = get();
-      const updatedChallenges = [...challenges, newChallenge];
-      
-      get().setChallenges(updatedChallenges);
+      await get().fetchChallenges();
       set({ isLoading: false });
-      toast.success('Challenge created successfully');
+
     } catch (error: any) {
       set({ error: error.message, isLoading: false });
       toast.error(`Failed to create challenge: ${error.message}`);
@@ -174,7 +225,6 @@ export const useChallengesStore = create<ChallengesState>((set, get) => ({
         throw new Error(errorData.message || 'Failed to join challenge');
       }
 
-      // Refresh challenges to get updated participation status
       await get().fetchChallenges();
       toast.success('Successfully joined the challenge');
     } catch (error: any) {

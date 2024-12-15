@@ -16,5 +16,5 @@ export async function GET(req: Request) {
       activeUsers,
       topProviders
     });
-  });
+  }, "get community stats");
 } 

@@ -35,7 +35,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ id: s
       };
 
       return NextResponse.json(serviceData as Service & { user: any }, { status: 200 });
-    });
+    }, "get services");
   } catch (error: any) {
     return NextResponse.json(
       { message: "Failed to fetch service", error: error.message },
@@ -61,7 +61,7 @@ export async function PUT(request: NextRequest, props: { params: Promise<{ id: s
         { message: "Service updated successfully" },
         { status: 200 }
       );
-    });
+    }, "Service put ");
   } catch (error: any) {
     return NextResponse.json(
       { message: "Failed to update service", error: error.message },
@@ -81,7 +81,7 @@ export async function DELETE(request: Request, props: { params: Promise<{ id: st
         { message: "Service deleted successfully" },
         { status: 200 }
       );
-    });
+    }, "Service deleted successfully");
   } catch (error: any) {
     return NextResponse.json(
       { message: "Failed to delete service", error: error.message },

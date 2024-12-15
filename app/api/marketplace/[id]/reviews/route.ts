@@ -26,7 +26,7 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
       );
 
       return NextResponse.json(reviews, { status: 200 });
-    });
+    }, "get reviews");
   } catch (error: any) {
     return NextResponse.json(
       { message: "Failed to fetch reviews", error: error.message },
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
         { message: "Review added successfully", reviewId: result.insertId },
         { status: 201 }
       );
-    });
+    }, "get reviews");
   } catch (error: any) {
     return NextResponse.json(
       { message: "Failed to add review", error: error.message },
