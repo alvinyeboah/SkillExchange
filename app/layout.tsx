@@ -4,6 +4,7 @@ import { Metadata } from "next";
 import MainLayout from "./MainLayout";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { SpeedInsights } from "@vercel/speed-insights/next"
+import { Analytics } from "@vercel/analytics/react"
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -116,6 +117,7 @@ export default function RootLayout({
         >
           <MainLayout>{children}</MainLayout>
           <SpeedInsights/>
+          <Analytics/>
         </ThemeProvider>
       </body>
     </html>
