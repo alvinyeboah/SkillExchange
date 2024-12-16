@@ -3,6 +3,7 @@ import "./globals.css";
 import { Metadata } from "next";
 import MainLayout from "./MainLayout";
 import { ThemeProvider } from "@/components/providers/theme-provider";
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -114,6 +115,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <MainLayout>{children}</MainLayout>
+          <SpeedInsights/>
         </ThemeProvider>
       </body>
     </html>
