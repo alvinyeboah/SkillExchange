@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import pool, { withConnection } from "@/lib/db";
 import { RowDataPacket, ResultSetHeader, FieldPacket } from "mysql2";
 
-export async function GET(req: Request, props: { params: { id: string } }) {
+export async function GET(req: Request, props: { params: Promise<{ id: string }> }) {
   try {
-    const id = props.params.id;
+    const id = (await props.params).id;
 
     return await withConnection(async (connection) => {
       const [userRows]: [RowDataPacket[], FieldPacket[]] =
