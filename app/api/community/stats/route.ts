@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import pool, { withConnection } from "@/lib/db";
 
-
 export async function GET(req: Request) {
-  return await withConnection(pool, async (connection) => {
+  return await withConnection(async (connection) => {
     const activeUsers = await connection.query(
       "SELECT COUNT(*) as count FROM Users "
     );
@@ -14,7 +13,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({
       activeUsers,
-      topProviders
+      topProviders,
     });
-  });
-} 
+  }, "get community stats");
+}

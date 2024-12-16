@@ -1,50 +1,92 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
-import { verifyJWT } from './lib/jwt';
-import { rateLimiter } from './lib/middleware/rateLimiter';
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { jwtManager } from "@/lib/auth";
 
-const securityHeaders = {
-  'Content-Security-Policy': "default-src 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';",
-  'X-Frame-Options': 'DENY',
-  'X-Content-Type-Options': 'nosniff',
-  'Referrer-Policy': 'strict-origin-when-cross-origin',
-  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
-  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains'
-};
+const protectedRoutes = [
+  "/dashboard",
+  "/wallet",
+  // Add other protected routes here
+];
 
-export async function middleware(request: NextRequest) {
-  // Rate limiting check
-  const rateLimitResult = await rateLimiter({
-    windowMs: 15 * 60 * 1000,
-    max: 100
-  })(request);
+const authRoutes = ["/auth/signin", "/auth/signup"];
 
-  if (rateLimitResult) return rateLimitResult;
-
-  const response = await handleRequest(request);
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  const authToken = request.cookies.get("authToken")?.value;
   
-  // Add security headers
-  Object.entries(securityHeaders).forEach(([key, value]) => {
-    response.headers.set(key, value);
-  });
-
-  return response;
-}
-
-async function handleRequest(request: NextRequest): Promise<NextResponse> {
-  const currentPath = request.nextUrl.pathname;
+  const isProtectedRoute = protectedRoutes.some(
+    (route) => pathname === route || 
+    pathname.startsWith(`${route}/`) || 
+    (pathname.startsWith(route) && pathname.length > route.length)
+  );
   
-  // Example logic to handle the request
-  if (currentPath === '/some-path') {
-    return NextResponse.json({ message: 'Handled specific path' });
+  const isAuthRoute = authRoutes.some(
+    (route) => pathname === route
+  );
+
+  const createRedirectUrl = (path: string, message: string) => {
+    const redirectUrl = new URL(path, request.url);
+    if (message) {
+      redirectUrl.searchParams.set("message", message);
+    }
+    if (path === "/auth/signin") {
+      redirectUrl.searchParams.set("from", pathname);
+    }
+    return redirectUrl;
+  };
+
+  // Synchronous token verification
+  const verifyToken = (token?: string) => {
+    if (!token) return null;
+    return jwtManager.verify(token);
+  };
+
+  try {
+    // Check protected routes
+    if (isProtectedRoute) {
+      if (!authToken) {
+        return NextResponse.redirect(
+          createRedirectUrl("/auth/signin", "Please sign in to access this page")
+        );
+      }
+
+      const decodedToken = verifyToken(authToken);
+      if (!decodedToken) {
+        const response = NextResponse.redirect(
+          createRedirectUrl("/auth/signin", "Your session has expired. Please sign in again")
+        );
+        response.cookies.delete("authToken");
+        return response;
+      }
+    }
+
+    // Handle auth routes
+    if (isAuthRoute && authToken) {
+      const decodedToken = verifyToken(authToken);
+      if (decodedToken) {
+        return NextResponse.redirect(createRedirectUrl("/dashboard", ""));
+      }
+      
+      // Clear invalid token on auth routes
+      const response = NextResponse.next();
+      response.cookies.delete("authToken");
+      return response;
+    }
+
+    return NextResponse.next();
+  } catch (error) {
+    console.error("Middleware error:", error);
+    
+    const response = NextResponse.redirect(
+      createRedirectUrl("/auth/signin", "An error occurred. Please sign in again")
+    );
+    response.cookies.delete("authToken");
+    return response;
   }
-
-  // Default response if no specific path is handled
-  return NextResponse.next();
 }
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|public).*)',
+    "/((?!api|_next/static|_next/image|favicon.ico|public/|assets/).*)"
   ],
 };

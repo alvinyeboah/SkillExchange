@@ -16,21 +16,21 @@ export async function GET(req: NextRequest) {
   const authResult = await authMiddleware(req);
   if (authResult instanceof Response) return authResult;
 
-  const userId = req.headers.get('user-id');
-  
+  const userId = req.headers.get("user-id");
+
   try {
-    return await withConnection(pool, async (connection) => {
+    return await withConnection(async (connection) => {
       const transactions = await connection.query<Transaction[]>(
         "SELECT * FROM Transactions WHERE from_user_id = ? OR to_user_id = ? ORDER BY created_at DESC",
         [userId, userId]
       );
 
       return NextResponse.json(transactions);
-    });
+    }, "get wallet transaction");
   } catch (error: any) {
     return NextResponse.json(
       { message: "Failed to fetch transactions", error: error.message },
       { status: 500 }
     );
   }
-} 
+}

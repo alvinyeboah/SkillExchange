@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import Link from "next/link"
-import { motion, AnimatePresence } from "framer-motion"
-import { Button } from "@/components/ui/button"
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -11,35 +11,53 @@ import {
   CardHeader,
   CardTitle,
   CardFooter,
-} from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { ChevronRight, Star, Zap, Trophy, Users, Clock, ArrowRight, Search, Mail, Briefcase, TrendingUp, ArrowUp } from 'lucide-react'
-import { useAuth } from "@/hooks/use-auth"
-import { useServices } from "@/hooks/use-services"
-import { useChallenges } from "@/hooks/use-challenges"
-import { LoadingSpinner } from "@/components/ui/loading-spinner"
-import { ReminderCheck } from "@/components/reminder-check"
-import { useCommunityStore } from "@/hooks/useCommunityStore"
-import { TestimonialCarousel } from "@/components/testimonial-carousel"
-import { FeatureCards } from "@/components/feature-cards"
-import { ParticleBackground } from "@/components/particlebackground"
-import { GlowingButton } from "@/components/glowingButton"
-import { SkillCoinCounter } from "@/components/skillcoinCounter"
+} from "@/components/ui/card";
+import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  ChevronRight,
+  Star,
+  Zap,
+  Trophy,
+  Users,
+  Clock,
+  ArrowRight,
+  Search,
+  Mail,
+  Briefcase,
+  TrendingUp,
+  ArrowUp,
+} from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { useServices } from "@/hooks/use-services";
+import { useChallenges } from "@/hooks/use-challenges";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { ReminderCheck } from "@/components/reminder-check";
+import { useCommunityStore } from "@/hooks/useCommunityStore";
+import { TestimonialCarousel } from "@/components/testimonial-carousel";
+import { FeatureCards } from "@/components/feature-cards";
+import { ParticleBackground } from "@/components/particlebackground";
+import { GlowingButton } from "@/components/glowingButton";
+import { SkillCoinCounter } from "@/components/skillcoinCounter";
+import { useRouter } from "next/navigation";
+import { useChallengesStore } from "@/hooks/use-challenges-store";
+import Image from "next/image";
+import { Progress } from "@/components/ui/progress";
+import coin from "@/public/coin.png";
 
 const RotatingText = ({ items }: { items: string[] }) => {
-  const [index, setIndex] = useState(0)
-
+  const [index, setIndex] = useState(0);
   useEffect(() => {
     const timer = setInterval(() => {
-      setIndex((prevIndex) => (prevIndex + 1) % items.length)
-    }, 2000)
-    return () => clearInterval(timer)
-  }, [items.length])
+      setIndex((prevIndex) => (prevIndex + 1) % items.length);
+    }, 2000);
+    return () => clearInterval(timer);
+  }, [items.length]);
 
   return (
     <div className="h-20 overflow-hidden">
@@ -56,31 +74,67 @@ const RotatingText = ({ items }: { items: string[] }) => {
         </motion.div>
       </AnimatePresence>
     </div>
-  )
-}
+  );
+};
 
 export default function Home() {
-  const { user } = useAuth()
-  const { services, isLoading: servicesLoading, fetchServices } = useServices()
-  const {
-    challenges,
-    isLoading: challengesLoading,
-    getChallenges,
-  } = useChallenges()
-  const { communityStats, isLoading: communityLoading, fetchCommunityStats } =
-    useCommunityStore()
+  const { user } = useAuth();
+  const router = useRouter();
+  const { services, isLoading: servicesLoading, fetchServices } = useServices();
+  const renderSkillsBadges = (skills: string[] | string | undefined) => {
+    if (!skills) return null;
 
+    const skillsArray = Array.isArray(skills)
+      ? skills
+      : skills.split(",").map((skill) => skill.trim());
+
+    return (
+      <div className="flex flex-wrap gap-2">
+        {skillsArray.map((skill, index) => (
+          <Badge key={index} variant="outline">
+            {skill}
+          </Badge>
+        ))}
+      </div>
+    );
+  };
+
+  const handleJoinChallenge = async (challengeId: number) => {
+    if (!user) {
+      toast.error("Please login to join challenges");
+      return;
+    }
+
+    try {
+      await participateInChallenge(challengeId, user.id);
+      console.log("Successfully joined the challenge!");
+    } catch (error) {
+      console.log("Failed to join challenge. Please try again.");
+    }
+  };
+  const {
+    activeChallenges,
+    isLoading: challengesLoading,
+    error,
+    fetchChallenges,
+    participateInChallenge,
+  } = useChallengesStore();
+  const {
+    communityStats,
+    isLoading: communityLoading,
+    fetchCommunityStats,
+  } = useCommunityStore();
   useEffect(() => {
-    fetchServices()
-    getChallenges()
-    fetchCommunityStats()
-  }, [fetchServices, getChallenges, fetchCommunityStats])
+    fetchServices();
+    fetchChallenges();
+    fetchCommunityStats();
+  }, [fetchServices, fetchChallenges, fetchCommunityStats]);
 
   if (servicesLoading || challengesLoading || communityLoading) {
-    return <LoadingSpinner />
+    return <LoadingSpinner />;
   }
 
-  const rotatingItems = ["Skills", "Knowledge", "Experiences", "Talents"]
+  const rotatingItems = ["Skills", "Knowledge", "Experiences", "Talents"];
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-background to-background/80">
@@ -137,7 +191,7 @@ export default function Home() {
           >
             {[
               { label: "Services", value: services?.length },
-              { label: "Active Challenges", value: challenges.length },
+              { label: "Active Challenges", value: activeChallenges.length },
               { label: "Users", value: communityStats.activeUsers?.length },
             ].map((stat, index) => (
               <motion.div
@@ -255,12 +309,20 @@ export default function Home() {
                             {service?.user.name?.[0]}
                           </AvatarFallback>
                         </Avatar>
-                        <span className="text-sm">{service?.provider_name}</span>
+                        <span className="text-sm">
+                          {service?.provider_name}
+                        </span>
                       </div>
                     </div>
                   </CardContent>
                   <CardFooter>
-                    <Button className="w-full bg-primary/80 hover:bg-primary">
+                    <Button
+                      className="w-full bg-primary/80 hover:bg-primary"
+                      disabled={!user}
+                      onClick={() =>
+                        router.push(`/marketplace/${service.service_id}`)
+                      }
+                    >
                       Request Service
                     </Button>
                   </CardFooter>
@@ -284,41 +346,88 @@ export default function Home() {
             Active Challenges
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {challenges.slice(0, 2).map((challenge, index) => (
-              <motion.div
-                key={challenge.challenge_id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-              >
-                <Card className="flex flex-col h-full bg-card/50 backdrop-blur-sm border-primary/20 hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/20">
-                  <CardHeader>
-                    <CardTitle>{challenge.title}</CardTitle>
-                    <CardDescription>{challenge.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="flex-grow">
-                    <div className="flex justify-between items-center mb-4">
-                      <span className="flex items-center">
-                        <Users className="w-4 h-4 mr-1 text-primary" />
-                        {challenge.participants} participants
-                      </span>
-                      <span className="flex items-center">
-                        <Trophy className="w-4 h-4 mr-1 text-primary" />
-                        <SkillCoinCounter amount={challenge.reward_skillcoins} duration={2} />
-                      </span>
+            {activeChallenges.slice(0, 2).map((challenge) => (
+              <Card key={challenge.challenge_id} className="flex flex-col">
+                <CardHeader>
+                  <CardTitle className="flex justify-between items-center">
+                    {challenge.title}
+                    <Badge variant="secondary">{challenge.category}</Badge>
+                  </CardTitle>
+                  <CardDescription>{challenge.description}</CardDescription>
+                </CardHeader>
+                <CardContent className="flex-grow">
+                  <div className="flex justify-between items-center mb-4">
+                    <Badge
+                      variant={
+                        challenge.difficulty === "Hard"
+                          ? "destructive"
+                          : "default"
+                      }
+                    >
+                      {challenge.difficulty}
+                    </Badge>
+                    <span className="flex items-center">
+                      <Users className="w-4 h-4 mr-1" />
+                      {challenge.participantsCount} participants
+                    </span>
+                  </div>
+                  <Progress value={challenge.progress} className="mb-2" />
+                  <p className="text-sm text-muted-foreground mb-4">
+                    {challenge.progress}% completed
+                  </p>
+                  <div className="flex justify-between items-center mb-4">
+                    <span className="flex items-center">
+                      <Image
+                        alt="skillcoin-image"
+                        src={coin}
+                        className="w-8 h-8"
+                      />
+                      {challenge.reward_skillcoins} SkillCoins
+                    </span>
+                    <span className="flex items-center">
+                      <Clock className="w-4 h-4 mr-1" />
+                      {new Date(challenge.end_date).toUTCString()}
+                    </span>
+                  </div>
+                  <div className="mb-4">
+                    <h4 className="font-semibold mb-2">Required Skills:</h4>
+                    {renderSkillsBadges(challenge.skills)}
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-2">Top Participants:</h4>
+                    <div className="flex justify-between">
+                      {challenge.topParticipants?.map((participant, index) => (
+                        <div key={index} className="flex flex-col items-center">
+                          <Avatar className="h-10 w-10 mb-1">
+                            <AvatarImage
+                              src={participant.avatar_url}
+                              alt={participant.username}
+                            />
+                            <AvatarFallback>
+                              {participant.username[0]}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-sm">
+                            {participant.username}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {participant.progress}%
+                          </span>
+                        </div>
+                      ))}
                     </div>
-                    <div className="flex items-center">
-                      <Clock className="w-4 h-4 mr-1 text-primary" />
-                      <span>{challenge.timeLeft} left</span>
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button className="w-full bg-primary/80 hover:bg-primary">
-                      Join Challenge
-                    </Button>
-                  </CardFooter>
-                </Card>
-              </motion.div>
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Button
+                    className="w-full"
+                    disabled={!user}
+                    onClick={() => handleJoinChallenge(challenge.challenge_id)}
+                  >
+                    Join Challenge
+                  </Button>
+                </CardFooter>
+              </Card>
             ))}
           </div>
           <div className="text-center mt-8">
@@ -348,7 +457,7 @@ export default function Home() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {communityStats.topProviders?.map((provider, index) => (
                   <motion.div
-                    key={index}
+                    key={provider.user_id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: index * 0.1 }}
@@ -361,19 +470,21 @@ export default function Home() {
                               src={provider.avatar_url}
                               alt={provider.username}
                             />
-                            <AvatarFallback>{provider.username[0]}</AvatarFallback>
+                            <AvatarFallback>
+                              {provider.username[0]}
+                            </AvatarFallback>
                           </Avatar>
-                          {provider.username}
+                          {provider.name}
                         </CardTitle>
-                        <CardDescription>{provider.skill}</CardDescription>
+                        <CardDescription>{provider.username}</CardDescription>
                       </CardHeader>
                       <CardContent className="flex-grow">
                         <div className="flex justify-between items-center">
                           <span className="flex items-center">
                             <Star className="w-4 h-4 mr-1 text-yellow-500" />
-                            {provider.avg_rating}
+                            {provider.avg_rating ?? "No ratings"}
                           </span>
-                          <span>{provider.completedTasks} tasks completed</span>
+                          <span>{provider.skillcoins} skillcoins</span>
                         </div>
                       </CardContent>
                     </Card>
@@ -450,11 +561,10 @@ export default function Home() {
         initial={{ opacity: 0, y: 100 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
-        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
       >
         <ArrowUp className="w-6 h-6" />
       </motion.button>
     </div>
-  )
+  );
 }
-

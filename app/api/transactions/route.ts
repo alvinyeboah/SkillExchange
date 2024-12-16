@@ -9,11 +9,11 @@ export async function GET(req: NextRequest) {
 
   try {
     // Use withConnection to handle the database connection
-    const transactions = await withConnection(pool, async (connection) => {
+    const transactions = await withConnection(async (connection) => {
       return await connection.query(
         "SELECT * FROM Transactions ORDER BY transaction_date DESC"
       );
-    });
+    }, " get transactions");
 
     return NextResponse.json(transactions, { status: 200 });
   } catch (error: any) {
@@ -28,12 +28,12 @@ export async function POST(req: NextRequest) {
   try {
     const { from_user_id, to_user_id, service_id, skillcoins_transferred } = await req.json();
     
-    await withConnection(pool, async (connection) => {
+    await withConnection( async (connection) => {
       await connection.query(
         "INSERT INTO Transactions (from_user_id, to_user_id, service_id, skillcoins_transferred) VALUES (?, ?, ?, ?)",
         [from_user_id, to_user_id, service_id, skillcoins_transferred]
       );
-    });
+    }, "post transactions");
 
     return NextResponse.json(
       { message: "Transaction created successfully" },

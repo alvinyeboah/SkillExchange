@@ -10,6 +10,12 @@ interface Transaction {
   type: 'Earned' | 'Spent';
 }
 
+interface Donation {
+  amount:string;
+  username:string;
+  created_at: string;
+}
+
 interface User {
   user_id: number;
   username: string;
@@ -23,7 +29,10 @@ interface WalletState {
   fetchWallet: (userId: number) => Promise<void>;
   handleDonation: (userId: number, amount: number, recipientId: number | null) => Promise<void>;
   users: User[];
+  donations: Donation[];
   fetchUsers: () => Promise<void>;
+  getUserDonations: (userId: number) => Promise<void>;
+  getDonations: () => Promise<void>;
 }
 
 export const useWallet = create<WalletState>((set, get) => ({
@@ -32,6 +41,7 @@ export const useWallet = create<WalletState>((set, get) => ({
   isLoading: false,
   error: null,
   users: [],
+  donations: [],
 
   fetchWallet: async (userId: number) => {
     set({ isLoading: true, error: null });
@@ -49,8 +59,40 @@ export const useWallet = create<WalletState>((set, get) => ({
         transactions: data.transactions,
         isLoading: false 
       });
+
+      // Fetch user donations after fetching wallet data
+      await get().getUserDonations(userId);
     } catch (error: any) {
       set({ error: error.message, isLoading: false });
+    }
+  },
+  getUserDonations: async (userId: number) => {
+    try {
+      const donationsResponse = await fetch(`/api/donations?userId=${userId}`);
+      const usersResponse = await fetch('/api/users');
+      if (!donationsResponse.ok) throw new Error('Failed to fetch user donations');
+      const donationsData = await donationsResponse.json();
+      const usersData = await usersResponse.json();
+      const matchedDonations = donationsData.map((donation:any) => {
+        const recipient = usersData.find((user:any) => user.user_id === donation.to_user_id);
+        return {
+          ...donation,
+          username: recipient ? recipient.username : 'Unknown User'
+        };
+      });
+      set({ donations: matchedDonations });
+    } catch (error: any) {
+      set({ error: error.message });
+    }
+  },
+  getDonations: async () => {
+    try {
+      const response = await fetch('/api/donations');
+      if (!response.ok) throw new Error('Failed to fetch all donations');
+      const donations = await response.json();
+      // Handle donations as needed
+    } catch (error: any) {
+      set({ error: error.message });
     }
   },
 
@@ -62,17 +104,13 @@ export const useWallet = create<WalletState>((set, get) => ({
         if (amount > currentBalance) {
             throw new Error('Insufficient balance to make this donation');
         }
-
-        // Create the transaction with service_id set to 0
-        const transactionResponse = await fetch('/api/transactions', {
+        const transactionResponse = await fetch('/api/donations', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 from_user_id: userId,
                 to_user_id: recipientId,
-                skillcoins_transferred: amount,
-                service_id: null, // Always send service_id as 0 for donations
-                description: recipientId ? 'User Donation' : 'Community Donation'
+                amount: amount,
             })
         });
 
@@ -80,7 +118,6 @@ export const useWallet = create<WalletState>((set, get) => ({
             throw new Error('Failed to create transaction');
         }
 
-        // Update sender's balance
         await fetch(`/api/users/${userId}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
@@ -88,8 +125,6 @@ export const useWallet = create<WalletState>((set, get) => ({
                 skillcoins_adjustment: -amount
             })
         });
-
-        // If sending to a user, update their balance
         if (recipientId) {
             await fetch(`/api/users/${recipientId}`, {
                 method: 'PATCH',
@@ -99,8 +134,6 @@ export const useWallet = create<WalletState>((set, get) => ({
                 })
             });
         }
-
-        // Refresh wallet data
         await get().fetchWallet(userId);
     } catch (error: any) {
         set({ error: error.message, isLoading: false });

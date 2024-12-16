@@ -27,7 +27,13 @@ export const useServiceRequests = create<ServiceRequestsState>((set) => ({
     try {
       await createServiceRequest(requestData);
     } catch (error: any) {
-      set({ error: 'Failed to add service request', isLoading: false });
+      // Pass through the specific error message
+      set({ 
+        error: error.message || 'Failed to add service request', 
+        isLoading: false 
+      });
+      // Re-throw the error so the component can handle it
+      throw error;
     }
   },
 })); 

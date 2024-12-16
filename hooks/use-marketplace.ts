@@ -59,7 +59,6 @@ export const useMarketplace = create<MarketplaceState>((set, get) => ({
       });
     } catch (error: any) {
       set({ error: error.message, isLoading: false });
-      toast.error(`Service fetch failed: ${error.message}`);
     }
   },
 
@@ -71,7 +70,6 @@ export const useMarketplace = create<MarketplaceState>((set, get) => ({
       return service;
     } catch (error: any) {
       set({ error: error.message, isLoading: false });
-      toast.error(`Service fetch failed: ${error.message}`);
       return null;
     }
   },
@@ -79,7 +77,12 @@ export const useMarketplace = create<MarketplaceState>((set, get) => ({
   createNewService: async (serviceData) => {
     set({ isLoading: true, error: null });
     try {
-      await createService(serviceData);
+      const formattedServiceData = {
+        ...serviceData,
+        title: serviceData.title.charAt(0).toUpperCase() + serviceData.title.slice(1),
+        category: serviceData.category.charAt(0).toUpperCase() + serviceData.category.slice(1),
+      };
+      await createService(formattedServiceData);
       await get().fetchServices();
       toast.success('Service created successfully!');
     } catch (error: any) {
@@ -115,7 +118,7 @@ export const useMarketplace = create<MarketplaceState>((set, get) => ({
   },
 
   setSelectedCategory: (category: string) => {
-    set({ selectedCategory: category });
+    set({ selectedCategory: category.charAt(0).toUpperCase() + category.slice(1) });
     const { services, searchTerm } = get();
     const filtered = filterServices(services, searchTerm, category);
     set({ filteredServices: filtered });

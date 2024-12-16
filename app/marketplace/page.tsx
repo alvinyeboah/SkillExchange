@@ -42,6 +42,8 @@ import { useServices } from "@/hooks/use-services";
 import Image from "next/image";
 import coin from "@/public/coin.png";
 import { useAuth } from "@/hooks/use-auth";
+import { useCommunityStore } from "@/hooks/useCommunityStore";
+import { useChallenges } from "@/hooks/use-challenges";
 
 export default function Marketplace() {
   const {
@@ -66,6 +68,20 @@ export default function Marketplace() {
     deliveryTime: "",
     category: "",
   });
+  const {
+    challenges,
+    isLoading: challengesLoading,
+    getChallenges,
+  } = useChallenges()
+  const { communityStats, isLoading: communityLoading, fetchCommunityStats } =
+    useCommunityStore()
+
+  useEffect(() => {
+    fetchServices()
+    getChallenges()
+    fetchCommunityStats()
+  }, [fetchServices, getChallenges, fetchCommunityStats])
+
 
   useEffect(() => {
     fetchServices();
@@ -203,11 +219,11 @@ export default function Marketplace() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span>Active Users</span>
-                  <span className="font-semibold">10,000+</span>
+                  <span className="font-semibold">{communityStats.activeUsers?.length}+</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span>Services Offered</span>
-                  <span className="font-semibold">5,000+</span>
+                  <span className="font-semibold">{services?.length}+</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span>Skills Exchanged</span>

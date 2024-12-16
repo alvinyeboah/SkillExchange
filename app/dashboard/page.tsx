@@ -1,79 +1,27 @@
 "use client";
 
 import { useEffect } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useDashboardStore } from "@/hooks/use-dashboard-store";
-import {
-  Loader2,
-  TrendingUp,
-  Users,
-  Briefcase,
-  Award,
-  Activity,
-} from "lucide-react";
-import {
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Legend,
-} from "recharts";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { StatCard } from "@/components/stat-card";
+import { useDashboardStore } from "@/hooks/use-dashboard-store";
+import { Loader2, Briefcase, Award } from 'lucide-react';
+import { useAuth } from "@/hooks/use-auth";
 
-interface Activity {
-  id: number;
-  user_id: number;
-  activity_type: 'post' | 'share';
-  description: string;
-  created_at: string;
-  status: 'pending' | 'completed' | 'failed';
-}
-
-interface ChartDataPoint {
-  hour: string;
-  post: number;
-  share: number;
-}
-
-
-export default function Dashboard() {
-  const {
-    stats,
-    isLoading,
-    error,
-    fetchDashboardStats,
-    fetchActivityData,
-    activityData,
-  } = useDashboardStore();
+export default function UserDashboard() {
+  const { stats, isLoading, error, fetchDashboardStats } = useDashboardStore();
+  const {user} = useAuth();
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        await fetchDashboardStats();
-        await fetchActivityData();
-      } catch (err) {
-        console.error('Error fetching dashboard data:', err);
-      }
-    };
+    if (user?.id) {
+      fetchDashboardStats(user.id);
+    }
+  }, [fetchDashboardStats, user?.id]);
 
-    fetchData();
-  }, [fetchDashboardStats, fetchActivityData]);
-
+  console.log(stats);
+  
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -93,190 +41,122 @@ export default function Dashboard() {
     );
   }
 
-  const processData = (data: Activity[]): ChartDataPoint[] => {
-    const activityCounts: Record<string, ChartDataPoint> = {};
-    
-    data?.forEach((item) => {
-      const date = new Date(item.created_at);
-      const hour = date.getHours();
-      const formattedHour = `${hour}:00`;
-      
-      if (!activityCounts[formattedHour]) {
-        activityCounts[formattedHour] = {
-          hour: formattedHour,
-          post: 0,
-          share: 0
-        };
-      }
-      
-      activityCounts[formattedHour][item.activity_type]++;
-    });
-
-    // Convert to array and sort by hour
-    return Object.values(activityCounts).sort((a, b) => {
-      return parseInt(a.hour) - parseInt(b.hour);
-    });
-  };
-  const chartData = processData(activityData);
-
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-4xl font-bold">Community Dashboard</h1>
-        <Button>Generate Report</Button>
-      </div>
+      <h1 className="text-4xl font-bold mb-8">My Dashboard</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard
-          title="Active Users"
-          value={stats?.total_users || 0}
-          description="Currently online and engaged"
-          icon={<Users className="h-6 w-6 text-blue-500" />}
-          trend="+5.2%"
-        />
-        <StatCard
-          title="Total Services"
-          value={stats?.total_services || 0}
-          description="Available on marketplace"
-          icon={<Briefcase className="h-6 w-6 text-green-500" />}
-          trend="+2.4%"
-        />
-        <StatCard
-          title="Active Challenges"
-          value={stats?.active_challenges || 0}
-          description="Ongoing community challenges"
-          icon={<Award className="h-6 w-6 text-yellow-500" />}
-          trend="+12.5%"
-        />
-        <StatCard
-          title="Total SkillCoins"
-          value={stats?.total_skillcoins || 0}
-          description="Circulating in the community"
-          icon={<Activity className="h-6 w-6 text-purple-500" />}
-          trend="+8.1%"
-        />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <Card>
-          <CardHeader>
-            <CardTitle>Community Activity</CardTitle>
-            <CardDescription>
-              Users and services over the past week
-            </CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              My SkillCoins
+            </CardTitle>
+            <Briefcase className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="hour"
-                  label={{
-                    value: "Time of Day",
-                    position: "bottom",
-                    offset: 0,
-                  }}
-                />
-                <YAxis
-                  label={{
-                    value: "Number of Activities",
-                    angle: -90,
-                    position: "insideLeft",
-                    offset: 10,
-                  }}
-                />
-                <Tooltip />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="post"
-                  stroke="#8884d8"
-                  name="Posts"
-                  strokeWidth={2}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="share"
-                  stroke="#82ca9d"
-                  name="Shares"
-                  strokeWidth={2}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            <div className="text-2xl font-bold">{stats?.skillcoins || 0}</div>
+            <p className="text-xs text-muted-foreground">
+              +{stats?.skillcoins_earned_this_week || 0} from last week
+            </p>
           </CardContent>
         </Card>
-
         <Card>
-          <CardHeader>
-            <CardTitle>Most Requested Skills</CardTitle>
-            <CardDescription>Based on marketplace activity</CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Active Services
+            </CardTitle>
+            <Briefcase className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <ScrollArea className="h-[300px] pr-4">
-              <ul className="space-y-4">
-                {stats?.popular_skills?.map((skill) => (
-                  <li
-                    key={skill.skill}
-                    className="flex justify-between items-center"
-                  >
-                    <span>{skill.skill}</span>
-                    <div className="flex items-center">
-                      <Progress
-                        value={skill.usage_count}
-                        max={100}
-                        className="w-24 mr-2"
-                      />
-                      <Badge variant="secondary">
-                        {skill.usage_count} requests
-                      </Badge>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </ScrollArea>
+            <div className="text-2xl font-bold">{stats?.active_services || 0}</div>
+            <p className="text-xs text-muted-foreground">
+              {stats?.my_services?.length || 0} total services
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Participating Challenges
+            </CardTitle>
+            <Award className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.participating_challenges.length || 0}</div>
+            <p className="text-xs text-muted-foreground">
+              {stats?.completed_challenges || 0} completed challenges
+            </p>
           </CardContent>
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Top Contributors</CardTitle>
-          <CardDescription>
-            Based on SkillCoins earned this week
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+      <Tabs defaultValue="my-services" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="my-services">My Services</TabsTrigger>
+          <TabsTrigger value="requested-services">Requested Services</TabsTrigger>
+          <TabsTrigger value="challenges">Challenges</TabsTrigger>
+        </TabsList>
+        <TabsContent value="my-services" className="space-y-4">
+          <h2 className="text-2xl font-semibold mb-4">My Services</h2>
           <ScrollArea className="h-[400px]">
-            <div className="space-y-8">
-              {stats?.leaderboard?.map((user, index) => (
-                <div
-                  key={`${user.id}-${user.username}`}
-                  className="flex items-center"
-                >
-                  <div className="flex items-center flex-1">
-                    <span className="font-bold mr-4 w-4">{index + 1}</span>
-                    <Avatar className="h-10 w-10 mr-4">
-                      <AvatarImage src={user.avatar_url} />
-                      <AvatarFallback>{user.username[0]}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-medium">{user.username}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {user.name || "Community Member"}
-                      </p>
-                    </div>
+            {stats?.my_services?.map((service) => (
+              <Card key={service.id} className="mb-4">
+                <CardHeader>
+                  <CardTitle>{service.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p>{service.description}</p>
+                  <div className="flex justify-between items-center mt-4">
+                    <Badge>{service.category}</Badge>
+                    <span className="font-semibold">{service.price} SkillCoins</span>
                   </div>
-                  <div className="flex items-center">
-                    <TrendingUp className="h-4 w-4 text-green-500 mr-2" />
-                    <span className="font-bold mr-2">{user.skillcoins}</span>
-                    <Badge variant="secondary">SkillCoins</Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
+                </CardContent>
+              </Card>
+            ))}
           </ScrollArea>
-        </CardContent>
-      </Card>
+          <Button>Add New Service</Button>
+        </TabsContent>
+        <TabsContent value="requested-services" className="space-y-4">
+          <h2 className="text-2xl font-semibold mb-4">Requested Services</h2>
+          <ScrollArea className="h-[400px]">
+            {stats?.requested_services?.map((service) => (
+              <Card key={service.id} className="mb-4">
+                <CardHeader>
+                  <CardTitle>{service.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p>{service.description}</p>
+                  <div className="flex justify-between items-center mt-4">
+                    <Badge>{service.status}</Badge>
+                    <span className="font-semibold">{service.price} SkillCoins</span>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </ScrollArea>
+          <Button>Request New Service</Button>
+        </TabsContent>
+        <TabsContent value="challenges" className="space-y-4">
+          <h2 className="text-2xl font-semibold mb-4">Participating Challenges</h2>
+          <ScrollArea className="h-[400px]">
+            {stats?.participating_challenges?.map((challenge) => (
+              <Card key={challenge.id} className="mb-4">
+                <CardHeader>
+                  <CardTitle>{challenge.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p>{challenge.description}</p>
+                  <div className="flex justify-between items-center mt-4">
+                    <Badge>{challenge.status}</Badge>
+                    <span className="font-semibold">Reward: {challenge.reward} SkillCoins</span>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </ScrollArea>
+          <Button>Find New Challenges</Button>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
