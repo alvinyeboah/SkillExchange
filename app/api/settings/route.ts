@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const [settings] = await withConnection(pool, async (connection) => {
+    const [settings] = await withConnection(async (connection) => {
       return await connection.query<RowDataPacket[]>(
         "SELECT * FROM UserSettings WHERE user_id = ?",
         [userId]
@@ -27,12 +27,13 @@ export async function GET(req: NextRequest) {
     }, "get user settings");
 
     if (settings.length === 0) {
-      await withConnection(pool, async (connection) => {
-        await connection.query("INSERT INTO UserSettings (user_id) VALUES (?)", [
-          userId,
-        ]);
+      await withConnection(async (connection) => {
+        await connection.query(
+          "INSERT INTO UserSettings (user_id) VALUES (?)",
+          [userId]
+        );
       }, "create user settings");
-      const [newSettings] = await withConnection(pool, async (connection) => {
+      const [newSettings] = await withConnection(async (connection) => {
         return await connection.query<RowDataPacket[]>(
           "SELECT * FROM UserSettings WHERE user_id = ?",
           [userId]
@@ -68,7 +69,7 @@ export async function PUT(req: NextRequest) {
       dataUsageConsent,
     } = await req.json();
 
-    await withConnection(pool, async (connection) => {
+    await withConnection(async (connection) => {
       await connection.query(
         `UPDATE UserSettings SET 
           email_notifications = ?,

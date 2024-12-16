@@ -3,12 +3,15 @@ import pool from "@/lib/db";
 import { RowDataPacket } from "mysql2";
 import { withConnection } from "@/lib/db";
 
-export async function GET(req: Request, props: { params: Promise<{ id: string }> }) {
+export async function GET(
+  req: Request,
+  props: { params: Promise<{ id: string }> }
+) {
   const params = await props.params;
   try {
-    const userId =  params.id;
+    const userId = params.id;
 
-    const [transactions] = await withConnection(pool, async (connection) => {
+    const [transactions] = await withConnection(async (connection) => {
       return await connection.query<RowDataPacket[]>(
         "SELECT * FROM Transactions WHERE from_user_id = ? OR to_user_id = ? ORDER BY transaction_date DESC",
         [userId, userId]

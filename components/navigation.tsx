@@ -43,6 +43,8 @@ export default function Header() {
   const menuItems = [
     { href: "/marketplace", label: "Marketplace" },
     { href: "/challenges", label: "Challenges" },
+    { href: "/stats", label: "Stats" },
+
   ];
 
   return (

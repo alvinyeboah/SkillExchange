@@ -34,11 +34,15 @@ export const useServices = create<ServicesState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await getServices();
-      set({ services: response, isLoading: false });
+      const updatedServices = response.map((service:any) => ({
+        ...service,
+        category: service.category.charAt(0).toUpperCase() + service.category.slice(1),
+      }));
+      set({ services: updatedServices, isLoading: false });
     } catch (error: any) {
       set({ error: "Failed to fetch services", isLoading: false });
     }
-  },
+},
 
   addService: async (serviceData) => {
     set({ isLoading: true, error: null });

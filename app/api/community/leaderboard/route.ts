@@ -4,7 +4,7 @@ import { RowDataPacket } from "mysql2";
 
 export async function GET(req: Request) {
   try {
-    return await withConnection(pool, async (connection) => {
+    return await withConnection(async (connection) => {
       const [leaderboard] = await connection.query<RowDataPacket[]>(`
         SELECT 
           Users.user_id, 

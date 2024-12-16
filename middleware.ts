@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { verifyJWT } from "./lib/jwt";
+import { jwtManager } from "@/lib/auth";
 
 const protectedRoutes = [
   "/dashboard",
@@ -10,56 +10,83 @@ const protectedRoutes = [
 
 const authRoutes = ["/auth/signin", "/auth/signup"];
 
-export async function middleware(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const authToken = request.cookies.get("authToken")?.value;
   
   const isProtectedRoute = protectedRoutes.some(
-    (route) => pathname.startsWith(route) || pathname === route
+    (route) => pathname === route || 
+    pathname.startsWith(`${route}/`) || 
+    (pathname.startsWith(route) && pathname.length > route.length)
   );
-  const isAuthRoute = authRoutes.some((route) => pathname === route);
+  
+  const isAuthRoute = authRoutes.some(
+    (route) => pathname === route
+  );
 
-  // Check protected routes first
-  if (isProtectedRoute) {
-    // If no token exists, redirect to sign in
-    if (!authToken) {
-      const redirectUrl = new URL("/auth/signin", request.url);
+  const createRedirectUrl = (path: string, message: string) => {
+    const redirectUrl = new URL(path, request.url);
+    if (message) {
+      redirectUrl.searchParams.set("message", message);
+    }
+    if (path === "/auth/signin") {
       redirectUrl.searchParams.set("from", pathname);
-      redirectUrl.searchParams.set(
-        "message",
-        "Please sign in to access this page"
-      );
-      return NextResponse.redirect(redirectUrl);
+    }
+    return redirectUrl;
+  };
+
+  // Synchronous token verification
+  const verifyToken = (token?: string) => {
+    if (!token) return null;
+    return jwtManager.verify(token);
+  };
+
+  try {
+    // Check protected routes
+    if (isProtectedRoute) {
+      if (!authToken) {
+        return NextResponse.redirect(
+          createRedirectUrl("/auth/signin", "Please sign in to access this page")
+        );
+      }
+
+      const decodedToken = verifyToken(authToken);
+      if (!decodedToken) {
+        const response = NextResponse.redirect(
+          createRedirectUrl("/auth/signin", "Your session has expired. Please sign in again")
+        );
+        response.cookies.delete("authToken");
+        return response;
+      }
     }
 
-    // Verify token validity
-    try {
-      await verifyJWT(authToken);
-    } catch (error) {
-      const redirectUrl = new URL("/auth/signin", request.url);
-      redirectUrl.searchParams.set("from", pathname);
-      redirectUrl.searchParams.set(
-        "message",
-        "Your session has expired. Please sign in again"
-      );
-      return NextResponse.redirect(redirectUrl);
+    // Handle auth routes
+    if (isAuthRoute && authToken) {
+      const decodedToken = verifyToken(authToken);
+      if (decodedToken) {
+        return NextResponse.redirect(createRedirectUrl("/dashboard", ""));
+      }
+      
+      // Clear invalid token on auth routes
+      const response = NextResponse.next();
+      response.cookies.delete("authToken");
+      return response;
     }
+
+    return NextResponse.next();
+  } catch (error) {
+    console.error("Middleware error:", error);
+    
+    const response = NextResponse.redirect(
+      createRedirectUrl("/auth/signin", "An error occurred. Please sign in again")
+    );
+    response.cookies.delete("authToken");
+    return response;
   }
-
-  // Handle auth routes - redirect to dashboard if already authenticated
-  if (isAuthRoute && authToken) {
-    try {
-      await verifyJWT(authToken);
-      return NextResponse.redirect(new URL("/dashboard", request.url));
-    } catch (error) {
-      // If token is invalid, allow access to auth routes
-      return NextResponse.next();
-    }
-  }
-
-  return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  matcher: [
+    "/((?!api|_next/static|_next/image|favicon.ico|public/|assets/).*)"
+  ],
 };

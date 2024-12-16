@@ -59,7 +59,6 @@ export const useMarketplace = create<MarketplaceState>((set, get) => ({
       });
     } catch (error: any) {
       set({ error: error.message, isLoading: false });
-      toast.error(`Service fetch failed: ${error.message}`);
     }
   },
 
@@ -71,7 +70,6 @@ export const useMarketplace = create<MarketplaceState>((set, get) => ({
       return service;
     } catch (error: any) {
       set({ error: error.message, isLoading: false });
-      toast.error(`Service fetch failed: ${error.message}`);
       return null;
     }
   },

@@ -2,13 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import pool, { withConnection } from "@/lib/db";
 import { RowDataPacket, ResultSetHeader } from "mysql2";
 
-export async function GET(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+export async function GET(
+  req: NextRequest,
+  props: { params: Promise<{ id: string }> }
+) {
   const params = await props.params;
 
   try {
     const { id: serviceId } = params;
 
-    return await withConnection(pool, async (connection) => {
+    return await withConnection(async (connection) => {
       const [reviews] = await connection.query<RowDataPacket[]>(
         `
         SELECT 
@@ -35,7 +38,10 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
   }
 }
 
-export async function POST(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+export async function POST(
+  req: NextRequest,
+  props: { params: Promise<{ id: string }> }
+) {
   const params = await props.params;
 
   try {
@@ -43,14 +49,18 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
     const { user_id, rating_value, review } = await req.json();
 
     // Validate rating
-    if (typeof rating_value !== "number" || rating_value < 1 || rating_value > 5) {
+    if (
+      typeof rating_value !== "number" ||
+      rating_value < 1 ||
+      rating_value > 5
+    ) {
       return NextResponse.json(
         { message: "Rating must be a number between 1 and 5" },
         { status: 400 }
       );
     }
 
-    return await withConnection(pool, async (connection) => {
+    return await withConnection(async (connection) => {
       // Insert review into database
       const [result] = await connection.query<ResultSetHeader>(
         "INSERT INTO Ratings (service_id, user_id, rating_value, review) VALUES (?, ?, ?, ?)",

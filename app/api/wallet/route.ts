@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Use withConnection to handle the database operations
-    return await withConnection(pool, async (connection) => {
+    return await withConnection(async (connection) => {
       await connection.beginTransaction();
 
       const [users] = await connection.query<RowDataPacket[]>(
@@ -80,7 +80,7 @@ export async function POST(req: Request) {
       await req.json();
 
     // Use withConnection to handle the database operations
-    await withConnection(pool, async (connection) => {
+    await withConnection(async (connection) => {
       // Insert a new transaction
       await connection.query(
         "INSERT INTO Transactions (from_user_id, to_user_id, service_id, skillcoins_transferred) VALUES (?, ?, ?, ?)",

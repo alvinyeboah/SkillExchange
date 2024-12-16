@@ -4,7 +4,7 @@ import { ResultSetHeader, RowDataPacket } from "mysql2";
 
 export async function GET(req: Request) {
   try {
-    return await withConnection(pool, async (connection) => {
+    return await withConnection(async (connection) => {
       const [challenges] = await connection.query<RowDataPacket[]>(
         "SELECT challenge_id, title,difficulty,category,skills, reward_skillcoins, start_date, end_date, created_at FROM Challenges ORDER BY start_date DESC"
       );
@@ -23,7 +23,7 @@ export async function DELETE(req: Request) {
   try {
     const { challenge_id } = await req.json();
 
-    return await withConnection(pool, async (connection) => {
+    return await withConnection(async (connection) => {
       const [result] = await connection.query<ResultSetHeader>(
         "DELETE FROM Challenges WHERE challenge_id = ?",
         [challenge_id]
@@ -51,16 +51,37 @@ export async function DELETE(req: Request) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { title, difficulty, category, skills, status, reward_skillcoins, start_date, end_date } = await req.json();
+    const {
+      title,
+      difficulty,
+      category,
+      skills,
+      status,
+      reward_skillcoins,
+      start_date,
+      end_date,
+    } = await req.json();
 
-    return await withConnection(pool, async (connection) => {
+    return await withConnection(async (connection) => {
       const [result] = await connection.query<ResultSetHeader>(
         "INSERT INTO Challenges (title, difficulty, category, skills, reward_skillcoins, start_date, end_date) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        [title, difficulty, category, skills, status, reward_skillcoins, start_date, end_date]
+        [
+          title,
+          difficulty,
+          category,
+          skills,
+          status,
+          reward_skillcoins,
+          start_date,
+          end_date,
+        ]
       );
 
       return NextResponse.json(
-        { message: "Challenge added successfully", challenge_id: result.insertId },
+        {
+          message: "Challenge added successfully",
+          challenge_id: result.insertId,
+        },
         { status: 201 }
       );
     }, "add challenge");

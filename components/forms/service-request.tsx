@@ -24,7 +24,7 @@ import { Loader2, Send } from 'lucide-react'
 const formSchema = z.object({
   requirements: z
     .string()
-    .min(50, { message: 'Requirements must be at least 50 characters.' })
+    .min(5, { message: 'Requirements must be at least 5 characters.' })
     .max(500, { message: 'Requirements must not exceed 500 characters.' }).optional(),
   deadline: z.string().refine((val) => !isNaN(Date.parse(val)), {
     message: 'Please enter a valid date',
@@ -64,8 +64,8 @@ export function ServiceRequestForm({ serviceId, providerId }: ServiceRequestForm
       
       toast.success('Request sent successfully!')
       form.reset()
-    } catch (error) {
-      toast.error('Failed to send request. Please try again.')
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to send request. Please try again.')
     } finally {
       setIsLoading(false)
     }

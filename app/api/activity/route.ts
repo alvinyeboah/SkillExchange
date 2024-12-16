@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import pool, { withConnection } from "@/lib/db";
 
 export async function GET() {
-  return withConnection(pool, async (connection) => {
+  return withConnection(async (connection) => {
     const [activityData] = await connection.query(`
       SELECT * FROM Activity WHERE status = 'pending'
     `);

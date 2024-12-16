@@ -7,7 +7,7 @@ export async function POST(req: Request) {
     const { username, email, password, name } = await req.json();
 
     // Check if the user already exists
-    const existingUser = await withConnection(pool, async (connection) => {
+    const existingUser = await withConnection(async (connection) => {
       const [result]: any = await connection.query(
         "SELECT * FROM Users WHERE email = ?",
         [email]
@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     const hashedPassword = await bcrypt.hash(password, 10);
     const defaultAvatarUrl = `https://api.dicebear.com/7.x/avatars/svg?seed=${username}`;
 
-    await withConnection(pool, async (connection) => {
+    await withConnection(async (connection) => {
       await connection.query(
         `INSERT INTO Users (
           username, 

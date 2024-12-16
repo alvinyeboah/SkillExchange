@@ -8,6 +8,10 @@ interface Challenge {
   reward_skillcoins: number;
   participants: number;
   timeLeft: string;
+  category:string;
+  skills:any;
+  difficulty:string;
+  
 }
 
 interface ChallengesState {

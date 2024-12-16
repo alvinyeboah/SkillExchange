@@ -27,7 +27,6 @@ import {
   Lightbulb,
   Trophy,
   Users,
-  Zap,
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -38,8 +37,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { ChallengeSubmissionForm } from "@/components/forms/challenge-submission";
-import { useChallenges } from "@/hooks/use-challenges";
+import coin from "@/public/coin.png";
+import Image from "next/image";
+
 
 export default function Challenges() {
   const { user } = useAuth();
@@ -103,9 +103,9 @@ export default function Challenges() {
 
     try {
       await participateInChallenge(challengeId, user.id);
-      toast.success("Successfully joined the challenge!");
+      console.log("Successfully joined the challenge!")
     } catch (error) {
-      toast.error("Failed to join challenge. Please try again.");
+      console.log("Failed to join challenge. Please try again.")
     }
   };
 
@@ -227,7 +227,11 @@ export default function Challenges() {
                     </p>
                     <div className="flex justify-between items-center mb-4">
                       <span className="flex items-center">
-                        <Trophy className="w-4 h-4 mr-1" />
+                      <Image
+                        alt="skillcoin-image"
+                        src={coin}
+                        className="w-8 h-8"
+                      />
                         {challenge.reward_skillcoins} SkillCoins
                       </span>
                       <span className="flex items-center">
@@ -250,15 +254,15 @@ export default function Challenges() {
                             >
                               <Avatar className="h-10 w-10 mb-1">
                                 <AvatarImage
-                                  src={participant.avatar}
-                                  alt={participant.name}
+                                  src={participant.avatar_url}
+                                  alt={participant.username}
                                 />
                                 <AvatarFallback>
-                                  {participant.name[0]}
+                                  {participant.username[0]}
                                 </AvatarFallback>
                               </Avatar>
                               <span className="text-sm">
-                                {participant.name}
+                                {participant.username}
                               </span>
                               <span className="text-xs text-muted-foreground">
                                 {participant.progress}%
@@ -444,7 +448,7 @@ export default function Challenges() {
         </div>
       </Tabs>
 
-      <div id="propose-challenge" className="mt-16 pt-8 border-t">
+      {/* <div id="propose-challenge" className="mt-16 pt-8 border-t">
         <h2 className="text-3xl font-bold mb-6">Propose a New Challenge</h2>
         <Card>
           <CardContent className="pt-6">
@@ -580,7 +584,7 @@ export default function Challenges() {
             </form>
           </CardContent>
         </Card>
-      </div>
+      </div> */}
     </div>
   );
 }

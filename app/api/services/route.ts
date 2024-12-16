@@ -15,7 +15,7 @@ export async function POST(req: Request) {
       revisions,
     } = await req.json();
 
-    return await withConnection(pool, async (connection) => {
+    return await withConnection(async (connection) => {
       const [result] = await connection.query<ResultSetHeader>(
         "INSERT INTO Services (user_id, title, description, skillcoin_price, delivery_time, tags, requirements, revisions) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
         [

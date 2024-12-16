@@ -1,8 +1,8 @@
-import { create } from 'zustand';
-import { toast } from 'sonner';
+import { create } from "zustand";
+import { toast } from "sonner";
 
 interface User {
-  id: number;
+  user_id: number;
   username: string;
   avatar_url: string;
 }
@@ -36,8 +36,8 @@ interface Challenge extends BaseChallenge {
     avatar: string;
   };
   topParticipants?: {
-    name: string;
-    avatar: string;
+    username: string;
+    avatar_url: string;
     progress: number;
   }[];
 }
@@ -51,7 +51,10 @@ interface ChallengesState {
   setChallenges: (challenges: Challenge[]) => void;
   fetchChallenges: () => Promise<void>;
   createChallenge: (challenge: BaseChallenge) => Promise<void>;
-  participateInChallenge: (challengeId: number, userId: number) => Promise<void>;
+  participateInChallenge: (
+    challengeId: number,
+    userId: number
+  ) => Promise<void>;
 }
 
 const normalizeSkills = (skills: string | string[] | undefined): string[] => {
@@ -65,12 +68,12 @@ const getChallengeStatus = (startDate: string, endDate: string) => {
   const start = new Date(startDate);
   const end = new Date(endDate);
 
-  if (now < start) return 'upcoming';
-  if (now > end) return 'completed';
-  return 'active';
+  if (now < start) return "upcoming";
+  if (now > end) return "completed";
+  return "active";
 };
 
-const sortByStartDate = (a: Challenge, b: Challenge) => 
+const sortByStartDate = (a: Challenge, b: Challenge) =>
   new Date(a.start_date).getTime() - new Date(b.start_date).getTime();
 
 export const useChallengesStore = create<ChallengesState>((set, get) => ({
@@ -86,20 +89,32 @@ export const useChallengesStore = create<ChallengesState>((set, get) => ({
     const upcoming: Challenge[] = [];
     const completed: Challenge[] = [];
 
-    challenges.forEach(challenge => {
-      const status = getChallengeStatus(challenge.start_date, challenge.end_date);
+    challenges.forEach((challenge) => {
+      const status = getChallengeStatus(
+        challenge.start_date,
+        challenge.end_date
+      );
       challenge.skills = normalizeSkills(challenge.skills);
-      
-      switch (status) {
-        case 'active':
-          active.push(challenge);
-          break;
-        case 'upcoming':
-          upcoming.push(challenge);
-          break;
-        case 'completed':
-          completed.push(challenge);
-          break;
+
+      // Capitalize the difficulty
+      if (challenge.difficulty) {
+        challenge.difficulty =
+          challenge.difficulty.charAt(0).toUpperCase() +
+          challenge.difficulty.slice(1);
+      }
+
+      if (status === "active") {
+        const now = new Date().getTime();
+        const start = new Date(challenge.start_date).getTime();
+        const end = new Date(challenge.end_date).getTime();
+        const progress = Math.round(
+          Math.min(100, Math.max(0, ((now - start) / (end - start)) * 100))
+        );
+        active.push({ ...challenge, progress });
+      } else if (status === "upcoming") {
+        upcoming.push(challenge);
+      } else if (status === "completed") {
+        completed.push(challenge);
       }
     });
 
@@ -107,7 +122,7 @@ export const useChallengesStore = create<ChallengesState>((set, get) => ({
       challenges,
       activeChallenges: active.sort(sortByStartDate),
       upcomingChallenges: upcoming.sort(sortByStartDate),
-      completedChallenges: completed.sort(sortByStartDate)
+      completedChallenges: completed.sort(sortByStartDate),
     });
   },
 
@@ -117,45 +132,47 @@ export const useChallengesStore = create<ChallengesState>((set, get) => ({
 
     try {
       // Fetch all data in parallel
-      const [challengesResponse, participantsResponse, usersResponse] = await Promise.all([
-        fetch('/api/challenges'),
-        fetch('/api/challenges/participate'),
-        fetch('/api/users')
-      ]);
+      const [challengesResponse, participantsResponse, usersResponse] =
+        await Promise.all([
+          fetch("/api/challenges"),
+          fetch("/api/challenges/participate"),
+          fetch("/api/users"),
+        ]);
 
-      if (!challengesResponse.ok || !participantsResponse.ok || !usersResponse.ok) {
-        throw new Error('Failed to fetch data');
+      if (
+        !challengesResponse.ok ||
+        !participantsResponse.ok ||
+        !usersResponse.ok
+      ) {
+        throw new Error("Failed to fetch data");
       }
 
-      const [challenges, participants, users]: [BaseChallenge[], Participant[], User[]] = await Promise.all([
+      const [challenges, participants, users]: [
+        BaseChallenge[],
+        Participant[],
+        User[]
+      ] = await Promise.all([
         challengesResponse.json(),
         participantsResponse.json(),
-        usersResponse.json()
+        usersResponse.json(),
       ]);
-
-      // Create a map of users for quick lookup
-      const userMap = new Map(users.map(user => [user.id, user]));
-
-      // Process challenges with participant data
-      const processedChallenges: Challenge[] = challenges.map(challenge => {
-        // Get participants for this challenge
+      const userMap = new Map(users.map((user) => [user.user_id, user]));
+      const processedChallenges: Challenge[] = challenges.map((challenge) => {
         const challengeParticipants = participants.filter(
-          p => p.challenge_id === (challenge as Challenge).challenge_id
+          (p) => p.challenge_id === (challenge as Challenge).challenge_id
         );
-
-        // Get unique participants count
-        const uniqueParticipants = new Set(challengeParticipants.map(p => p.user_id));
-        
-        // Get top 3 participants sorted by progress
+        const uniqueParticipants = new Set(
+          challengeParticipants.map((p) => p.user_id)
+        );
         const topParticipants = challengeParticipants
           .sort((a, b) => b.progress - a.progress)
           .slice(0, 3)
-          .map(p => {
+          .map((p) => {
             const user = userMap.get(p.user_id);
             return {
-              name: user?.username || 'Unknown User',
-              avatar: user?.avatar_url || '',
-              progress: p.progress
+              username: user?.username || "Unknown User",
+              avatar_url: user?.avatar_url || "",
+              progress: p.progress,
             };
           });
 
@@ -163,20 +180,20 @@ export const useChallengesStore = create<ChallengesState>((set, get) => ({
           ...challenge,
           challenge_id: (challenge as Challenge).challenge_id,
           participantsCount: uniqueParticipants.size,
-          topParticipants
+          topParticipants,
         };
       });
 
       setChallenges(processedChallenges);
       set({ isLoading: false });
     } catch (error: any) {
-      set({ 
-        error: error.message, 
+      set({
+        error: error.message,
         isLoading: false,
         challenges: [],
         activeChallenges: [],
         upcomingChallenges: [],
-        completedChallenges: []
+        completedChallenges: [],
       });
       toast.error(`Failed to fetch challenges: ${error.message}`);
     }
@@ -186,24 +203,32 @@ export const useChallengesStore = create<ChallengesState>((set, get) => ({
     set({ isLoading: true, error: null });
 
     try {
-      const response = await fetch('/api/challenges', {
-        method: 'POST',
+      // Capitalize the difficulty
+      const capitalizedDifficulty = challenge.difficulty
+        ? challenge.difficulty.charAt(0).toUpperCase() +
+          challenge.difficulty.slice(1)
+        : undefined;
+
+      const response = await fetch("/api/challenges", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           ...challenge,
-          skills: Array.isArray(challenge.skills) ? challenge.skills.join(',') : challenge.skills
+          difficulty: capitalizedDifficulty,
+          skills: Array.isArray(challenge.skills)
+            ? challenge.skills.join(",")
+            : challenge.skills,
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create challenge');
+        throw new Error("Failed to create challenge");
       }
 
       await get().fetchChallenges();
       set({ isLoading: false });
-
     } catch (error: any) {
       set({ error: error.message, isLoading: false });
       toast.error(`Failed to create challenge: ${error.message}`);
@@ -212,21 +237,21 @@ export const useChallengesStore = create<ChallengesState>((set, get) => ({
 
   participateInChallenge: async (challengeId: number, userId: number) => {
     try {
-      const response = await fetch('/api/challenges/participate', {
-        method: 'POST',
+      const response = await fetch("/api/challenges/participate", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ challenge_id: challengeId, user_id: userId }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to join challenge');
+        throw new Error(errorData.message || "Failed to join challenge");
       }
 
       await get().fetchChallenges();
-      toast.success('Successfully joined the challenge');
+      toast.success("Successfully joined the challenge");
     } catch (error: any) {
       toast.error(error.message);
       throw error;

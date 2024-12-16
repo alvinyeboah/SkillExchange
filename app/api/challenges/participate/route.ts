@@ -1,9 +1,7 @@
-
 import { NextRequest, NextResponse } from "next/server";
 import pool, { withConnection } from "@/lib/db";
 import { RowDataPacket } from "mysql2";
 import { authMiddleware } from "@/lib/middleware/authMiddleware";
-
 
 export async function POST(req: NextRequest) {
   const authResult = await authMiddleware(req);
@@ -12,7 +10,7 @@ export async function POST(req: NextRequest) {
   try {
     const { challenge_id, user_id } = await req.json();
 
-    return await withConnection(pool, async (connection) => {
+    return await withConnection(async (connection) => {
       const [[challenge]] = await connection.query<RowDataPacket[]>(
         `SELECT * FROM Challenges 
          WHERE challenge_id = ? 
@@ -61,15 +59,29 @@ export async function POST(req: NextRequest) {
   }
 }
 
-
 export async function GET(req: NextRequest) {
   try {
-    return await withConnection(pool, async (connection) => {
-      const [participants] = await connection.query<RowDataPacket[]>(
-        `SELECT challenge_id, user_id, progress, joined_at 
-         FROM ChallengeParticipation`
-      );
+    const url = new URL(req.url);
+    const userId = url.searchParams.get("user_id");
 
+    return await withConnection(async (connection) => {
+      let query = `
+        SELECT 
+          cp.challenge_id as id,
+          c.title,
+          c.description,
+          c.reward_skillcoins
+        FROM ChallengeParticipation cp
+        JOIN Challenges c ON cp.challenge_id = c.challenge_id
+      `;
+
+      const params: string[] = [];
+      if (userId) {
+        query += ` WHERE cp.user_id = ?`;
+        params.push(userId);
+      }
+
+      const [participants] = await connection.query(query, params);
       return NextResponse.json(participants, { status: 200 });
     }, "get participants");
   } catch (error: any) {

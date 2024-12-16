@@ -6,7 +6,7 @@ export async function POST(req: Request) {
   try {
     const { name, description, creator_id } = await req.json();
 
-    return await withConnection(pool, async (connection) => {
+    return await withConnection(async (connection) => {
       const [result] = await connection.query<ResultSetHeader>(
         "INSERT INTO Communities (name, description, creator_id) VALUES (?, ?, ?)",
         [name, description, creator_id]
