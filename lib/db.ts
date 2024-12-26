@@ -22,7 +22,7 @@ export async function withConnection<T>(
   const startTime = performance.now();
 
   try {
-    console.log(`[${label}] Starting operation`);
+    `[${label}] Starting operation`;
     connection = await pool.getConnection();
     const result = await operation(connection);
     const duration = Math.round(performance.now() - startTime);
@@ -33,7 +33,9 @@ export async function withConnection<T>(
     console.error(`[${label}] Failed after ${duration}ms:`, error);
 
     if (!(error instanceof Error)) {
-      throw new Error(`[${label}] Operation failed: ${String(error)}`, { cause: error });
+      throw new Error(`[${label}] Operation failed: ${String(error)}`, {
+        cause: error,
+      });
     }
     throw error;
   } finally {

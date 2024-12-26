@@ -1,3 +1,4 @@
+"use client"
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { login as apiLogin, logout as apiLogout } from '@/lib/api'
@@ -60,108 +61,125 @@ interface AuthState {
   updateUser: (user: User) => void
 }
 
-export const useAuth = create<AuthState>()(
-  persist(
-    (set, get) => ({
-      user: null,
-      isLoading: false,
-      error: null,
-      isInitialized: false,
+const useAuth =
+  typeof window !== "undefined"
+    ? create<AuthState>()(
+        persist(
+          (set, get) => ({
+        user: null,
+        isLoading: false,
+        error: null,
+        isInitialized: false,
 
-      login: async (email: string, password: string) => {
-        set({ isLoading: true, error: null })
-        try {
-          const response = await apiLogin({ email, password })
-          const authCheck = await fetch('/api/auth/check')
-          if (!authCheck.ok) {
-            throw new Error('Failed to verify authentication')
+        login: async (email: string, password: string) => {
+          set({ isLoading: true, error: null })
+          try {
+            const response = await apiLogin({ email, password })
+            const authCheck = await fetch('/api/auth/check')
+            if (!authCheck.ok) {
+              throw new Error('Failed to verify authentication')
+            }
+            const { user } = await authCheck.json()
+            set({ user, isLoading: false, isInitialized: true })
+          } catch (error: any) {
+            set({ error: error.message, isLoading: false })
+            throw error
           }
-          const { user } = await authCheck.json()
-          set({ user, isLoading: false, isInitialized: true })
-        } catch (error: any) {
-          set({ error: error.message, isLoading: false })
-          throw error
-        }
-      },
+        },
 
-      logout: async () => {
-        set({ isLoading: true, error: null })
-        try {
-          await apiLogout()
-          set({ user: null, isLoading: false })
-          window.location.href = '/auth/signin'
-        } catch (error: any) {
-          set({ error: error.message, isLoading: false })
-          throw error
-        }
-      },
+        logout: async () => {
+          set({ isLoading: true, error: null })
+          try {
+            await apiLogout()
+            set({ user: null, isLoading: false })
+            window.location.href = '/auth/signin'
+          } catch (error: any) {
+            set({ error: error.message, isLoading: false })
+            throw error
+          }
+        },
 
-      setUser: (user: User | null) => set({ user }),
-      clearError: () => set({ error: null }),
+        setUser: (user: User | null) => set({ user }),
+        clearError: () => set({ error: null }),
 
-      checkAuth: async () => {
-        try {
-          const response = await fetch('/api/auth/check');
-          if (response.ok) {
-            const { user } = await response.json();
-            set({ user, isInitialized: true });
-          } else {
-            // Clear everything if authentication fails
+        checkAuth: async () => {
+          try {
+            const response = await fetch('/api/auth/check');
+            if (response.ok) {
+              const { user } = await response.json();
+              set({ user, isInitialized: true });
+            } else {
+              // Clear everything if authentication fails
+              set({ user: null, isInitialized: true });
+              localStorage.removeItem('auth-storage');
+              window.location.href = '/auth/signin';
+            }
+          } catch {
+            // Clear everything on error
             set({ user: null, isInitialized: true });
             localStorage.removeItem('auth-storage');
             window.location.href = '/auth/signin';
           }
-        } catch {
-          // Clear everything on error
-          set({ user: null, isInitialized: true });
-          localStorage.removeItem('auth-storage');
-          window.location.href = '/auth/signin';
-        }
-      },
+        },
 
-      refreshUserData: async () => {
-        const currentUser = get().user
-        if (!currentUser?.id) return
+        refreshUserData: async () => {
+          const currentUser = get().user
+          if (!currentUser?.id) return
 
-        try {
-          const [userResponse, transactionsResponse, servicesResponse] = await Promise.all([
-            fetch(`/api/users/${currentUser.id}`),
-            fetch(`/api/transactions/${currentUser.id}`),
-            fetch(`/api/services/${currentUser.id}`)
-          ])
+          try {
+            const [userResponse, transactionsResponse, servicesResponse] = await Promise.all([
+              fetch(`/api/users/${currentUser.id}`),
+              fetch(`/api/transactions/${currentUser.id}`),
+              fetch(`/api/services/${currentUser.id}`)
+            ])
 
-          if (!userResponse.ok || !transactionsResponse.ok || !servicesResponse.ok) {
-            throw new Error('Failed to fetch user data')
+            if (!userResponse.ok || !transactionsResponse.ok || !servicesResponse.ok) {
+              throw new Error('Failed to fetch user data')
+            }
+
+            const [userData, transactionsData, servicesData] = await Promise.all([
+              userResponse.json(),
+              transactionsResponse.json(),
+              servicesResponse.json()
+            ])
+
+            const enrichedUser = {
+              ...userData,
+              transactions: transactionsData,
+              services: servicesData
+            }
+
+            set({ user: enrichedUser })
+          } catch (error: any) {
+            console.error('Failed to refresh user data:', error)
           }
+        },
 
-          const [userData, transactionsData, servicesData] = await Promise.all([
-            userResponse.json(),
-            transactionsResponse.json(),
-            servicesResponse.json()
-          ])
-
-          const enrichedUser = {
-            ...userData,
-            transactions: transactionsData,
-            services: servicesData
+        updateUser: (user: User) => set({ user })
+      }),
+      {
+        name: 'auth-storage',
+        partialize: (state) => ({ user: state.user }),
+        onRehydrateStorage: () => (state) => {
+          if (state?.user) {
+            state.checkAuth()
           }
-
-          set({ user: enrichedUser })
-        } catch (error: any) {
-          console.error('Failed to refresh user data:', error)
-        }
-      },
-
-      updateUser: (user: User) => set({ user })
-    }),
-    {
-      name: 'auth-storage',
-      partialize: (state) => ({ user: state.user }),
-      onRehydrateStorage: () => (state) => {
-        if (state?.user) {
-          state.checkAuth()
         }
       }
-    }
+    )
   )
-)
+  : (() => ({
+    user: null,
+    isLoading: false,
+    error: null,
+    isInitialized: false,
+    login: async () => {},
+    logout: async () => {},
+    setUser: () => {},
+    clearError: () => {},
+    refreshUserData: async () => {},
+    checkAuth: async () => {},
+    updateUser: () => {},
+  }));
+
+export { useAuth };

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { toast } from "sonner";
+import { useMemo } from 'react';
 
 interface User {
   user_id: number;
@@ -27,20 +28,28 @@ interface BaseChallenge {
 }
 
 // Extended challenge type with additional data
+interface ChallengeParticipant {
+  username: string;
+  avatar_url: string;
+  progress: number;
+  joined_at: string;
+}
+
+interface ChallengeWinner {
+  name: string;
+  avatar: string;
+  user_id: number;
+}
+
 interface Challenge extends BaseChallenge {
   challenge_id: number;
   participantsCount: number;
   progress?: number;
-  winner?: {
-    name: string;
-    avatar: string;
-  };
-  topParticipants?: {
-    username: string;
-    avatar_url: string;
-    progress: number;
-  }[];
+  winner?: ChallengeWinner;
+  topParticipants?: ChallengeParticipant[];
+  status: 'active' | 'upcoming' | 'completed';
 }
+
 interface ChallengesState {
   challenges: Challenge[];
   activeChallenges: Challenge[];
@@ -165,22 +174,24 @@ export const useChallengesStore = create<ChallengesState>((set, get) => ({
           challengeParticipants.map((p) => p.user_id)
         );
         const topParticipants = challengeParticipants
-          .sort((a, b) => b.progress - a.progress)
-          .slice(0, 3)
           .map((p) => {
             const user = userMap.get(p.user_id);
             return {
               username: user?.username || "Unknown User",
               avatar_url: user?.avatar_url || "",
               progress: p.progress,
+              joined_at: p.joined_at,
             };
-          });
+          })
+          .sort((a, b) => b.progress - a.progress)
+          .slice(0, 3);
 
         return {
           ...challenge,
           challenge_id: (challenge as Challenge).challenge_id,
           participantsCount: uniqueParticipants.size,
           topParticipants,
+          status: getChallengeStatus(challenge.start_date, challenge.end_date)
         };
       });
 

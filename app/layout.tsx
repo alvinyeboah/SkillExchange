@@ -19,11 +19,11 @@ const geistMono = localFont({
 
 export const metadata = {
   title: {
-    default: "SkillCoin - Simplified Service Exchange Platform",
+    default: "SkillExchange - Simplified Service Exchange Platform",
     template: "%s | SkillCoin",
   },
   description:
-    "SkillCoin is a platform for exchanging services using virtual SkillCoins. Earn, spend, and collaborate in a community-driven economy.",
+    "SkillExchange is a platform for exchanging services using virtual SkillCoins. Earn, spend, and collaborate in a community-driven economy.",
   icons: {
     icon: "/public/favicon.ico",
     shortcut: "/public/favicon.ico",
@@ -37,7 +37,7 @@ export const metadata = {
     ],
   },
   openGraph: {
-    title: "SkillCoin - Simplified Service Exchange Platform",
+    title: "SkillExchange - Simplified Service Exchange Platform",
     description:
       "Exchange services and collaborate in a community-driven ecosystem with SkillCoin.",
     url: "https://skillcoin.com",
@@ -46,8 +46,8 @@ export const metadata = {
       {
         url: "/og-image.png",
         width: 1200,
-        height: 630,
-        alt: "SkillCoin - Simplified Service Exchange Platform",
+        height: 1200,
+        alt: "SkillExchange - Simplified Service Exchange Platform",
       },
     ],
     locale: "en_US",
@@ -55,28 +55,29 @@ export const metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "SkillCoin - Simplified Service Exchange Platform",
+    title: "SkillExchange - Simplified Service Exchange Platform",
     description:
-      "SkillCoin is a platform for exchanging services using virtual SkillCoins. Earn, spend, and collaborate in a community-driven economy.",
+      "SkillExchange is a platform for exchanging services using virtual SkillCoins. Earn, spend, and collaborate in a community-driven economy.",
     images: ["/twitter-image.png"],
-    creator: "@SkillCoin",
+    creator: "@SkillExchange",
   },
   keywords: [
+    "SkillExchange",
     "SkillCoin",
     "service exchange",
     "community-driven economy",
     "virtual currency",
     "collaboration",
   ],
-  authors: [{ name: "SkillCoin Team" }],
-  creator: "SkillCoin Team",
-  publisher: "SkillCoin Inc.",
+  authors: [{ name: "SkillExchange Team" }],
+  creator: "Alvin Yeboah",
+  publisher: "SkillExchange Inc.",
   formatDetection: {
     email: false,
     address: false,
     telephone: false,
   },
-  metadataBase: new URL("https://skillcoin.com"),
+  metadataBase: new URL("https://SkillExchange.vercel.app"),
   alternates: {
     canonical: "/",
     languages: {
@@ -106,8 +107,12 @@ export default function RootLayout({
  
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="icon" type="image/x-icon" sizes="48x48" href="/favicon.ico" />
+        <script src="https://js.paystack.co/v1/inline.js"></script>
+      </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased transition-colors duration-300`}
       >
         <ThemeProvider
           attribute="class"

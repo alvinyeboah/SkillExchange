@@ -1,34 +1,40 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { usePathname, useRouter } from 'next/navigation';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { checkAuth, isInitialized, user } = useAuth();
+  const [isChecking, setIsChecking] = useState(true);
   const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
     const checkAuthentication = async () => {
       if (!isInitialized) {
-        await checkAuth();
+        try {
+          await checkAuth();
+        } catch (error) {
+          console.error('Auth check failed:', error);
+        }
       }
+      setIsChecking(false);
     };
     checkAuthentication();
   }, [isInitialized, checkAuth]);
 
   useEffect(() => {
-    if (isInitialized) {
+    if (!isChecking && isInitialized) {
       const isAuthPage = pathname.startsWith('/auth/');
       if (user && isAuthPage) {
         router.push('/');
       }
     }
-  }, [isInitialized, user, pathname, router]);
+  }, [isChecking, isInitialized, user, pathname, router]);
 
-  if (!isInitialized) {
+  if (isChecking || !isInitialized) {
     return <LoadingSpinner />;
   }
 

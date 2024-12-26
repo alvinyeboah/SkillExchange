@@ -41,6 +41,10 @@ body {
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 98%;
+    --spacing-scale: 0.25rem;
+    --transition-standard: 0.2s ease-in-out;
   }
 
   .dark {
@@ -76,6 +80,7 @@ body {
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
   * {
@@ -145,4 +150,15 @@ body {
       transform: translateY(0px);
     }
   }
+}
+
+
+.paystack-frame {
+  max-width: 400px !important;
+  max-height: 600px !important;
+  margin: auto;
+}
+
+.paystack-button {
+  z-index: 999999;
 }

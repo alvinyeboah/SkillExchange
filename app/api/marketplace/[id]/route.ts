@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
       const [services] = await connection.query<RowDataPacket[]>(
         `SELECT S.*, U.name, U.email, U.avatar_url
 FROM Services S
-WHERE S.user_id = ?;
+WHERE S.user_id = ? AND S.service_id > 0;
 `,
         [user_id]
       );
