@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
+    "@paystack/inline-js": "^2.22.1",
     "@radix-ui/react-avatar": "^1.1.1",
     "@radix-ui/react-context-menu": "^2.2.2",
     "@radix-ui/react-dialog": "^1.1.2",
@@ -58,6 +59,7 @@
     "react-intersection-observer": "^9.13.1",
     "react-particles": "^2.12.2",
     "react-particles2": "^2.4.3",
+    "react-paystack": "^6.0.0",
     "recharts": "^2.13.3",
     "shimmer-effects-react": "^1.0.4",
     "sonner": "^1.7.0",

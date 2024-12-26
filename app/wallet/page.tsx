@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, CreditCard, Gift, Users } from "lucide-react";
+import { Loader2, CreditCard, Gift, Users } from 'lucide-react';
 import coin from "@/public/coin.png";
 import Image from "next/image";
 import { motion } from "framer-motion";
@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/table";
 import Link from "next/link";
 import { useTransactions } from "@/hooks/use-transactions";
+import { AddFundsDialog } from '@/components/AddFundsDialog'
 
 export default function Wallet() {
   const { user } = useAuth();
@@ -64,7 +65,7 @@ export default function Wallet() {
       fetchWallet(user.id);
       fetchUsers();
       fetchUserTransactions(user.id);
-      getUserDonations(user.id)
+      getUserDonations(user.id);
     }
   }, [user?.id]);
 
@@ -126,7 +127,7 @@ export default function Wallet() {
             </div>
           </CardContent>
           <CardFooter className="justify-between">
-            <Button variant="outline">Add Funds</Button>
+            <AddFundsDialog />
             <Button variant="outline">Withdraw</Button>
           </CardFooter>
         </Card>
@@ -284,15 +285,16 @@ export default function Wallet() {
                     <TableHead>Date</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead>Amount</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead>Description</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {transactions.map((transaction, index) => (
                     <TableRow key={index}>
-                      <TableCell>{transaction.date}</TableCell>
+                      <TableCell>{new Date(transaction.transaction_date).toLocaleDateString()}</TableCell>
                       <TableCell>{transaction.type}</TableCell>
-                      <TableCell>{transaction.amount}</TableCell>
+                      <TableCell>{transaction.skillcoins_transferred}</TableCell>
+                      <TableCell>{transaction.description}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -344,3 +346,4 @@ export default function Wallet() {
     </div>
   );
 }
+

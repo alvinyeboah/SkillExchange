@@ -53,6 +53,7 @@ export async function GET(req: NextRequest): Promise<Response> {
           u.avatar_url 
         FROM Services s
         JOIN Users u ON s.user_id = u.user_id
+        WHERE s.service_id > 0
         ORDER BY s.created_at DESC`
           );
 

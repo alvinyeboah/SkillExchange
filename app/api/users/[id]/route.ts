@@ -43,7 +43,7 @@ export async function GET(req: Request, props: { params: Promise<{ id: string }>
       const [activeServices]: [RowDataPacket[], FieldPacket[]] = await connection.query(
         `SELECT COUNT(*) as count 
          FROM Services 
-         WHERE user_id = ? AND status = 'active'`,
+         WHERE user_id = ? AND service_id > 0 AND status = 'active'`,
         [id]
       );
 

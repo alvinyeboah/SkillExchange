@@ -10,7 +10,18 @@ const protectedRoutes = [
 
 const authRoutes = ["/auth/signin", "/auth/signup"];
 
-export function middleware(request: NextRequest) {
+const verifyToken = async (token?: string) => {
+  if (!token) return null;
+  try {
+    const payload = await jwtManager.verify(token);
+    return payload;
+  } catch (error) {
+    console.error('Token verification failed:', error);
+    return null;
+  }
+};
+
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const authToken = request.cookies.get("authToken")?.value;
   
@@ -35,12 +46,6 @@ export function middleware(request: NextRequest) {
     return redirectUrl;
   };
 
-  // Synchronous token verification
-  const verifyToken = (token?: string) => {
-    if (!token) return null;
-    return jwtManager.verify(token);
-  };
-
   try {
     // Check protected routes
     if (isProtectedRoute) {
@@ -50,7 +55,7 @@ export function middleware(request: NextRequest) {
         );
       }
 
-      const decodedToken = verifyToken(authToken);
+      const decodedToken = await verifyToken(authToken);
       if (!decodedToken) {
         const response = NextResponse.redirect(
           createRedirectUrl("/auth/signin", "Your session has expired. Please sign in again")
@@ -62,7 +67,7 @@ export function middleware(request: NextRequest) {
 
     // Handle auth routes
     if (isAuthRoute && authToken) {
-      const decodedToken = verifyToken(authToken);
+      const decodedToken = await verifyToken(authToken);
       if (decodedToken) {
         return NextResponse.redirect(createRedirectUrl("/dashboard", ""));
       }

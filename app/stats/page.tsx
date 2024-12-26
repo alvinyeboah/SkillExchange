@@ -39,8 +39,6 @@ export default function CommunityStats() {
     getChallenges,
   } = useChallenges();
   const { communityStats, isLoading: communityLoading, fetchCommunityStats, error } = useCommunityStore();
-  console.log("🚀 ~ CommunityStats ~ communityStats:", communityStats)
-  const { stats, isLoading: statsLoading } = useDashboardStore();
 
   useEffect(() => {
     fetchServices();
@@ -48,7 +46,7 @@ export default function CommunityStats() {
     fetchCommunityStats();
   }, [fetchServices, getChallenges, fetchCommunityStats]);
 
-  const isLoading = servicesLoading && communityLoading && challengesLoading && statsLoading;
+  const isLoading = servicesLoading && communityLoading && challengesLoading ;
 
   if (isLoading) {
     return (

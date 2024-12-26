@@ -9,7 +9,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { UserNav } from "./user-nav";
 import { NotificationsDropdown } from "./notifications-dropdown";
 import Image from "next/image";
-import logo from "@/public/logo.png";
+import logo from "@/public/coin.png";
 import {
   Popover,
   PopoverContent,
