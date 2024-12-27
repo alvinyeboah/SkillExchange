@@ -6,7 +6,6 @@ export async function POST(req: Request) {
     const { userId, amount, reference, transactionId } = await req.json();
 
     await withConnection(async (connection) => {
-      // Start transaction
       await connection.beginTransaction();
 
       try {

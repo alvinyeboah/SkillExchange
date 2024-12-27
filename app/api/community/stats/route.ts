@@ -8,7 +8,7 @@ export async function GET(req: Request) {
     );
 
     const [topProviders] = await connection.query(
-      "SELECT u.*, AVG(r.rating_value) as avg_rating FROM Users u LEFT JOIN Ratings r ON u.user_id = r.user_id GROUP BY u.user_id ORDER BY avg_rating DESC LIMIT 5"
+      "SELECT u.*, AVG(r.rating_value) as avg_rating FROM Users u LEFT JOIN Ratings r ON u.user_id = r.user_id WHERE u.user_id > 0 GROUP BY u.user_id ORDER BY avg_rating DESC LIMIT 5"
     );
 
     return NextResponse.json({

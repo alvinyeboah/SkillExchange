@@ -7,11 +7,11 @@ export async function GET(req: Request) {
   try {
     connection = await pool.getConnection();
     const [activeUsers] = await connection.query(
-      "SELECT COUNT(*) as count FROM Users WHERE updated_at > DATE_SUB(NOW(), INTERVAL 15 MINUTE)"
+      "SELECT COUNT(*) as count FROM Users WHERE updated_at > DATE_SUB(NOW(), INTERVAL 15 MINUTE) AND user_id > 0"
     );
 
     const [topProviders] = await connection.query(
-      "SELECT u.*, AVG(r.rating_value) as avg_rating FROM Users u LEFT JOIN Ratings r ON u.user_id = r.user_id GROUP BY u.user_id ORDER BY avg_rating DESC LIMIT 5"
+      "SELECT u.*, AVG(r.rating_value) as avg_rating FROM Users u LEFT JOIN Ratings r ON u.user_id = r.user_id WHERE u.user_id > 0 GROUP BY u.user_id ORDER BY avg_rating DESC LIMIT 5"
     );
 
     return NextResponse.json({

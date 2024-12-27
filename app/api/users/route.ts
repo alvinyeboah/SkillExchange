@@ -18,6 +18,7 @@ export async function GET(req: NextRequest) {
           avatar_url,
           email
          FROM Users 
+         WHERE user_id > 0
          ORDER BY username ASC`
       );
     }, "get user");

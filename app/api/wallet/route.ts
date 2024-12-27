@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
       await connection.beginTransaction();
 
       const [users] = await connection.query<RowDataPacket[]>(
-        "SELECT user_id, username, email, skillcoins FROM Users WHERE user_id = ?",
+        "SELECT user_id, username, email, skillcoins FROM Users WHERE user_id = ? AND user_id > 0",
         [userId]
       );
 

@@ -44,6 +44,12 @@ import coin from "@/public/coin.png";
 import { useAuth } from "@/hooks/use-auth";
 import { useCommunityStore } from "@/hooks/useCommunityStore";
 import { useChallenges } from "@/hooks/use-challenges";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export default function Marketplace() {
   const {
@@ -72,16 +78,18 @@ export default function Marketplace() {
     challenges,
     isLoading: challengesLoading,
     getChallenges,
-  } = useChallenges()
-  const { communityStats, isLoading: communityLoading, fetchCommunityStats } =
-    useCommunityStore()
+  } = useChallenges();
+  const {
+    communityStats,
+    isLoading: communityLoading,
+    fetchCommunityStats,
+  } = useCommunityStore();
 
   useEffect(() => {
-    fetchServices()
-    getChallenges()
-    fetchCommunityStats()
-  }, [fetchServices, getChallenges, fetchCommunityStats])
-
+    fetchServices();
+    getChallenges();
+    fetchCommunityStats();
+  }, [fetchServices, getChallenges, fetchCommunityStats]);
 
   useEffect(() => {
     fetchServices();
@@ -104,14 +112,20 @@ export default function Marketplace() {
       });
       toast.success("Service created successfully");
     } catch (error) {
+      console.error("Error creating service:", error);
       toast.error("Failed to create service");
+      return;
     }
   };
 
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-gray-900" role="status" aria-label="Loading..."></div>
+        <div
+          className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-gray-900"
+          role="status"
+          aria-label="Loading..."
+        ></div>
       </div>
     );
   }
@@ -219,7 +233,9 @@ export default function Marketplace() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span>Active Users</span>
-                  <span className="font-semibold">{communityStats.activeUsers?.length}+</span>
+                  <span className="font-semibold">
+                    {communityStats.activeUsers?.length}+
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span>Services Offered</span>
@@ -244,12 +260,30 @@ export default function Marketplace() {
                 <Button className="w-full" variant="outline">
                   Post a Service
                 </Button>
-                <Button className="w-full" variant="outline">
-                  Find a Mentor
-                </Button>
-                <Button className="w-full" variant="outline">
-                  Join a Skill Group
-                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button disabled className="w-full" variant="outline">
+                        Find a Mentor
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Coming soon</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button disabled className="w-full" variant="outline">
+                        Join a Skill Group
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Coming soon</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
             </CardContent>
           </Card>

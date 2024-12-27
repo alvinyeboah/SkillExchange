@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
 
     const [settings] = await withConnection(async (connection) => {
       return await connection.query<RowDataPacket[]>(
-        "SELECT * FROM UserSettings WHERE user_id = ?",
+        "SELECT * FROM UserSettings WHERE user_id = ? AND user_id > 0",
         [userId]
       );
     }, "get user settings");
@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
       }, "create user settings");
       const [newSettings] = await withConnection(async (connection) => {
         return await connection.query<RowDataPacket[]>(
-          "SELECT * FROM UserSettings WHERE user_id = ?",
+          "SELECT * FROM UserSettings WHERE user_id = ? AND user_id > 0",
           [userId]
         );
       }, "userSettings");
