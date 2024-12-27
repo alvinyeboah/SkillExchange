@@ -1,12 +1,13 @@
 import { create } from "zustand";
 import { getServices, createService } from "@/lib/api";
+import { toast } from "sonner";
 
 interface Service {
   service_id: any;
   title: string;
   description: string;
   category: string;
-  delivery_time:number;
+  delivery_time: number;
   skillcoin_price: number;
   provider_name: string;
   user_id: any;
@@ -34,23 +35,27 @@ export const useServices = create<ServicesState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await getServices();
-      const updatedServices = response.map((service:any) => ({
+      const updatedServices = response.map((service: any) => ({
         ...service,
-        category: service.category.charAt(0).toUpperCase() + service.category.slice(1),
+        category:
+          service.category.charAt(0).toUpperCase() + service.category.slice(1),
       }));
       set({ services: updatedServices, isLoading: false });
     } catch (error: any) {
       set({ error: "Failed to fetch services", isLoading: false });
     }
-},
+  },
 
   addService: async (serviceData) => {
     set({ isLoading: true, error: null });
     try {
       await createService(serviceData);
       await get().fetchServices();
+      set({ isLoading: false });
+      toast.success("Service added successfully");
     } catch (error: any) {
-      set({ error: "Failed to add service", isLoading: false });
+      set({ isLoading: false });
+      toast.error(error.message || "Failed to add service");
     }
   },
 }));

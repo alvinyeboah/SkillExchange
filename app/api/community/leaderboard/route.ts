@@ -15,6 +15,7 @@ export async function GET(req: Request) {
           COUNT(Ratings.rating_id) AS total_ratings
         FROM Users
         LEFT JOIN Ratings ON Ratings.user_id = Users.user_id
+        WHERE Users.user_id > 0
         GROUP BY Users.user_id
         ORDER BY total_skillcoins DESC, avg_rating DESC
         LIMIT 10

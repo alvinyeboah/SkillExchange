@@ -19,7 +19,8 @@ export async function GET(req: Request, props: { params: Promise<{ id: string }>
           created_at, 
           bio 
         FROM Users 
-        WHERE user_id = ?`,
+        WHERE user_id = ?
+        AND user_id > 0`,
           [id]
         );
 
@@ -34,7 +35,8 @@ export async function GET(req: Request, props: { params: Promise<{ id: string }>
       const [weeklySkillcoins]: [RowDataPacket[], FieldPacket[]] = await connection.query(
         `SELECT COALESCE(SUM(skillcoins), 0) as total 
          FROM Users 
-         WHERE user_id = ? 
+         WHERE user_id = ?
+         AND user_id > 0 
          AND created_at >= DATE_SUB(NOW(), INTERVAL 1 WEEK)`,
         [id]
       );
@@ -113,7 +115,7 @@ export async function DELETE(
   try {
     return await withConnection(async (connection) => {
       const [result] = await connection.query<ResultSetHeader>(
-        "DELETE FROM Users WHERE user_id = ?",
+        "DELETE FROM Users WHERE user_id = ? AND user_id > 0",
         [params.id]
       );
 

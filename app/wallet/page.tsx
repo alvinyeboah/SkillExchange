@@ -40,6 +40,7 @@ import {
 import Link from "next/link";
 import { useTransactions } from "@/hooks/use-transactions";
 import { AddFundsDialog } from '@/components/AddFundsDialog'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function Wallet() {
   const { user } = useAuth();
@@ -128,7 +129,16 @@ export default function Wallet() {
           </CardContent>
           <CardFooter className="justify-between">
             <AddFundsDialog />
-            <Button variant="outline">Withdraw</Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <Button disabled variant="outline">Withdraw</Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  Curently Unavalable
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </CardFooter>
         </Card>
 
@@ -137,18 +147,33 @@ export default function Wallet() {
             <CardTitle className="text-2xl">Quick Actions</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
+            <div className="flex flex-col space-y-5">
               <Button className="w-full justify-start" variant="ghost">
                 <Link className="flex space-x-3" href="#transactions">
                   <CreditCard className="mr-4 h-4 w-4" /> View Transactions
                 </Link>
               </Button>
-              <Button className="w-full justify-start" variant="ghost">
-                <Gift className="mr-2 h-4 w-4" /> Redeem SkillCoins
-              </Button>
-              <Button className="w-full justify-start" variant="ghost">
-                <Users className="mr-2 h-4 w-4" /> Invite Friends
-              </Button>
+              
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger >
+                    <Button disabled className="w-full justify-start" variant="ghost">
+                      <Gift className="mr-2 h-4 w-4" /> Redeem SkillCoins
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Coming Soon</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Button disabled className="w-full justify-start" variant="ghost">
+                      <Users className="mr-2 h-4 w-4" /> Invite Friends
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Coming Soon</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </CardContent>
         </Card>

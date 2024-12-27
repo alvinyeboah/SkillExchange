@@ -9,7 +9,7 @@ export async function POST(req: Request) {
     // Check if the user already exists
     const existingUser = await withConnection(async (connection) => {
       const [result]: any = await connection.query(
-        "SELECT * FROM Users WHERE email = ?",
+        "SELECT * FROM Users WHERE email = ? AND user_id > 0",
         [email]
       );
       return result;

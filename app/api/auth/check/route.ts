@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
 
     return await withConnection(async (connection) => {
       const [users] = (await connection.query<UserRow[]>(
-        "SELECT user_id, name, username, email, skillcoins, created_at, updated_at, role, status, avatar_url FROM Users WHERE user_id = ?",
+        "SELECT user_id, name, username, email, skillcoins, created_at, updated_at, role, status, avatar_url FROM Users WHERE user_id = ? AND user_id > 0",
         [payload.userId]
       )) as [UserRow[], any];
 

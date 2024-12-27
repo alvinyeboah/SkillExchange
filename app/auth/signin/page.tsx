@@ -19,7 +19,6 @@ import {
 } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/navigation";
 
-
 export default function SignInPage() {
   const router = useRouter();
   const { login, user } = useAuth();
@@ -28,15 +27,15 @@ export default function SignInPage() {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState(false);
 
-
-
   const toastShown = useRef(false);
   useEffect(() => {
     if (user && !loading) {
-      router.push("/"); 
+      const redirectTo =
+        new URLSearchParams(window.location.search).get("from") || "/";
+      router.push(redirectTo);
     }
-  }, []); 
-  
+  }, [user, loading, router]);
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const message = params.get("message");
@@ -53,9 +52,6 @@ export default function SignInPage() {
     try {
       await login(email, password);
       toast.success("Login successful!");
-      const redirectTo =
-        new URLSearchParams(window.location.search).get("redirect") || "/";
-      router.push(redirectTo);
     } catch (error: any) {
       setErrors({ server: error.message });
       toast.error(error.message || "An error occurred during login");

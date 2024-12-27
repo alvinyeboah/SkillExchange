@@ -27,7 +27,7 @@ export async function POST(req: Request) {
 
     return await withConnection(async (connection) => {
       const [users] = await connection.query<any[]>(
-        "SELECT user_id, name, username, email, skillcoins, created_at, updated_at, role, status, avatar_url, password_hash FROM Users WHERE email = ?",
+        "SELECT user_id, name, username, email, skillcoins, created_at, updated_at, role, status, avatar_url, password_hash FROM Users WHERE email = ? AND user_id > 0",
         [email]
       );
 
