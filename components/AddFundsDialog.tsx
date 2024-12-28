@@ -42,9 +42,7 @@ export function AddFundsDialog({ onSuccess }: { onSuccess?: () => void }) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const { user } = useAuth();
-  console.log("🚀 ~ AddFundsDialog ~ user:", user);
-  const { fetchWallet, creditWallet } = useWallet();
-  const { fetchUserTransactions, transactions } = useTransactions();
+  const { creditWallet } = useWallet();
   const publicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
 
   const handlePaymentSuccess = async (response: {

@@ -71,6 +71,7 @@ import coin from "@/public/coin.png";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useMarketplace } from "@/hooks/use-marketplace";
 import { useChallengeSubmissions } from "@/hooks/use-challenge-submissions";
+import { ProtectedRoute } from "@/components/protected-route";
 
 const formSchema = z.object({
   title: z.string().min(2, {
@@ -197,6 +198,8 @@ export default function UserDashboard() {
 
   if (!isLoading && user && !user.email) {
     return (
+
+
       <div className="container mx-auto py-10">
         <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
           Please complete your profile with an email address to access the
@@ -316,6 +319,7 @@ export default function UserDashboard() {
   );
 
   return (
+    <ProtectedRoute>
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-4xl font-bold mb-8">My Dashboard</h1>
 
@@ -702,5 +706,6 @@ export default function UserDashboard() {
         </Dialog>
       )}
     </div>
+    </ProtectedRoute>
   );
 }
