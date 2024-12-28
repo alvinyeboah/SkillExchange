@@ -38,23 +38,24 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { ServiceForm } from "@/components/forms/service-form";
-import { useServices } from "@/hooks/use-services";
 import Image from "next/image";
 import coin from "@/public/coin.png";
 import { useAuth } from "@/hooks/use-auth";
-import { useCommunityStore } from "@/hooks/useCommunityStore";
-import { useChallenges } from "@/hooks/use-challenges";
+import { useCommunityStore } from "@/hooks/useCommunityStatsStore";
+
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useChallengesStore } from "@/hooks/use-challenges-store";
 
 export default function Marketplace() {
   const {
     filteredServices,
     isLoading,
+    services,
     error,
     searchTerm,
     selectedCategory,
@@ -64,7 +65,6 @@ export default function Marketplace() {
     setSelectedCategory,
   } = useMarketplace();
 
-  const { services, fetchServices: fetchServicesFromServices } = useServices();
   const { user } = useAuth();
   const router = useRouter();
   const [newListing, setNewListing] = useState({
@@ -77,8 +77,8 @@ export default function Marketplace() {
   const {
     challenges,
     isLoading: challengesLoading,
-    getChallenges,
-  } = useChallenges();
+    fetchChallenges,
+  } = useChallengesStore();
   const {
     communityStats,
     isLoading: communityLoading,
@@ -87,14 +87,14 @@ export default function Marketplace() {
 
   useEffect(() => {
     fetchServices();
-    getChallenges();
+    fetchChallenges();
     fetchCommunityStats();
-  }, [fetchServices, getChallenges, fetchCommunityStats]);
+  }, [fetchServices, fetchChallenges, fetchCommunityStats]);
 
   useEffect(() => {
     fetchServices();
-    fetchServicesFromServices();
-  }, [fetchServices, fetchServicesFromServices]);
+    fetchServices();
+  }, [fetchServices, fetchServices]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,6 +102,7 @@ export default function Marketplace() {
       await createNewService({
         ...newListing,
         skillcoinPrice: Number(newListing.skillcoinPrice),
+        deliveryTime: Number(newListing.deliveryTime),
       });
       setNewListing({
         title: "",
@@ -234,7 +235,7 @@ export default function Marketplace() {
                 <div className="flex justify-between items-center">
                   <span>Active Users</span>
                   <span className="font-semibold">
-                    {communityStats.activeUsers?.length}+
+                    {communityStats.activeUsers}+
                   </span>
                 </div>
                 <div className="flex justify-between items-center">

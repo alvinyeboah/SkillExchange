@@ -34,7 +34,6 @@ const fundOptions = [
 ];
 
 export function AddFundsDialog() {
-  const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
   const [selectedOption, setSelectedOption] = useState<null | {
     amount: number;
@@ -44,13 +43,8 @@ export function AddFundsDialog() {
   const [isProcessing, setIsProcessing] = useState(false);
   const { user } = useAuth();
   const { fetchWallet } = useWallet();
-  const {fetchUserTransactions, transactions} = useTransactions();
-  const publicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
-
-  // Add useEffect to handle mounting
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const { fetchUserTransactions, transactions } = useTransactions();
+  const publicKey = process.env.PAYSTACK_PUBLIC_KEY;
 
   const handlePaymentSuccess = async (response: {
     reference: string;
@@ -66,7 +60,7 @@ export function AddFundsDialog() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          userId: user?.id,
+          userId: user?.user_id,
           amount: response.amount,
           reference: response.reference,
           transactionId: response.trans,
@@ -76,9 +70,9 @@ export function AddFundsDialog() {
       if (!apiResponse.ok) {
         throw new Error("Failed to credit wallet");
       }
-      if (user?.id) {
-        fetchWallet(user.id);
-        fetchUserTransactions(user.id);
+      if (user?.user_id) {
+        fetchWallet(user?.user_id);
+        fetchUserTransactions(user?.user_id);
       }
       toast.success(
         `Successfully added ${response.amount} SkillCoins to your wallet!`
@@ -134,10 +128,6 @@ export function AddFundsDialog() {
     };
   };
 
-  // Modify the render method to check for mounted state
-  if (!mounted) {
-    return null; // or a loading spinner
-  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -186,7 +176,7 @@ export function AddFundsDialog() {
                     </div>
                   </CardContent>
                   <CardFooter className="bg-muted/50 p-3">
-                    {mounted && user?.email && publicKey ? (
+                    {user?.email && publicKey ? (
                       <PaystackButton
                         {...(handlePaystackButtonProps(option) as any)}
                         className="w-full"

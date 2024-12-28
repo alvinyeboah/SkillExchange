@@ -51,16 +51,45 @@ export default function SignInPage() {
 
     try {
       await login(email, password);
-      toast.success("Login successful!");
+      toast.success("Login successful! Redirecting...");
     } catch (error: any) {
-      setErrors({ server: error.message });
-      toast.error(error.message || "An error occurred during login");
+      console.log(error);
+      switch (error.message) {
+        case "Email not confirmed":
+          toast.error("Please verify your email before signing in.");
+          break;
+        case "Invalid credentials":
+          toast.error("Invalid email or password. Please try again.");
+          break;
+        case "OAuth error":
+          toast.error(
+            "There was a problem signing in with your provider. Please try again."
+          );
+          break;
+        case "JWT error":
+          toast.error(
+            "Authentication configuration error. Please contact support."
+          );
+          break;
+        case "Network error":
+          toast.error(
+            "Network error. Please check your connection and try again."
+          );
+          break;
+        case "Session verification failed":
+          toast.error(
+            "Session verification failed. Please try signing in again."
+          );
+          break;
+        default:
+          toast.error("An error occurred during sign in. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  return (
+   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-background">
       <motion.div
         initial={{ opacity: 0, x: -50 }}

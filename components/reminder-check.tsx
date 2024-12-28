@@ -1,24 +1,24 @@
-"use client"
+"use client";
 
-import { useEffect } from 'react'
-import { useAuth } from '@/hooks/use-auth'
-import { useReminders } from '@/hooks/use-reminders-store'
-import { toast } from 'sonner'
+import { useEffect } from "react";
+import { useAuth } from "@/hooks/use-auth";
+import { useReminders } from "@/hooks/use-reminders-store";
+import { toast } from "sonner";
 
 export function ReminderCheck() {
-  const { user } = useAuth()
-  const { fetchReminders } = useReminders()
+  const { user } = useAuth();
+  const { fetchReminders } = useReminders();
 
   useEffect(() => {
-    if (user?.id) {
-      fetchReminders(user.id)
+    if (user?.user_id) {
+      fetchReminders(user?.user_id);
       const interval = setInterval(() => {
-        fetchReminders(user.id) 
-      }, 60000) 
+        fetchReminders(user?.user_id);
+      }, 60000);
 
-      return () => clearInterval(interval)
+      return () => clearInterval(interval);
     }
-  }, [user?.id, fetchReminders])
+  }, [user?.user_id, fetchReminders]);
 
-  return null
-} 
+  return null;
+}

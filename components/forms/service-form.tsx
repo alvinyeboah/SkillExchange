@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useServices } from "@/hooks/use-services";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,11 +13,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useMarketplace } from "@/hooks/use-marketplace";
 
 export function ServiceForm() {
   const [category, setCategory] = useState<string>("");
   const { user } = useAuth();
-  const { addService } = useServices();
+  const { createNewService } = useMarketplace();
+
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -29,14 +30,14 @@ export function ServiceForm() {
     const formData = new FormData(e.currentTarget);
 
     try {
-      await addService({
-        user_id: user.id,
-        title: formData.get("title"),
-        description: formData.get("description"),
-        skillcoin_price: Number(formData.get("price")),
-        delivery_time: Number(formData.get("delivery_time")),
+      await createNewService({
+        user_id: user?.user_id,
+        title: formData.get("title") as string,
+        description: formData.get("description") as string,
+        skillcoinPrice: Number(formData.get("price")),
+        deliveryTime: Number(formData.get("delivery_time")),
         category,
-        requirements: formData.get("requirements"),
+        requirements: formData.get("requirements")?.toString(),
       });
     } catch (error) {
       // Error is already handled in the hook

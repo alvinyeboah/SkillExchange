@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface AchievementsListProps {
-  userId: number;
+  userId: string;
 }
 
 export function AchievementsList({ userId }: AchievementsListProps) {
@@ -30,15 +30,15 @@ export function AchievementsList({ userId }: AchievementsListProps) {
         <Card key={achievement.achievement_id}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              {achievement.title}
+              {achievement.achievement.title}
               <Badge variant="secondary">
-                +{achievement.skillcoins_reward} SkillCoins
+                +{achievement.achievement.skillcoins_reward} SkillCoins
               </Badge>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              {achievement.description}
+              {achievement.achievement.description}
             </p>
           </CardContent>
         </Card>

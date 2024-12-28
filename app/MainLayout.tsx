@@ -10,21 +10,9 @@ import { Toaster } from "@/components/providers/toaster";
 import { ThemeProvider } from "@/components/providers/theme-provider"
 
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
-  const [someState, setSomeState] = useState(false);
-
   const { checkAuth } = useAuth()
   const pathname = usePathname()
   const isAuthPage = pathname.startsWith('/auth')
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      checkAuth()
-    }, 5 * 60 * 1000) // Check every 5 minutes
-
-    return () => clearInterval(interval)
-  }, [checkAuth])
-
-
   return (
     <>
       {!isAuthPage && <Header />}
