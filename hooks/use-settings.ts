@@ -36,6 +36,15 @@ interface SettingsState {
       Omit<UserSettings, "setting_id" | "user_id" | "created_at" | "updated_at">
     >
   ) => Promise<void>;
+  updateUserProfile: (
+    userId: string,
+    userData: {
+      name: string;
+      username: string;
+      bio: string;
+      email: string;
+    }
+  ) => Promise<void>;
 }
 
 export const useSettings = create<SettingsState>((set) => ({
@@ -111,6 +120,21 @@ export const useSettings = create<SettingsState>((set) => ({
         settings: data,
         isLoading: false,
       }));
+    } catch (error: any) {
+      set({ error: error.message, isLoading: false });
+    }
+  },
+
+  updateUserProfile: async (userId: string, userData) => {
+    set({ isLoading: true, error: null });
+    try {
+      const { error } = await supabase
+        .from("Users")
+        .update(userData)
+        .eq("user_id", userId);
+
+      if (error) throw error;
+      set({ isLoading: false });
     } catch (error: any) {
       set({ error: error.message, isLoading: false });
     }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -70,7 +70,6 @@ import {
 import coin from "@/public/coin.png";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useMarketplace } from "@/hooks/use-marketplace";
-import { Service } from "@/types/database.types";
 import { useChallengeSubmissions } from "@/hooks/use-challenge-submissions";
 
 const formSchema = z.object({
@@ -93,7 +92,7 @@ const formSchema = z.object({
 
 export default function UserDashboard() {
   const { user, isLoading, error } = useAuth();
-  const {addSubmission} = useChallengeSubmissions();
+  const { addSubmission } = useChallengeSubmissions();
   const { editService } = useMarketplace();
 
   const [submitting, setSubmitting] = useState<number | null>(null);
@@ -115,6 +114,8 @@ export default function UserDashboard() {
       delivery_time: 0,
     },
   });
+
+  console.log(user, "but email exists")
 
   const handleFileChange = (
     challengeId: number,
@@ -180,6 +181,12 @@ export default function UserDashboard() {
     }
   };
 
+  useEffect(() => {
+    if (user && !user.email) {
+      toast.error("Please complete your profile with an email address");
+    }
+  }, [user]);
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -188,12 +195,26 @@ export default function UserDashboard() {
     );
   }
 
-  if (error) {
+  // if (error) {
+  //   return (
+  //     <div className="container mx-auto px-4 py-12">
+  //       <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+  //         <strong className="font-bold">Error:</strong>
+  //         <span className="block sm:inline"> {error}</span>
+  //       </div>
+  //     </div>
+  //   );
+  // }
+
+  if (!isLoading && user && !user.email) {
     return (
-      <div className="container mx-auto px-4 py-12">
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
-          <strong className="font-bold">Error:</strong>
-          <span className="block sm:inline"> {error}</span>
+      <div className="container mx-auto py-10">
+        <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
+          Please complete your profile with an email address to access the
+          dashboard.
+          <Button asChild className="ml-4">
+            <Link href="/profile">Complete Profile</Link>
+          </Button>
         </div>
       </div>
     );
@@ -509,10 +530,7 @@ export default function UserDashboard() {
                 <p className="text-lg text-muted-foreground">
                   No requested services yet
                 </p>
-                <Button
-                  asChild
-                  className="mt-4"
-                >
+                <Button asChild className="mt-4">
                   <Link href="/marketplace">Request Your First Service</Link>
                 </Button>
               </div>
@@ -637,7 +655,10 @@ export default function UserDashboard() {
                 Fill in the details to request a service
               </DialogDescription>
             </DialogHeader>
-            <ServiceRequestForm providerId="" onClose={() => setShowRequestForm(false)} />
+            <ServiceRequestForm
+              providerId=""
+              onClose={() => setShowRequestForm(false)}
+            />
           </DialogContent>
         </Dialog>
       )}

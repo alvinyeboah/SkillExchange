@@ -43,8 +43,14 @@ export default function SettingsPage() {
   const { user, updateUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
 
-  const { settings, isLoading, error, fetchSettings, updateSettings } =
-    useSettings();
+  const {
+    settings,
+    isLoading,
+    error,
+    fetchSettings,
+    updateSettings,
+    updateUserProfile,
+  } = useSettings();
 
   useEffect(() => {
     if (user?.user_id) {
@@ -65,7 +71,9 @@ export default function SettingsPage() {
   const handleFrequencyUpdate = async (value: string) => {
     if (!user?.user_id) return;
     try {
-      // await updateSettings(user?.user_id, { notificationFrequency: value as 'realtime' | 'daily' | 'weekly' })
+      await updateSettings(user?.user_id, {
+        notification_frequency: value as "realtime" | "daily" | "weekly",
+      });
       toast.success("Notification frequency updated");
     } catch (error) {
       toast.error("Failed to update notification frequency");
@@ -91,19 +99,12 @@ export default function SettingsPage() {
   const handleProfileUpdate = async (formData: FormData) => {
     if (!user?.user_id) return;
     try {
-      const profileData = {
-        fullName: formData.get("fullName") as string,
+      await updateUserProfile(user.user_id, {
+        name: formData.get("fullName") as string,
         username: formData.get("username") as string,
         bio: formData.get("bio") as string,
-        skills: formData.get("skills") as string,
         email: formData.get("email") as string,
-      };
-      await fetch(`/api/users/${user?.user_id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(profileData),
       });
-
       toast.success("Profile updated successfully");
     } catch (error) {
       toast.error("Failed to update profile");
