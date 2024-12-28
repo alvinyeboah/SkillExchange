@@ -115,7 +115,7 @@ export default function UserDashboard() {
     },
   });
 
-  console.log(user, "but email exists")
+  console.log(user, "but email exists");
 
   const handleFileChange = (
     challengeId: number,
@@ -182,10 +182,10 @@ export default function UserDashboard() {
   };
 
   useEffect(() => {
-    if (user && !user.email) {
+    if (!isLoading && user && !user.email) {
       toast.error("Please complete your profile with an email address");
     }
-  }, [user]);
+  }, [user, isLoading]);
 
   if (isLoading) {
     return (
@@ -194,17 +194,6 @@ export default function UserDashboard() {
       </div>
     );
   }
-
-  // if (error) {
-  //   return (
-  //     <div className="container mx-auto px-4 py-12">
-  //       <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
-  //         <strong className="font-bold">Error:</strong>
-  //         <span className="block sm:inline"> {error}</span>
-  //       </div>
-  //     </div>
-  //   );
-  // }
 
   if (!isLoading && user && !user.email) {
     return (
