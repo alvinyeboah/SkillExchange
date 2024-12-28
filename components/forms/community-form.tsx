@@ -21,8 +21,8 @@ export function CommunityForm() {
 
     try {
       await addCommunity({
-        name: formData.get("name"),
-        description: formData.get("description"),
+        name: formData.get("name") as string,
+        description: formData.get("description") as string,
         creator_id: user?.user_id,
       });
 

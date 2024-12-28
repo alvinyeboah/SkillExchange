@@ -29,8 +29,8 @@ export function ChallengeSubmissionForm({
       await addSubmission({
         challenge_id: challengeId,
         user_id: user?.user_id,
-        content: formData.get("content"),
-        submission_url: formData.get("submission_url"),
+        content: formData.get("content") as string,
+        submission_url: (formData.get("submission_url") as string) || "",
       });
 
       toast.success("Submission created successfully!");

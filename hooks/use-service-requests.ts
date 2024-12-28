@@ -1,15 +1,15 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 import { createClient } from "@/utils/supabase/client";
 
 const supabase = createClient();
 
 // Enum for request status
 export enum RequestStatus {
-  PENDING = 'pending',
-  ACCEPTED = 'accepted',
-  REJECTED = 'rejected',
-  COMPLETED = 'completed',
-  CANCELLED = 'cancelled'
+  PENDING = "pending",
+  ACCEPTED = "accepted",
+  REJECTED = "rejected",
+  COMPLETED = "completed",
+  CANCELLED = "cancelled",
 }
 
 // DTO for creating a new service request
@@ -23,7 +23,8 @@ interface CreateServiceRequestDTO {
 }
 
 // Full service request interface
-interface ServiceRequest extends Omit<CreateServiceRequestDTO, 'requester_id' | 'provider_id'> {
+interface ServiceRequest
+  extends Omit<CreateServiceRequestDTO, "requester_id" | "provider_id"> {
   request_id: number;
   requester_id: string;
   provider_id: string;
@@ -38,11 +39,13 @@ interface ServiceRequestsState {
   requests: ServiceRequest[];
   isLoading: boolean;
   error: string | null;
-  addRequest: (requestData: CreateServiceRequestDTO) => Promise<ServiceRequest | null>;
+  addRequest: (
+    requestData: CreateServiceRequestDTO
+  ) => Promise<ServiceRequest | null>;
   fetchUserRequests: (userId: string, asProvider?: boolean) => Promise<void>;
   updateRequestStatus: (
-    requestId: number, 
-    status: RequestStatus, 
+    requestId: number,
+    status: RequestStatus,
     notes?: string
   ) => Promise<void>;
   fetchRequestById: (requestId: number) => Promise<ServiceRequest | null>;
@@ -58,31 +61,45 @@ export const useServiceRequests = create<ServiceRequestsState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       // Validate request data
-      if (!requestData.service_id || !requestData.requester_id || !requestData.provider_id) {
-        throw new Error('Missing required request fields');
+      if (
+        !requestData.service_id ||
+        !requestData.requester_id ||
+        !requestData.provider_id
+      ) {
+        throw new Error("Missing required request fields");
+      }
+
+      // Check if user is requesting service from themselves
+      if (requestData.requester_id === requestData.provider_id) {
+        throw new Error("You cannot request services from yourself");
       }
 
       const { data: newRequest, error } = await supabase
-        .from('service_requests')
-        .insert([{
-          ...requestData,
-          status: RequestStatus.PENDING
-        }])
-        .select('*')
+        .from("ServiceRequests")
+        .insert([
+          {
+            ...requestData,
+            status: RequestStatus.PENDING,
+          },
+        ])
+        .select("*")
         .single();
 
       if (error) throw new Error(error.message);
 
       set((state) => ({
         requests: [...state.requests, newRequest as ServiceRequest],
-        isLoading: false
+        isLoading: false,
       }));
 
       return newRequest as ServiceRequest;
     } catch (error) {
-      set({ 
-        error: error instanceof Error ? error.message : 'Failed to add service request', 
-        isLoading: false 
+      set({
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to add service request",
+        isLoading: false,
       });
       throw error; // Re-throw for component handling
     }
@@ -92,21 +109,22 @@ export const useServiceRequests = create<ServiceRequestsState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const { data: requests, error } = await supabase
-        .from('service_requests')
-        .select('*')
-        .eq(asProvider ? 'provider_id' : 'requester_id', userId)
-        .order('created_at', { ascending: false });
+        .from("ServiceRequests")
+        .select("*")
+        .eq(asProvider ? "provider_id" : "requester_id", userId)
+        .order("created_at", { ascending: false });
 
       if (error) throw new Error(error.message);
 
-      set({ 
-        requests: requests as ServiceRequest[], 
-        isLoading: false 
+      set({
+        requests: requests as ServiceRequest[],
+        isLoading: false,
       });
     } catch (error) {
-      set({ 
-        error: error instanceof Error ? error.message : 'Failed to fetch requests', 
-        isLoading: false 
+      set({
+        error:
+          error instanceof Error ? error.message : "Failed to fetch requests",
+        isLoading: false,
       });
     }
   },
@@ -115,18 +133,19 @@ export const useServiceRequests = create<ServiceRequestsState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const { data: request, error } = await supabase
-        .from('service_requests')
-        .select('*')
-        .eq('request_id', requestId)
+        .from("service_requests")
+        .select("*")
+        .eq("request_id", requestId)
         .single();
 
       if (error) throw new Error(error.message);
 
       return request as ServiceRequest;
     } catch (error) {
-      set({ 
-        error: error instanceof Error ? error.message : 'Failed to fetch request', 
-        isLoading: false 
+      set({
+        error:
+          error instanceof Error ? error.message : "Failed to fetch request",
+        isLoading: false,
       });
       return null;
     }
@@ -136,31 +155,38 @@ export const useServiceRequests = create<ServiceRequestsState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const { data: requests, error } = await supabase
-        .from('service_requests')
-        .select('*')
-        .eq('status', RequestStatus.PENDING)
-        .order('created_at', { ascending: false });
+        .from("ServiceRequests")
+        .select("*")
+        .eq("status", RequestStatus.PENDING)
+        .order("created_at", { ascending: false });
 
       if (error) throw new Error(error.message);
 
-      set({ 
-        requests: requests as ServiceRequest[], 
-        isLoading: false 
+      set({
+        requests: requests as ServiceRequest[],
+        isLoading: false,
       });
     } catch (error) {
-      set({ 
-        error: error instanceof Error ? error.message : 'Failed to fetch pending requests', 
-        isLoading: false 
+      set({
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to fetch pending requests",
+        isLoading: false,
       });
     }
   },
 
-  updateRequestStatus: async (requestId: number, status: RequestStatus, notes?: string) => {
+  updateRequestStatus: async (
+    requestId: number,
+    status: RequestStatus,
+    notes?: string
+  ) => {
     set({ isLoading: true, error: null });
     try {
       const updateData: any = {
         status,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       };
 
       // Add appropriate notes field based on status
@@ -171,28 +197,29 @@ export const useServiceRequests = create<ServiceRequestsState>((set, get) => ({
       }
 
       const { data: updatedRequest, error } = await supabase
-        .from('service_requests')
+        .from("ServiceRequests")
         .update(updateData)
-        .eq('request_id', requestId)
+        .eq("request_id", requestId)
         .select()
         .single();
 
       if (error) throw new Error(error.message);
 
       set((state) => ({
-        requests: state.requests.map(req => 
-          req.request_id === requestId 
-            ? { ...req, ...updatedRequest } 
-            : req
+        requests: state.requests.map((req) =>
+          req.request_id === requestId ? { ...req, ...updatedRequest } : req
         ),
-        isLoading: false
+        isLoading: false,
       }));
     } catch (error) {
-      set({ 
-        error: error instanceof Error ? error.message : 'Failed to update request status', 
-        isLoading: false 
+      set({
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to update request status",
+        isLoading: false,
       });
       throw error;
     }
-  }
+  },
 }));

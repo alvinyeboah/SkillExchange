@@ -368,7 +368,7 @@ export default function Challenges() {
                         try {
                           await setReminder({
                             user_id: user?.user_id,
-                            type: "challenge",
+                            type: "Challenge",
                             reference_id: challenge.challenge_id,
                             title: challenge.title,
                             datetime: challenge.start_date,

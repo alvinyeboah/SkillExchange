@@ -1,10 +1,10 @@
-'use client'
+"use client";
 
-import { use } from "react"
-import Image from "next/image"
-import Link from "next/link"
-import { Clock, Globe, User } from 'lucide-react'
-import { Button } from "@/components/ui/button"
+import { use } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { Clock, Globe, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -12,17 +12,17 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { useAuth } from "@/hooks/use-auth"
-import { ServiceRequestForm } from "@/components/forms/service-request"
-import { useMarketplace } from "@/hooks/use-marketplace"
+} from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/hooks/use-auth";
+import { ServiceRequestForm } from "@/components/forms/service-request";
+import { useMarketplace } from "@/hooks/use-marketplace";
 
 interface ServiceDetailsPageProps {
   params: Promise<{
-    id: string
-  }>
+    id: string;
+  }>;
 }
 
 export default function ServiceDetailsPage(props: ServiceDetailsPageProps) {
@@ -39,12 +39,12 @@ export default function ServiceDetailsPage(props: ServiceDetailsPageProps) {
     setSelectedCategory,
   } = useMarketplace();
 
-  const params = use(props.params)
-  const { id } = params
-  const { user } = useAuth()
-  const service = services.find((s) => s.service_id === Number(id))
+  const params = use(props.params);
+  const { id } = params;
+  const { user } = useAuth();
+  const service = services.find((s) => s.service_id === Number(id));
 
-  if (!service) return <div>Loading...</div>
+  if (!service) return <div>Loading...</div>;
 
   return (
     <div className="container mx-auto p-6">
@@ -53,7 +53,10 @@ export default function ServiceDetailsPage(props: ServiceDetailsPageProps) {
           <h1 className="text-3xl font-bold mb-4">{service.title}</h1>
           <div className="flex items-center mb-6">
             <Avatar className="h-10 w-10 mr-3">
-              <AvatarImage src={service.user.avatar_url} alt={service.user.name} />
+              <AvatarImage
+                src={service.user.avatar_url}
+                alt={service.user.name}
+              />
               <AvatarFallback>{service.user.name.charAt(0)}</AvatarFallback>
             </Avatar>
             <div>
@@ -85,30 +88,43 @@ export default function ServiceDetailsPage(props: ServiceDetailsPageProps) {
             </CardHeader>
             <CardContent>
               <div className="mb-6">
-                <p className="text-2xl font-bold">{service.skillcoin_price} SkillCoins</p>
+                <p className="text-2xl font-bold">
+                  {service.skillcoin_price} SkillCoins
+                </p>
                 <Badge variant="secondary" className="mt-2">
                   {service.category}
                 </Badge>
               </div>
-              {user ? (
-                <ServiceRequestForm
-                  serviceId={service.service_id}
-                  providerId={service.user_id}
-                />
-              ) : (
+              {!user ? (
                 <div className="text-center">
-                  <p className="mb-4">You need to be signed in to request services.</p>
+                  <p className="mb-4">
+                    You need to be signed in to request services.
+                  </p>
                   <Link href="/auth/signin">
                     <Button className="w-full">Sign In</Button>
                   </Link>
                 </div>
+              ) : user.user_id === service.user_id ? (
+                <div className="text-center">
+                  <p className="text-muted-foreground">
+                    This is your own service listing.
+                  </p>
+                </div>
+              ) : (
+                <ServiceRequestForm
+                  serviceId={service.service_id}
+                  providerId={service.user_id}
+                />
               )}
             </CardContent>
             {!user && (
               <CardFooter className="justify-center">
                 <p className="text-sm text-muted-foreground">
                   Don't have an account?{" "}
-                  <Link href="/auth/register" className="text-primary hover:underline">
+                  <Link
+                    href="/auth/register"
+                    className="text-primary hover:underline"
+                  >
                     Sign up
                   </Link>
                 </p>
@@ -118,6 +134,5 @@ export default function ServiceDetailsPage(props: ServiceDetailsPageProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }
-

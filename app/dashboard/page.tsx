@@ -510,17 +510,17 @@ export default function UserDashboard() {
                   No requested services yet
                 </p>
                 <Button
-                  onClick={() => setShowRequestForm(true)}
+                  asChild
                   className="mt-4"
                 >
-                  Request Your First Service
+                  <Link href="/marketplace">Request Your First Service</Link>
                 </Button>
               </div>
             )}
           </ScrollArea>
-          <Button onClick={() => setShowRequestForm(true)}>
+          {/* <Button onClick={() => setShowRequestForm(true)}>
             Request New Service
-          </Button>
+          </Button> */}
         </TabsContent>
         <TabsContent value="challenges" className="space-y-6 h-auto">
           <div className="flex justify-between items-center">
@@ -637,7 +637,7 @@ export default function UserDashboard() {
                 Fill in the details to request a service
               </DialogDescription>
             </DialogHeader>
-            <ServiceRequestForm onClose={() => setShowRequestForm(false)} />
+            <ServiceRequestForm providerId="" onClose={() => setShowRequestForm(false)} />
           </DialogContent>
         </Dialog>
       )}

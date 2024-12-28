@@ -34,7 +34,7 @@ const formSchema = z.object({
 
 interface ServiceRequestFormProps {
   serviceId?: number;
-  providerId?: string;
+  providerId: string;
   isOpen?: boolean;
   onClose?: () => void;
 }
@@ -58,15 +58,15 @@ export function ServiceRequestForm({
   });
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
-    if (!user) return;
+    if (!user || !serviceId || !providerId) return;
 
     setIsLoading(true);
     try {
       await addRequest({
         service_id: serviceId,
-        requester_id: user?.user_id,
+        requester_id: user.user_id,
         provider_id: providerId,
-        requirements: values.requirements,
+        requirements: values.requirements ?? "",
         deadline: new Date(values.deadline).toISOString(),
       });
 
