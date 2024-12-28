@@ -45,7 +45,7 @@ export function AddFundsDialog() {
   const { user } = useAuth();
   const { fetchWallet } = useWallet();
   const { fetchUserTransactions, transactions } = useTransactions();
-  const publicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
+  const publicKey = process.env.PAYSTACK_PUBLIC_KEY;
 
   // Add useEffect to handle mounting
   useEffect(() => {
