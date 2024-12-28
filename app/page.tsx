@@ -80,8 +80,57 @@ const RotatingText = ({ items }: { items: string[] }) => {
 };
 
 export default function Home() {
-  const { user } = useAuth();
+  const { user, login } = useAuth();
   const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrors({});
+    setLoading(true);
+
+    try {
+      await login(email, password);
+      toast.success("Login successful! Redirecting...");
+    } catch (error: any) {
+      console.log(error);
+      switch (error.message) {
+        case "Email not confirmed":
+          toast.error("Please verify your email before signing in.");
+          break;
+        case "Invalid credentials":
+          toast.error("Invalid email or password. Please try again.");
+          break;
+        case "OAuth error":
+          toast.error(
+            "There was a problem signing in with your provider. Please try again."
+          );
+          break;
+        case "JWT error":
+          toast.error(
+            "Authentication configuration error. Please contact support."
+          );
+          break;
+        case "Network error":
+          toast.error(
+            "Network error. Please check your connection and try again."
+          );
+          break;
+        case "Session verification failed":
+          toast.error(
+            "Session verification failed. Please try signing in again."
+          );
+          break;
+        default:
+          toast.error("An error occurred during sign in. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -678,30 +727,40 @@ export default function Home() {
               <CardHeader>
                 <CardTitle>Join SkillExchange</CardTitle>
                 <CardDescription>
-                  Create your account and start trading skills!
+                  Create your account or sign back in and start trading skills!
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <form>
                   <div className="grid w-full items-center gap-4">
                     <div className="flex flex-col space-y-1.5">
-                      <Label htmlFor="name">Name</Label>
-                      <Input id="name" placeholder="Enter your name" />
-                    </div>
-                    <div className="flex flex-col space-y-1.5">
                       <Label htmlFor="email">Email</Label>
                       <Input
                         id="email"
                         placeholder="Enter your email"
                         type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                      />
+                    </div>
+                    <div className="flex flex-col space-y-1.5">
+                      <Label htmlFor="password">Password</Label>
+                      <Input
+                        id="password"
+                        placeholder="Enter your password"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
                       />
                     </div>
                   </div>
                 </form>
               </CardContent>
               <CardFooter className="flex justify-between">
-                <Button variant="ghost">Sign In</Button>
-                <GlowingButton>Create Account</GlowingButton>
+                <Button onClick={handleSubmit} variant="ghost">Sign In</Button>
+                <GlowingButton asChild>
+                  <Link href="/auth/register">Create Account</Link>
+                </GlowingButton>
               </CardFooter>
             </Card>
           </div>

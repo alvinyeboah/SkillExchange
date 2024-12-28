@@ -156,8 +156,6 @@ export default function SettingsPage() {
       }
 
       const data = await response.json();
-
-      // Update local user state with new avatar URL
       if (updateUser && user) {
         updateUser({
           ...user,
