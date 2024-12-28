@@ -23,12 +23,10 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, CreditCard, Gift, Users } from 'lucide-react';
+import { Loader2, CreditCard, Gift, Users } from "lucide-react";
 import coin from "@/public/coin.png";
 import Image from "next/image";
 import { motion } from "framer-motion";
-
-// New imports for the table
 import {
   Table,
   TableBody,
@@ -39,10 +37,18 @@ import {
 } from "@/components/ui/table";
 import Link from "next/link";
 import { useTransactions } from "@/hooks/use-transactions";
-import { AddFundsDialog } from '@/components/AddFundsDialog'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { AddFundsDialog } from "@/components/AddFundsDialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export default function Wallet() {
+  const [donationRecipient, setDonationRecipient] = useState("");
+  const [donationAmount, setDonationAmount] = useState("");
+
   const { user } = useAuth();
   const {
     balance,
@@ -55,43 +61,56 @@ export default function Wallet() {
     handleDonation,
     getUserDonations,
   } = useWallet();
-
-  const {fetchUserTransactions, transactions} = useTransactions();
-  const [donationRecipient, setDonationRecipient] = useState("");
-  const [donationAmount, setDonationAmount] = useState(""); 
-  
+  const { fetchUserTransactions, transactions } = useTransactions();
 
   useEffect(() => {
-    if (user?.id) {
-      fetchWallet(user.id);
+    if (user?.user_id) {
+      fetchWallet(user.user_id);
       fetchUsers();
-      fetchUserTransactions(user.id);
-      getUserDonations(user.id);
+      fetchUserTransactions(user.user_id);
+      getUserDonations(user.user_id);
     }
-  }, [user?.id]);
+  }, [
+    user?.user_id,
+    fetchWallet,
+    fetchUsers,
+    fetchUserTransactions,
+    getUserDonations,
+  ]);
+
+  console.log(user);
 
   const handleDonationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user?.id || !donationRecipient || !donationAmount) {
+    if (!user?.user_id || !donationRecipient || !donationAmount) {
       toast.error("Please fill in all fields");
       return;
     }
 
     try {
-      await handleDonation(
-        user.id,
+      const result = await handleDonation(
+        user.user_id,
         parseInt(donationAmount),
-        donationRecipient === "community-fund"
-          ? null
-          : parseInt(donationRecipient)
+        donationRecipient
       );
-      toast.success("Donation successful!");
-      setDonationAmount("");
-      setDonationRecipient("");
+      console.log(result)
+
+      if (result.success) {
+        toast.success("Donation successful!");
+        setDonationAmount("");
+        setDonationRecipient("");
+        await fetchWallet(user.user_id);
+        await fetchUserTransactions(user.user_id);
+        await getUserDonations(user.user_id);
+      } else {
+        toast.error(result.message || "Failed to process donation");
+      }
     } catch (error: any) {
       toast.error(error.message || "Failed to process donation");
     }
   };
+
+
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -132,11 +151,11 @@ export default function Wallet() {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger>
-                  <Button disabled variant="outline">Withdraw</Button>
+                  <Button disabled variant="outline">
+                    Withdraw
+                  </Button>
                 </TooltipTrigger>
-                <TooltipContent>
-                  Curently Unavalable
-                </TooltipContent>
+                <TooltipContent>Curently Unavalable</TooltipContent>
               </Tooltip>
             </TooltipProvider>
           </CardFooter>
@@ -148,16 +167,20 @@ export default function Wallet() {
           </CardHeader>
           <CardContent>
             <div className="flex flex-col space-y-5">
-              <Button className="w-full justify-start" variant="ghost">
-                <Link className="flex space-x-3" href="#transactions">
+              <Link href="#transactions" className="w-full">
+                <Button className="w-full justify-start" variant="ghost">
                   <CreditCard className="mr-4 h-4 w-4" /> View Transactions
-                </Link>
-              </Button>
-              
+                </Button>
+              </Link>
+
               <TooltipProvider>
                 <Tooltip>
-                  <TooltipTrigger >
-                    <Button disabled className="w-full justify-start" variant="ghost">
+                  <TooltipTrigger>
+                    <Button
+                      disabled
+                      className="w-full justify-start"
+                      variant="ghost"
+                    >
                       <Gift className="mr-2 h-4 w-4" /> Redeem SkillCoins
                     </Button>
                   </TooltipTrigger>
@@ -167,7 +190,11 @@ export default function Wallet() {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger>
-                    <Button disabled className="w-full justify-start" variant="ghost">
+                    <Button
+                      disabled
+                      className="w-full justify-start"
+                      variant="ghost"
+                    >
                       <Users className="mr-2 h-4 w-4" /> Invite Friends
                     </Button>
                   </TooltipTrigger>
@@ -255,8 +282,8 @@ export default function Wallet() {
                       </SelectTrigger>
                       <SelectContent>
                         {users
-                          .filter((u) => u.user_id !== user?.id)
-                          .map((u) => (
+                          .filter((u: any) => u.user_id !== user?.user_id)
+                          .map((u: any) => (
                             <SelectItem
                               key={u.user_id}
                               value={u.user_id.toString()}
@@ -316,9 +343,15 @@ export default function Wallet() {
                 <TableBody>
                   {transactions.map((transaction, index) => (
                     <TableRow key={index}>
-                      <TableCell>{new Date(transaction.transaction_date).toLocaleDateString()}</TableCell>
+                      <TableCell>
+                        {new Date(
+                          transaction.transaction_date
+                        ).toLocaleDateString()}
+                      </TableCell>
                       <TableCell>{transaction.type}</TableCell>
-                      <TableCell>{transaction.skillcoins_transferred}</TableCell>
+                      <TableCell>
+                        {transaction.skillcoins_transferred}
+                      </TableCell>
                       <TableCell>{transaction.description}</TableCell>
                     </TableRow>
                   ))}
@@ -353,7 +386,9 @@ export default function Wallet() {
                 <TableBody>
                   {donations.map((donation, index) => (
                     <TableRow key={index}>
-                      <TableCell>{new Date(donation.created_at).toLocaleDateString()}</TableCell>
+                      <TableCell>
+                        {new Date(donation.created_at).toLocaleDateString()}
+                      </TableCell>
                       <TableCell>{donation.username}</TableCell>
                       <TableCell>{donation.amount}</TableCell>
                     </TableRow>
@@ -371,4 +406,3 @@ export default function Wallet() {
     </div>
   );
 }
-

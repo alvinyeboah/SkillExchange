@@ -18,9 +18,7 @@ import { useMarketplace } from "@/hooks/use-marketplace";
 export function ServiceForm() {
   const [category, setCategory] = useState<string>("");
   const { user } = useAuth();
-  const {
-    createNewService,
-  } = useMarketplace();
+  const { createNewService } = useMarketplace();
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -33,11 +31,11 @@ export function ServiceForm() {
 
     try {
       await createNewService({
-        user_id: user.id,
+        user_id: user?.user_id,
         title: formData.get("title") as string,
         description: formData.get("description") as string,
         skillcoinPrice: Number(formData.get("price")),
-        deliveryTime: Number(formData.get("delivery_time")), 
+        deliveryTime: Number(formData.get("delivery_time")),
         category,
         requirements: formData.get("requirements")?.toString(),
       });

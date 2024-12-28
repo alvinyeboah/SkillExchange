@@ -86,7 +86,7 @@ export function NotificationsDropdown() {
                 <p className="text-sm text-muted-foreground mt-1">
                   {reminder.type.charAt(0).toUpperCase() +
                     reminder.type.slice(1)}{" "}
-                  #{reminder.referenceId}
+                  #{reminder.id}
                 </p>
               </div>
             </div>

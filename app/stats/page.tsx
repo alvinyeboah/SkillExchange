@@ -25,7 +25,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { StatCard } from "@/components/stat-card";
-import { useChallenges } from "@/hooks/use-challenges";
 import { useCommunityStore } from "@/hooks/useCommunityStatsStore";
 import { useMarketplace } from "@/hooks/use-marketplace";
 
@@ -37,20 +36,14 @@ export default function CommunityStats() {
     fetchServices,
   } = useMarketplace();
 
-  const {
-    challenges,
-    isLoading: challengesLoading,
-    getChallenges,
-  } = useChallenges();
   const { communityStats, isLoading: communityLoading, fetchCommunityStats, error } = useCommunityStore();
 
   useEffect(() => {
     fetchServices();
-    getChallenges();
     fetchCommunityStats();
-  }, [fetchServices, getChallenges, fetchCommunityStats]);
+  }, [fetchServices, fetchCommunityStats]);
 
-  const isLoading = isServicesLoading && communityLoading && challengesLoading ;
+  const isLoading = isServicesLoading && communityLoading  ;
 
   if (isLoading) {
     return (
@@ -123,9 +116,9 @@ export default function CommunityStats() {
           trend="+2.4%"
         />
         <StatCard
-          title="Active Challenges"
-          value={challenges.length || 0}
-          description="Ongoing community challenges"
+          title="All Challenges"
+          value={communityStats.availableChallenges.length || 0}
+          description="Existing community challenges"
           icon={<Award className="h-6 w-6 text-yellow-500" />}
           trend="+12.5%"
         />

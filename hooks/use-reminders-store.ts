@@ -1,11 +1,14 @@
 import { create } from 'zustand';
 import { toast } from 'sonner';
+import { createClient } from '@/utils/supabase/client';
 
+// Initialize Supabase client
+const supabase = createClient();
 interface Reminder {
   id: string;
-  userId: string;
+  user_id: string;  
   type: 'challenge' | 'event';
-  referenceId: string;
+  reference_id: string; 
   title: string;
   datetime: string;
   notified: boolean;
@@ -28,15 +31,19 @@ export const useReminders = create<RemindersState>((set, get) => ({
   setReminder: async (reminder) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await fetch('/api/reminders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(reminder),
-      });
+      const { data: newReminder, error } = await supabase
+        .from('Reminders')
+        .insert([
+          {
+            ...reminder,
+            notified: false
+          }
+        ])
+        .select()
+        .single();
 
-      if (!response.ok) throw new Error('Failed to set reminder');
+      if (error) throw error;
       
-      const newReminder = await response.json();
       set((state) => ({
         reminders: [...state.reminders, newReminder],
         isLoading: false,
@@ -51,9 +58,12 @@ export const useReminders = create<RemindersState>((set, get) => ({
 
   removeReminder: async (reminderId) => {
     try {
-      await fetch(`/api/reminders/${reminderId}`, {
-        method: 'DELETE',
-      });
+      const { error } = await supabase
+        .from('Reminders')
+        .delete()
+        .eq('id', reminderId);
+
+      if (error) throw error;
       
       set((state) => ({
         reminders: state.reminders.filter((r) => r.id !== reminderId),
@@ -68,13 +78,16 @@ export const useReminders = create<RemindersState>((set, get) => ({
   fetchReminders: async (userId) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await fetch(`/api/reminders?userId=${userId}`);
-      if (!response.ok) throw new Error('Failed to fetch reminders');
+      const { data: reminders, error } = await supabase
+        .from('Reminders')
+        .select('*')
+        .eq('user_id', userId);
+
+      if (error) throw error;
       
-      const reminders = await response.json();
-      set({ reminders, isLoading: false });
+      set({ reminders: reminders || [], isLoading: false });
     } catch (error: any) {
       set({ error: error.message, isLoading: false });
     }
   },
-})); 
+}));

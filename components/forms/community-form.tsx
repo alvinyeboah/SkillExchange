@@ -1,11 +1,11 @@
-import { useState } from 'react';
-import { useCommunities } from '@/hooks/use-communities';
-import { useAuth } from '@/hooks/use-auth';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
+import { useState } from "react";
+import { useCommunities } from "@/hooks/use-communities";
+import { useAuth } from "@/hooks/use-auth";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 
 export function CommunityForm() {
   const { user } = useAuth();
@@ -18,18 +18,18 @@ export function CommunityForm() {
 
     setIsLoading(true);
     const formData = new FormData(e.currentTarget);
-    
+
     try {
       await addCommunity({
-        name: formData.get('name'),
-        description: formData.get('description'),
-        creator_id: user.id
+        name: formData.get("name"),
+        description: formData.get("description"),
+        creator_id: user?.user_id,
       });
-      
-      toast.success('Community created successfully!');
+
+      toast.success("Community created successfully!");
       e.currentTarget.reset();
     } catch (error) {
-      toast.error('Failed to create community');
+      toast.error("Failed to create community");
     } finally {
       setIsLoading(false);
     }
@@ -41,15 +41,15 @@ export function CommunityForm() {
         <Label htmlFor="name">Community Name</Label>
         <Input id="name" name="name" required />
       </div>
-      
+
       <div>
         <Label htmlFor="description">Description</Label>
         <Textarea id="description" name="description" required />
       </div>
-      
+
       <Button type="submit" disabled={isLoading}>
-        {isLoading ? 'Creating...' : 'Create Community'}
+        {isLoading ? "Creating..." : "Create Community"}
       </Button>
     </form>
   );
-} 
+}

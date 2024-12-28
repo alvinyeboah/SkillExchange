@@ -47,7 +47,6 @@ import {
 } from "@/components/ui/drawer";
 import { ServiceForm } from "@/components/forms/service-form";
 import { Progress } from "@/components/ui/progress";
-import { createChallengeSubmission } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -72,6 +71,7 @@ import coin from "@/public/coin.png";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useMarketplace } from "@/hooks/use-marketplace";
 import { Service } from "@/types/database.types";
+import { useChallengeSubmissions } from "@/hooks/use-challenge-submissions";
 
 const formSchema = z.object({
   title: z.string().min(2, {
@@ -93,6 +93,7 @@ const formSchema = z.object({
 
 export default function UserDashboard() {
   const { user, isLoading, error } = useAuth();
+  const {addSubmission} = useChallengeSubmissions();
   const { editService } = useMarketplace();
 
   const [submitting, setSubmitting] = useState<number | null>(null);
@@ -135,9 +136,9 @@ export default function UserDashboard() {
     try {
       setSubmitting(challengeId);
 
-      await createChallengeSubmission({
+      await addSubmission({
         challenge_id: challengeId,
-        user_id: user.id,
+        user_id: user.user_id,
         content: "",
         submission_url: "",
       });
@@ -153,7 +154,7 @@ export default function UserDashboard() {
   const handleEditService = (service: any) => {
     setEditingService({
       service_id: service.id,
-      user_id: user?.id,
+      user_id: user?.user_id,
       ...service,
     });
     form.reset({

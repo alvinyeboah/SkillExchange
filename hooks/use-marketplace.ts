@@ -160,7 +160,7 @@ export const useMarketplace = create<MarketplaceState>((set, get) => ({
         } = await supabase.auth.getUser();
         if (userError) throw userError;
         if (!user) throw new Error("User not authenticated");
-        userId = user.id;
+        userId = user?.id;
       }
 
       const formattedServiceData = {
@@ -210,7 +210,7 @@ export const useMarketplace = create<MarketplaceState>((set, get) => ({
 
       const { error } = await supabase.from("ServiceRequests").insert({
         service_id: serviceId,
-        requester_id: user.id,
+        requester_id: user?.id,
         provider_id: null,
         status: "pending",
         created_at: new Date().toISOString(),
@@ -285,7 +285,7 @@ export const useMarketplace = create<MarketplaceState>((set, get) => ({
         .from("Services")
         .update(formattedServiceData)
         .eq("service_id", serviceId)
-        .eq("user_id", user.id); // Ensure user can only edit their own services
+        .eq("user_id", user?.id); // Ensure user can only edit their own services
 
       if (updateError) throw updateError;
 

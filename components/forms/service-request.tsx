@@ -64,7 +64,7 @@ export function ServiceRequestForm({
     try {
       await addRequest({
         service_id: serviceId,
-        requester_id: user.id,
+        requester_id: user?.user_id,
         provider_id: providerId,
         requirements: values.requirements,
         deadline: new Date(values.deadline).toISOString(),

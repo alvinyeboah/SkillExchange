@@ -62,8 +62,8 @@ export function UserNav({ user }: { user: { name?: string; email: string; avatar
           {/* <DropdownMenuItem onClick={() => router.push('/settings')}>
             Settings
           </DropdownMenuItem> */}
-            <DropdownMenuItem onClick={() => router.push('/settings')}>
-            Settings
+            <DropdownMenuItem onClick={() => router.push('/profile')}>
+            Profile
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />

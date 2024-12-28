@@ -37,7 +37,6 @@ import {
   Award,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { useChallenges } from "@/hooks/use-challenges";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { ReminderCheck } from "@/components/reminder-check";
 import { useCommunityStore } from "@/hooks/useCommunityStatsStore";
@@ -125,7 +124,7 @@ export default function Home() {
     }
 
     try {
-      await participateInChallenge(challengeId, user.id);
+      await participateInChallenge(challengeId, user?.user_id);
       console.log("Successfully joined the challenge!");
     } catch (error) {
       console.log("Failed to join challenge. Please try again.");
@@ -156,9 +155,11 @@ export default function Home() {
     return <LoadingSpinner />;
   }
 
-  const maxCount = Math.max(...communityStats.topSkills.map(s => s.usage_count));
+  const maxCount = Math.max(
+    ...communityStats.topSkills.map((s) => s.usage_count)
+  );
   const rotatingItems = ["Skills", "Knowledge", "Experiences", "Talents"];
-  console.log(communityStats)
+  console.log(user);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-background to-background/80">

@@ -42,13 +42,14 @@ import Image from "next/image";
 import coin from "@/public/coin.png";
 import { useAuth } from "@/hooks/use-auth";
 import { useCommunityStore } from "@/hooks/useCommunityStatsStore";
-import { useChallenges } from "@/hooks/use-challenges";
+
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useChallengesStore } from "@/hooks/use-challenges-store";
 
 export default function Marketplace() {
   const {
@@ -76,8 +77,8 @@ export default function Marketplace() {
   const {
     challenges,
     isLoading: challengesLoading,
-    getChallenges,
-  } = useChallenges();
+    fetchChallenges,
+  } = useChallengesStore();
   const {
     communityStats,
     isLoading: communityLoading,
@@ -86,9 +87,9 @@ export default function Marketplace() {
 
   useEffect(() => {
     fetchServices();
-    getChallenges();
+    fetchChallenges();
     fetchCommunityStats();
-  }, [fetchServices, getChallenges, fetchCommunityStats]);
+  }, [fetchServices, fetchChallenges, fetchCommunityStats]);
 
   useEffect(() => {
     fetchServices();
