@@ -315,7 +315,17 @@ CREATE TABLE "UserSkills" (
     FOREIGN KEY ("skill_id") REFERENCES "Skills"("skill_id") ON DELETE CASCADE
 );
 
-
+-- Add this stored procedure to handle skillcoins increment
+CREATE OR REPLACE FUNCTION increment_skillcoins(
+  user_id_input text,
+  amount_input integer
+) RETURNS void AS $$
+BEGIN
+  UPDATE "Users"
+  SET skillcoins = skillcoins + amount_input
+  WHERE user_id = user_id_input;
+END;
+$$ LANGUAGE plpgsql;
 
 -- Insert some sample skills
 INSERT INTO "Skills" (name, category, description) VALUES
@@ -329,7 +339,6 @@ INSERT INTO "Skills" (name, category, description) VALUES
     ('Docker', 'DevOps', 'Containerization platform'),
     ('TypeScript', 'Programming', 'Typed JavaScript programming'),
     ('GraphQL', 'API', 'API query language');
-
 
 -- Create indexes for performance
 CREATE INDEX idx_participation_challenge ON "ChallengeParticipation"("challenge_id");

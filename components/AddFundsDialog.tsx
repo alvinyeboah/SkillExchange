@@ -33,7 +33,7 @@ const fundOptions = [
   { amount: 20000, price: 160 },
 ];
 
-export function AddFundsDialog() {
+export function AddFundsDialog({ onSuccess }: { onSuccess?: () => void }) {
   const [open, setOpen] = useState(false);
   const [selectedOption, setSelectedOption] = useState<null | {
     amount: number;
@@ -42,9 +42,10 @@ export function AddFundsDialog() {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const { user } = useAuth();
-  const { fetchWallet } = useWallet();
+  console.log("🚀 ~ AddFundsDialog ~ user:", user);
+  const { fetchWallet, creditWallet } = useWallet();
   const { fetchUserTransactions, transactions } = useTransactions();
-  const publicKey = process.env.PAYSTACK_PUBLIC_KEY;
+  const publicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
 
   const handlePaymentSuccess = async (response: {
     reference: string;
@@ -54,29 +55,25 @@ export function AddFundsDialog() {
     amount: number;
   }) => {
     try {
-      const apiResponse = await fetch("/api/wallet/credit", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId: user?.user_id,
-          amount: response.amount,
-          reference: response.reference,
-          transactionId: response.trans,
-        }),
-      });
+      if (!user?.user_id) {
+        throw new Error("User ID is required");
+      }
 
-      if (!apiResponse.ok) {
-        throw new Error("Failed to credit wallet");
+      const result = await creditWallet(
+        user.user_id,
+        response.amount,
+        response.reference,
+        response.trans
+      );
+
+      if (!result.success) {
+        throw new Error(result.message);
       }
-      if (user?.user_id) {
-        fetchWallet(user?.user_id);
-        fetchUserTransactions(user?.user_id);
-      }
+
       toast.success(
         `Successfully added ${response.amount} SkillCoins to your wallet!`
       );
+      onSuccess?.();
     } catch (error) {
       toast.error("Failed to credit your wallet. Please contact support.");
       console.error("Credit wallet error:", error);
@@ -86,17 +83,21 @@ export function AddFundsDialog() {
     }
   };
 
+  const isPaymentConfigValid = () => {
+    return !!(user?.email && publicKey);
+  };
+
   const handlePaystackButtonProps = (option: {
     amount?: number;
     price?: number;
   }) => {
-    if (!user?.email) {
-      toast.error("Please sign in to add funds");
+    if (!isPaymentConfigValid()) {
+      toast.error("Unable to process payment at this time");
       return null;
     }
 
     return {
-      email: user.email,
+      email: user!.email,
       amount: option.price ? option.price * 100 : 0,
       metadata: {
         custom_fields: [
@@ -127,7 +128,6 @@ export function AddFundsDialog() {
       currency: "GHS",
     };
   };
-
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -176,7 +176,7 @@ export function AddFundsDialog() {
                     </div>
                   </CardContent>
                   <CardFooter className="bg-muted/50 p-3">
-                    {user?.email && publicKey ? (
+                    {isPaymentConfigValid() ? (
                       <PaystackButton
                         {...(handlePaystackButtonProps(option) as any)}
                         className="w-full"
@@ -186,15 +186,21 @@ export function AddFundsDialog() {
                     ) : (
                       <Button
                         onClick={() =>
-                          toast.message("Please sign in to add funds")
+                          toast.message(
+                            !user?.email
+                              ? "Please sign in to add funds"
+                              : "Payment system not configured"
+                          )
                         }
                         variant="outline"
                         className="w-full"
                       >
                         <CreditCard className="mr-2 h-4 w-4" />
-                        {!publicKey
+                        {!user?.email
+                          ? "Sign in to Pay"
+                          : !publicKey
                           ? "Payment not configured"
-                          : "Sign in to Pay"}
+                          : "Unable to process payment"}
                       </Button>
                     )}
                   </CardFooter>
