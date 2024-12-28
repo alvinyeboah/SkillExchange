@@ -1,5 +1,4 @@
 import pool, { withConnection } from "@/lib/db";
-import { authMiddleware } from "@/lib/middleware/authMiddleware";
 import { NextRequest, NextResponse } from "next/server";
 import { RowDataPacket } from "mysql2";
 
@@ -13,8 +12,6 @@ interface Transaction extends RowDataPacket {
 }
 
 export async function GET(req: NextRequest) {
-  const authResult = await authMiddleware(req);
-  if (authResult instanceof Response) return authResult;
 
   const userId = req.headers.get("user-id");
 

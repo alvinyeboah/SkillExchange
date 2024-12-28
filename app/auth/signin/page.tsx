@@ -54,99 +54,121 @@ export default function SignInPage() {
       toast.success("Login successful!");
     } catch (error: any) {
       setErrors({ server: error.message });
-      toast.error(error.message || "An error occurred during login");
+      if (error.response?.data?.code === "email_not_confirmed") {
+        const resend = confirm(
+          "Email not confirmed. Would you like to resend the confirmation email?"
+        );
+        if (resend) {
+          try {
+            await fetch("/api/auth/resend-confirmation", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email }),
+            });
+            toast.success("Confirmation email sent!");
+          } catch (err) {
+            toast.error("Failed to send confirmation email");
+          }
+        }
+      }
     } finally {
       setLoading(false);
     }
-  };
 
-  return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-background">
-      <motion.div
-        initial={{ opacity: 0, x: -50 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.5 }}
-        className="md:w-1/2 bg-primary/10 text-primary flex flex-col justify-center p-12"
-      >
-        <h1 className="text-4xl font-bold mb-6">
-          Welcome Back to SkillExchange!
-        </h1>
-        <p className="text-xl mb-8">
-          Sign in to access your account and continue your skill-trading
-          journey.
-        </p>
-        <ul className="list-disc list-inside space-y-2">
-          <li>Check your SkillCoin balance</li>
-          <li>Browse the latest skill offerings</li>
-          <li>Participate in ongoing challenges</li>
-          <li>Connect with your network of skilled individuals</li>
-        </ul>
-      </motion.div>
-      <motion.div
-        initial={{ opacity: 0, x: 50 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.5 }}
-        className="md:w-1/2 flex items-center justify-center p-12"
-      >
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <CardTitle className="text-3xl font-semibold">Sign In</CardTitle>
-              <ThemeToggle />
-            </div>
-            <CardDescription>Access your SkillExchange account</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
-                />
-                {errors.email && (
-                  <p className="text-destructive text-xs">{errors.email}</p>
-                )}
+    return (
+      <div className="min-h-screen flex flex-col md:flex-row bg-background">
+        <motion.div
+          initial={{ opacity: 0, x: -50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
+          className="md:w-1/2 bg-primary/10 text-primary flex flex-col justify-center p-12"
+        >
+          <h1 className="text-4xl font-bold mb-6">
+            Welcome Back to SkillExchange!
+          </h1>
+          <p className="text-xl mb-8">
+            Sign in to access your account and continue your skill-trading
+            journey.
+          </p>
+          <ul className="list-disc list-inside space-y-2">
+            <li>Check your SkillCoin balance</li>
+            <li>Browse the latest skill offerings</li>
+            <li>Participate in ongoing challenges</li>
+            <li>Connect with your network of skilled individuals</li>
+          </ul>
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, x: 50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
+          className="md:w-1/2 flex items-center justify-center p-12"
+        >
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <CardTitle className="text-3xl font-semibold">
+                  Sign In
+                </CardTitle>
+                <ThemeToggle />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
-                />
-                {errors.password && (
-                  <p className="text-destructive text-xs">{errors.password}</p>
-                )}
-              </div>
-            </form>
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
-            <Button
-              className="w-full"
-              type="submit"
-              onClick={handleSubmit}
-              disabled={loading}
-            >
-              {loading ? "Loading..." : "Sign In"}
-            </Button>
-            <p className="text-sm text-muted-foreground text-center">
-              Don't have an account?{" "}
-              <Link
-                href="/auth/register"
-                className="text-primary hover:underline"
+              <CardDescription>
+                Access your SkillExchange account
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter your email"
+                  />
+                  {errors.email && (
+                    <p className="text-destructive text-xs">{errors.email}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter your password"
+                  />
+                  {errors.password && (
+                    <p className="text-destructive text-xs">
+                      {errors.password}
+                    </p>
+                  )}
+                </div>
+              </form>
+            </CardContent>
+            <CardFooter className="flex flex-col space-y-4">
+              <Button
+                className="w-full"
+                type="submit"
+                onClick={handleSubmit}
+                disabled={loading}
               >
-                Register
-              </Link>
-            </p>
-          </CardFooter>
-        </Card>
-      </motion.div>
-    </div>
-  );
+                {loading ? "Loading..." : "Sign In"}
+              </Button>
+              <p className="text-sm text-muted-foreground text-center">
+                Don't have an account?{" "}
+                <Link
+                  href="/auth/register"
+                  className="text-primary hover:underline"
+                >
+                  Register
+                </Link>
+              </p>
+            </CardFooter>
+          </Card>
+        </motion.div>
+      </div>
+    );
+  }
 }

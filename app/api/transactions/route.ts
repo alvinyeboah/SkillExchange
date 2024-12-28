@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
-import { authMiddleware } from "@/lib/middleware/authMiddleware";
 import { withConnection } from "@/lib/db";
 
 export async function GET(req: NextRequest) {
-  const authResult = await authMiddleware(req);
-  if (authResult instanceof Response) return authResult;
 
   try {
     // Use withConnection to handle the database connection

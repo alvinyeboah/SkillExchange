@@ -60,7 +60,7 @@ export default function RegisterPage() {
       const response = await register({ email, password, username, name });
       if (response) {
         router.push("/auth/signin");
-        toast.success("Registration successful! Please sign in.");
+        toast.success("Registration successful! Please check your email to confirm");
       }
     } catch (error: any) {
       toast.error(error.message || "Registration failed");

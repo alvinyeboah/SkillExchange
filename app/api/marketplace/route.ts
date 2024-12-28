@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool, { withConnection } from "@/lib/db";
-import { authMiddleware } from "@/lib/middleware/authMiddleware";
 import { roleMiddleware } from "@/lib/middleware/roleMiddleware";
 import { validateRequest } from "@/lib/middleware/validateRequest";
 import { z } from "zod";
@@ -39,8 +38,6 @@ const marketplaceSchema = z.object({
 });
 
 export async function GET(req: NextRequest): Promise<Response> {
-  // const authResult = await authMiddleware(req);
-  // if (authResult instanceof Response) return authResult;
 
   try {
     return await withConnection(

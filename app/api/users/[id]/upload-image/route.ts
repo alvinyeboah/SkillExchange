@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool, { withConnection } from "@/lib/db";
-import { authMiddleware } from "@/lib/middleware/authMiddleware";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 
 export async function POST(
@@ -8,8 +7,6 @@ export async function POST(
   props: { params: Promise<{ id: string }> }
 ) {
   const params = await props.params;
-  const authResult = await authMiddleware(req);
-  if (authResult instanceof Response) return authResult;
 
   try {
     const formData = await req.formData();

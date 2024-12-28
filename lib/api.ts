@@ -52,24 +52,6 @@ export async function register(userData: {
 
 
 // Logout API
-export async function logout() {
-  try {
-    const response = await fetch(`${BASE_URL}/auth/logout`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error('Logout failed');
-    }
-
-    return response.json();
-  } catch (error: any) {
-    throw new Error(error.message || 'Network error');
-  }
-}
 
 // Get Analytics (Admin-only)
 export async function getAnalytics() {

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool, { withConnection } from "@/lib/db";
 import { ResultSetHeader, RowDataPacket } from "mysql2";
-import { authMiddleware } from "@/lib/middleware/authMiddleware";
+
 
 function formatDateForMySQL(dateString: string): string {
   const date = new Date(dateString);
@@ -11,9 +11,6 @@ function formatDateForMySQL(dateString: string): string {
 // GET /api/reminders
 export async function GET(req: NextRequest) {
   try {
-    const authResult = await authMiddleware(req);
-    if (authResult instanceof Response) return authResult;
-
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get("userId");
 
@@ -44,9 +41,6 @@ export async function GET(req: NextRequest) {
 // POST /api/reminders
 export async function POST(req: NextRequest) {
   try {
-    const authResult = await authMiddleware(req);
-    if (authResult instanceof Response) return authResult;
-
     const { userId, type, referenceId, title, datetime } = await req.json();
     const formattedDatetime = formatDateForMySQL(datetime);
 
@@ -76,9 +70,6 @@ export async function POST(req: NextRequest) {
 // DELETE /api/reminders/:id
 export async function DELETE(req: NextRequest) {
   try {
-    const authResult = await authMiddleware(req);
-    if (authResult instanceof Response) return authResult;
-
     const { id } = await req.json();
 
     return await withConnection(async (connection) => {

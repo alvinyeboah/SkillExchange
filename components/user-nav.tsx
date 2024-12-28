@@ -12,7 +12,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useRouter } from "next/navigation"
-import { logout } from "@/lib/api"
 import { toast } from "sonner"
 import { useState } from "react"
 
@@ -21,14 +20,12 @@ import { useAuth } from "@/hooks/use-auth";
 export function UserNav({ user }: { user: { name?: string; email: string; avatar_url?: string } }) {
   const router = useRouter()
   const [notifications, setNotifications] = useState([]);
-  const { setUser } = useAuth();
+  const {logout } = useAuth();
   
+
   const handleLogout = async () => {
     try {
-      await logout()
-      setUser(null)
-      router.push('/')
-      router.refresh()
+      await logout();
       toast.success("Logged out successfully")
     } catch (error) {
       toast.error("Error logging out")

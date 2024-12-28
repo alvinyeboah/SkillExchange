@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool, { withConnection } from "@/lib/db"; // Import withConnection
 import { ResultSetHeader, RowDataPacket } from "mysql2";
-import { authMiddleware } from "@/lib/middleware/authMiddleware";
 
 export async function GET(req: NextRequest) {
-  const authResult = await authMiddleware(req);
-  if (authResult instanceof Response) return authResult;
 
   try {
     const { searchParams } = new URL(req.url);

@@ -1,27 +1,19 @@
-import { NextResponse } from 'next/server'
+import { createClient } from "@/utils/supabase/server";
+import { NextResponse } from "next/server";
 
 export async function POST() {
   try {
-    // Create a response object
-    const response = NextResponse.json(
-      { message: 'Logged out successfully' },
-      { status: 200 }
-    )
+    const supabase = await createClient();
+    const { error } = await supabase.auth.signOut();
 
-    // Clear the auth cookie
-    response.cookies.set('authToken', '', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      expires: new Date(0), // Setting expires to past date effectively deletes the cookie
-    })
-
-    return response
-  } catch (error) {
+    if (error) {
+      throw error;
+    }
     return NextResponse.json(
-      { error: 'Error during logout' },
-      { status: 500 }
-    )
+      { message: "Logged out successfully" },
+      { status: 200 }
+    );
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
