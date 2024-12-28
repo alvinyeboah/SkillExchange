@@ -33,7 +33,7 @@ const fundOptions = [
   { amount: 20000, price: 160 },
 ];
 
-export function AddFundsDialog() {
+export function AddFundsDialog({ onSuccess }: { onSuccess?: () => void }) {
   const [open, setOpen] = useState(false);
   const [selectedOption, setSelectedOption] = useState<null | {
     amount: number;
@@ -73,6 +73,7 @@ export function AddFundsDialog() {
       toast.success(
         `Successfully added ${response.amount} SkillCoins to your wallet!`
       );
+      onSuccess?.();
     } catch (error) {
       toast.error("Failed to credit your wallet. Please contact support.");
       console.error("Credit wallet error:", error);

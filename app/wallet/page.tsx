@@ -93,7 +93,7 @@ export default function Wallet() {
         parseInt(donationAmount),
         donationRecipient
       );
-      console.log(result)
+      console.log(result);
 
       if (result.success) {
         toast.success("Donation successful!");
@@ -110,7 +110,12 @@ export default function Wallet() {
     }
   };
 
-
+  const handlePaymentSuccess = () => {
+    if (user?.user_id) {
+      fetchUserTransactions(user.user_id);
+      fetchWallet(user.user_id);
+    }
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -147,7 +152,7 @@ export default function Wallet() {
             </div>
           </CardContent>
           <CardFooter className="justify-between">
-            <AddFundsDialog />
+            <AddFundsDialog onSuccess={handlePaymentSuccess} />
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger>
