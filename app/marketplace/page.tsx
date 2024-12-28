@@ -190,33 +190,17 @@ export default function Marketplace() {
             </CardHeader>
             <CardContent>
               <ul className="space-y-2">
-                {[
-                  {
-                    name: "Alice Smith",
-                    coins: 5000,
-                    avatar: "/avatars/alice.jpg",
-                  },
-                  {
-                    name: "Bob Johnson",
-                    coins: 4500,
-                    avatar: "/avatars/bob.jpg",
-                  },
-                  {
-                    name: "Carol Williams",
-                    coins: 4000,
-                    avatar: "/avatars/carol.jpg",
-                  },
-                ].map((user, index) => (
+                {communityStats.rankedUsers.slice(0,3).map((user, index) => (
                   <li key={index} className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <Avatar className="h-8 w-8 mr-2">
-                        <AvatarImage src={user.avatar} />
+                    <div className="flex items-center truncate">
+                      <Avatar className="h-8 w-8 mr-2 flex-shrink-0">
+                        <AvatarImage src={user?.avatar_url ?? undefined} />
                         <AvatarFallback>{user.name[0]}</AvatarFallback>
                       </Avatar>
-                      <span>{user.name}</span>
+                      <span className="truncate">{user.username}</span>
                     </div>
-                    <Badge variant="outline" className="ml-2">
-                      {user.coins} SC
+                    <Badge variant="outline" className="ml-2 flex-shrink-0">
+                      {user.skillcoins} SC
                     </Badge>
                   </li>
                 ))}
@@ -244,7 +228,7 @@ export default function Marketplace() {
                 </div>
                 <div className="flex justify-between items-center">
                   <span>Skills Exchanged</span>
-                  <span className="font-semibold">25,000+</span>
+                  <span className="font-semibold">{communityStats.topSkills.length}</span>
                 </div>
               </div>
             </CardContent>
