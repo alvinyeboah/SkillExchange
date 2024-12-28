@@ -34,7 +34,6 @@ const fundOptions = [
 ];
 
 export function AddFundsDialog() {
-  const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
   const [selectedOption, setSelectedOption] = useState<null | {
     amount: number;
@@ -46,11 +45,6 @@ export function AddFundsDialog() {
   const { fetchWallet } = useWallet();
   const { fetchUserTransactions, transactions } = useTransactions();
   const publicKey = process.env.PAYSTACK_PUBLIC_KEY;
-
-  // Add useEffect to handle mounting
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const handlePaymentSuccess = async (response: {
     reference: string;
@@ -134,10 +128,6 @@ export function AddFundsDialog() {
     };
   };
 
-  // Modify the render method to check for mounted state
-  if (!mounted) {
-    return null; // or a loading spinner
-  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -186,7 +176,7 @@ export function AddFundsDialog() {
                     </div>
                   </CardContent>
                   <CardFooter className="bg-muted/50 p-3">
-                    {mounted && user?.email && publicKey ? (
+                    {user?.email && publicKey ? (
                       <PaystackButton
                         {...(handlePaystackButtonProps(option) as any)}
                         className="w-full"
