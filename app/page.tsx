@@ -59,6 +59,7 @@ const RotatingText = ({ items }: { items: string[] }) => {
     return () => clearInterval(timer);
   }, [items.length]);
 
+
   return (
     <div className="h-20 overflow-hidden">
       <AnimatePresence mode="wait">
@@ -79,6 +80,7 @@ const RotatingText = ({ items }: { items: string[] }) => {
 
 export default function Home() {
   const { user } = useAuth();
+  console.log(user, "suer")
   const router = useRouter();
   const { services, isLoading: servicesLoading, fetchServices } = useServices();
   const renderSkillsBadges = (skills: string[] | string | undefined) => {
@@ -99,7 +101,7 @@ export default function Home() {
     );
   };
 
-  const handleJoinChallenge = async (challengeId: number) => {
+  const handleJoinChallenge = async (challengeId: string) => {
     if (!user) {
       toast.error("Please login to join challenges");
       return;

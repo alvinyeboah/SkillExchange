@@ -9,7 +9,7 @@ interface User {
 }
 
 interface Participant {
-  challenge_id: number;
+  challenge_id: string;
   user_id: number;
   progress: number;
   joined_at: string;
@@ -42,7 +42,7 @@ interface ChallengeWinner {
 }
 
 interface Challenge extends BaseChallenge {
-  challenge_id: number;
+  challenge_id: string;
   participantsCount: number;
   progress?: number;
   winner?: ChallengeWinner;
@@ -61,8 +61,8 @@ interface ChallengesState {
   fetchChallenges: () => Promise<void>;
   createChallenge: (challenge: BaseChallenge) => Promise<void>;
   participateInChallenge: (
-    challengeId: number,
-    userId: number
+    challengeId: string,
+    userId: string
   ) => Promise<void>;
 }
 
@@ -246,7 +246,7 @@ export const useChallengesStore = create<ChallengesState>((set, get) => ({
     }
   },
 
-  participateInChallenge: async (challengeId: number, userId: number) => {
+  participateInChallenge: async (challengeId: string, userId: string) => {
     try {
       const response = await fetch("/api/challenges/participate", {
         method: "POST",

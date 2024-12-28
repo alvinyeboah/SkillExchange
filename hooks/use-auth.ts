@@ -130,11 +130,10 @@ const useAuth = create<AuthState>()(
           } = await supabase.auth.getUser();
 
           if (user) {
-            // Get user profile data
             const { data: profile } = await supabase
-              .from("profiles")
+              .from("Users")
               .select("*")
-              .eq("id", user.id)
+              .eq("user_id", user.id)
               .single();
 
             set({

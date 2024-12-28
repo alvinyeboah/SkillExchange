@@ -11,7 +11,7 @@ export async function POST(req: Request) {
       try {
         // Insert payment record
         await connection.query(
-          `INSERT INTO PaymentTransactions (user_id, amount, reference, transaction_id, status)
+          `INSERT INTO Purchases (user_id, amount, reference, transaction_id, status)
            VALUES (?, ?, ?, ?, 'completed')`,
           [userId, amount, reference, transactionId]
         );
