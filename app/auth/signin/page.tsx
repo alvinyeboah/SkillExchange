@@ -89,7 +89,7 @@ export default function SignInPage() {
     }
   };
 
-  return (
+   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-background">
       <motion.div
         initial={{ opacity: 0, x: -50 }}

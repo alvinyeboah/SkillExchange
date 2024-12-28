@@ -16,18 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Calendar,
-  CheckCircle,
-  Clock,
-  Flame,
-  Lightbulb,
-  Trophy,
-  Users,
-} from "lucide-react";
+import { Clock, Flame, Lightbulb, Trophy, Users, Zap } from 'lucide-react';
 import { toast } from "sonner";
 import Link from "next/link";
 import { useReminders } from "@/hooks/use-reminders-store";
@@ -39,7 +28,6 @@ import {
 } from "@/components/ui/tooltip";
 import coin from "@/public/coin.png";
 import Image from "next/image";
-
 
 export default function Challenges() {
   const { user } = useAuth();
@@ -61,7 +49,7 @@ export default function Challenges() {
     reward_skillcoins: "",
     difficulty: "",
     category: "",
-    skills: "", // Keep as string for form input
+    skills: "",
     start_date: "",
     end_date: "",
   });
@@ -95,7 +83,7 @@ export default function Challenges() {
     }
   };
 
-  const handleJoinChallenge = async (challengeId: number) => {
+  const handleJoinChallenge = async (challengeId: string) => {
     if (!user) {
       toast.error("Please login to join challenges");
       return;
@@ -148,23 +136,47 @@ export default function Challenges() {
 
   return (
     <div className="container mx-auto px-4 py-12">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-4xl font-bold">SkillCoin Challenges</h1>
-          <p className="text-xl mt-2">
-            Participate in exciting challenges to earn SkillCoins and improve
-            your skills!
-          </p>
+      <div className="text-center mb-12">
+        <h1 className="text-4xl font-bold mb-4">SkillCoin Challenges</h1>
+        <p className="text-xl mb-6">
+          Participate in exciting challenges to earn SkillCoins and improve
+          your skills!
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Zap className="mr-2 h-6 w-6 text-yellow-500" />
+                Weekly Challenges
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>New challenges are released every week, offering fresh opportunities to test your skills and earn rewards.</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Trophy className="mr-2 h-6 w-6 text-yellow-500" />
+                SkillCoin Rewards
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>Complete challenges to earn SkillCoins, which can be used to access premium features and services on our platform.</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Flame className="mr-2 h-6 w-6 text-yellow-500" />
+                Skill Development
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>Each challenge is designed to help you improve specific skills, enhancing your overall expertise and marketability.</p>
+            </CardContent>
+          </Card>
         </div>
-        <Button
-          onClick={() =>
-            document
-              .getElementById("propose-challenge")
-              ?.scrollIntoView({ behavior: "smooth" })
-          }
-        >
-          Propose a Challenge
-        </Button>
       </div>
 
       <Tabs defaultValue="active" className="mb-12">
@@ -319,7 +331,11 @@ export default function Challenges() {
                     </div>
                     <div className="flex justify-between items-center mb-4">
                       <span className="flex items-center">
-                        <Trophy className="w-4 h-4 mr-1" />
+                      <Image
+                        alt="skillcoin-image"
+                        src={coin}
+                        className="w-8 h-8"
+                      />
                         {challenge.reward_skillcoins} SkillCoins
                       </span>
                       <span className="flex items-center">
@@ -382,6 +398,7 @@ export default function Challenges() {
                     <CardContent>
                       <div className="flex justify-between items-center mb-4">
                         <Badge
+
                           variant={
                             challenge.difficulty === "Hard"
                               ? "destructive"
@@ -397,7 +414,11 @@ export default function Challenges() {
                       </div>
                       <div className="flex justify-between items-center mb-4">
                         <span className="flex items-center">
-                          <Trophy className="w-4 h-4 mr-1" />
+                        <Image
+                        alt="skillcoin-image"
+                        src={coin}
+                        className="w-8 h-8"
+                      />
                           {challenge.reward_skillcoins} SkillCoins
                         </span>
                         <div className="flex items-center">

@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface AchievementsListProps {
-  userId: number;
+  userId: string;
 }
 
 export function AchievementsList({ userId }: AchievementsListProps) {

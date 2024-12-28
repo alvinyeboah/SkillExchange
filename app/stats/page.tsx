@@ -11,7 +11,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
-import { useDashboardStore } from "@/hooks/use-dashboard-store";
 import { Loader2, TrendingUp, Users, Briefcase, Award, Activity } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -26,13 +25,18 @@ import {
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { StatCard } from "@/components/stat-card";
-
-import { useServices } from "@/hooks/use-services";
 import { useChallenges } from "@/hooks/use-challenges";
-import { useCommunityStore } from "@/hooks/useCommunityStore";
+import { useCommunityStore } from "@/hooks/useCommunityStatsStore";
+import { useMarketplace } from "@/hooks/use-marketplace";
 
 export default function CommunityStats() {
-  const { services, isLoading: servicesLoading, fetchServices } = useServices();
+  const {
+    services,
+    isLoading:isServicesLoading,
+    error:isServicesError,
+    fetchServices,
+  } = useMarketplace();
+
   const {
     challenges,
     isLoading: challengesLoading,
@@ -46,7 +50,7 @@ export default function CommunityStats() {
     fetchCommunityStats();
   }, [fetchServices, getChallenges, fetchCommunityStats]);
 
-  const isLoading = servicesLoading && communityLoading && challengesLoading ;
+  const isLoading = isServicesLoading && communityLoading && challengesLoading ;
 
   if (isLoading) {
     return (
@@ -106,7 +110,7 @@ export default function CommunityStats() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard
           title="Active Users"
-          value={communityStats?.activeUsers.length || 0}
+          value={communityStats?.activeUsers || 0}
           description="Currently online and engaged"
           icon={<Users className="h-6 w-6 text-blue-500" />}
           trend="+5.2%"
@@ -233,7 +237,7 @@ export default function CommunityStats() {
                   <div className="flex items-center flex-1">
                     <span className="font-bold mr-4 w-4">{index + 1}</span>
                     <Avatar className="h-10 w-10 mr-4">
-                      <AvatarImage src={user.avatar_url} />
+                      <AvatarImage src={user.avatar_url || undefined}  />
                       <AvatarFallback>{user.username[0]}</AvatarFallback>
                     </Avatar>
                     <div>

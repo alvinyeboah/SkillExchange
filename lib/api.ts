@@ -351,7 +351,7 @@ export async function createServiceRequest(requestData: {
 // Challenge Submissions
 export async function createChallengeSubmission(submissionData: {
   challenge_id: number;
-  user_id: number;
+  user_id: string;
   content: string;
   submission_url?: string;
 }) {
@@ -453,7 +453,7 @@ export async function getChallengeSubmissions(challengeId: number) {
   }
 }
 
-export async function getUserAchievements(userId: number) {
+export async function getUserAchievements(userId: string) {
   try {
     const response = await fetch(`${BASE_URL}/achievements?userId=${userId}`);
     if (!response.ok) {

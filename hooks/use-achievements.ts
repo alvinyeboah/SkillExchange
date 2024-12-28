@@ -12,7 +12,7 @@ interface AchievementsState {
   achievements: Achievement[];
   isLoading: boolean;
   error: string | null;
-  fetchAchievements: (userId: number) => Promise<void>;
+  fetchAchievements: (userId: string) => Promise<void>;
   earnAchievement: (achievementData: any) => Promise<void>;
 }
 
@@ -21,7 +21,7 @@ export const useAchievements = create<AchievementsState>((set) => ({
   isLoading: false,
   error: null,
 
-  fetchAchievements: async (userId: number) => {
+  fetchAchievements: async (userId: string) => {
     set({ isLoading: true, error: null });
     try {
       const response = await getUserAchievements(userId);

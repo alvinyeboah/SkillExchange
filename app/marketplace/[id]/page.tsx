@@ -15,9 +15,9 @@ import {
 } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { useServices } from "@/hooks/use-services"
 import { useAuth } from "@/hooks/use-auth"
 import { ServiceRequestForm } from "@/components/forms/service-request"
+import { useMarketplace } from "@/hooks/use-marketplace"
 
 interface ServiceDetailsPageProps {
   params: Promise<{
@@ -26,9 +26,21 @@ interface ServiceDetailsPageProps {
 }
 
 export default function ServiceDetailsPage(props: ServiceDetailsPageProps) {
+  const {
+    services,
+    filteredServices,
+    isLoading,
+    error,
+    searchTerm,
+    selectedCategory,
+    fetchServices,
+    createNewService,
+    setSearchTerm,
+    setSelectedCategory,
+  } = useMarketplace();
+
   const params = use(props.params)
   const { id } = params
-  const { services } = useServices()
   const { user } = useAuth()
   const service = services.find((s) => s.service_id === Number(id))
 

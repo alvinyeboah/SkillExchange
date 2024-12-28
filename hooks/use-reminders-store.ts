@@ -2,10 +2,10 @@ import { create } from 'zustand';
 import { toast } from 'sonner';
 
 interface Reminder {
-  id: number;
-  userId: number;
+  id: string;
+  userId: string;
   type: 'challenge' | 'event';
-  referenceId: number;
+  referenceId: string;
   title: string;
   datetime: string;
   notified: boolean;
@@ -16,8 +16,8 @@ interface RemindersState {
   isLoading: boolean;
   error: string | null;
   setReminder: (reminder: Omit<Reminder, 'id' | 'notified'>) => Promise<void>;
-  removeReminder: (reminderId: number) => Promise<void>;
-  fetchReminders: (userId: number) => Promise<void>;
+  removeReminder: (reminderId: string) => Promise<void>;
+  fetchReminders: (userId: string) => Promise<void>;
 }
 
 export const useReminders = create<RemindersState>((set, get) => ({

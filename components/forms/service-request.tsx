@@ -34,7 +34,7 @@ const formSchema = z.object({
 
 interface ServiceRequestFormProps {
   serviceId?: number;
-  providerId?: number;
+  providerId?: string;
   isOpen?: boolean;
   onClose?: () => void;
 }

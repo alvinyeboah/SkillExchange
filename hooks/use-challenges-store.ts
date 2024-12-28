@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { toast } from "sonner";
-import { useMemo } from 'react';
+import { createClient } from "@/utils/supabase/client";
 
 interface User {
   user_id: number;
@@ -47,7 +47,7 @@ interface Challenge extends BaseChallenge {
   progress?: number;
   winner?: ChallengeWinner;
   topParticipants?: ChallengeParticipant[];
-  status: 'active' | 'upcoming' | 'completed';
+  status: "active" | "upcoming" | "completed";
 }
 
 interface ChallengesState {
@@ -140,41 +140,31 @@ export const useChallengesStore = create<ChallengesState>((set, get) => ({
     set({ isLoading: true, error: null });
 
     try {
-      // Fetch all data in parallel
-      const [challengesResponse, participantsResponse, usersResponse] =
-        await Promise.all([
-          fetch("/api/challenges"),
-          fetch("/api/challenges/participate"),
-          fetch("/api/users"),
-        ]);
+      const supabase = createClient();
+      const [
+        { data: challenges, error: challengesError },
+        { data: participants, error: participantsError },
+        { data: users, error: usersError },
+      ] = await Promise.all([
+        supabase.from("Challenges").select("*"),
+        supabase.from("ChallengeParticipation").select("*"),
+        supabase.from("Users").select("user_id, username, avatar_url"),
+      ]);
 
-      if (
-        !challengesResponse.ok ||
-        !participantsResponse.ok ||
-        !usersResponse.ok
-      ) {
+      if (challengesError || participantsError || usersError) {
         throw new Error("Failed to fetch data");
       }
 
-      const [challenges, participants, users]: [
-        BaseChallenge[],
-        Participant[],
-        User[]
-      ] = await Promise.all([
-        challengesResponse.json(),
-        participantsResponse.json(),
-        usersResponse.json(),
-      ]);
-      const userMap = new Map(users.map((user) => [user.user_id, user]));
-      const processedChallenges: Challenge[] = challenges.map((challenge) => {
+      const userMap = new Map(users.map((user:User) => [user.user_id, user]));
+      const processedChallenges: Challenge[] = challenges.map((challenge:any) => {
         const challengeParticipants = participants.filter(
-          (p) => p.challenge_id === (challenge as Challenge).challenge_id
+          (p:Challenge) => p.challenge_id === challenge.challenge_id
         );
         const uniqueParticipants = new Set(
-          challengeParticipants.map((p) => p.user_id)
+          challengeParticipants.map((p:any) => p.user_id)
         );
         const topParticipants = challengeParticipants
-          .map((p) => {
+          .map((p:Participant) => {
             const user = userMap.get(p.user_id);
             return {
               username: user?.username || "Unknown User",
@@ -188,10 +178,10 @@ export const useChallengesStore = create<ChallengesState>((set, get) => ({
 
         return {
           ...challenge,
-          challenge_id: (challenge as Challenge).challenge_id,
+          challenge_id: challenge.challenge_id,
           participantsCount: uniqueParticipants.size,
           topParticipants,
-          status: getChallengeStatus(challenge.start_date, challenge.end_date)
+          status: getChallengeStatus(challenge.start_date, challenge.end_date),
         };
       });
 
@@ -214,29 +204,28 @@ export const useChallengesStore = create<ChallengesState>((set, get) => ({
     set({ isLoading: true, error: null });
 
     try {
-      // Capitalize the difficulty
-      const capitalizedDifficulty = challenge.difficulty
-        ? challenge.difficulty.charAt(0).toUpperCase() +
-          challenge.difficulty.slice(1)
-        : undefined;
+      const supabase = createClient();
 
-      const response = await fetch("/api/challenges", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...challenge,
-          difficulty: capitalizedDifficulty,
-          skills: Array.isArray(challenge.skills)
-            ? challenge.skills.join(",")
-            : challenge.skills,
-        }),
-      });
+      const { data, error } = await supabase
+        .from("Challenges")
+        .insert([
+          {
+            title: challenge.title,
+            description: challenge.description || "",
+            reward_skillcoins: challenge.reward_skillcoins,
+            difficulty: challenge.difficulty,
+            category: challenge.category,
+            skills: Array.isArray(challenge.skills)
+              ? challenge.skills.join(",")
+              : challenge.skills,
+            start_date: challenge.start_date,
+            end_date: challenge.end_date,
+          },
+        ])
+        .select()
+        .single();
 
-      if (!response.ok) {
-        throw new Error("Failed to create challenge");
-      }
+      if (error) throw error;
 
       await get().fetchChallenges();
       set({ isLoading: false });
@@ -248,17 +237,18 @@ export const useChallengesStore = create<ChallengesState>((set, get) => ({
 
   participateInChallenge: async (challengeId: string, userId: string) => {
     try {
-      const response = await fetch("/api/challenges/participate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ challenge_id: challengeId, user_id: userId }),
-      });
+      const supabase = createClient();
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to join challenge");
+      const { error } = await supabase.from("ChallengeParticipation").insert([
+        {
+          challenge_id: challengeId,
+          user_id: userId,
+          progress: 0,
+        },
+      ]);
+
+      if (error) {
+        throw new Error(error.message);
       }
 
       await get().fetchChallenges();
