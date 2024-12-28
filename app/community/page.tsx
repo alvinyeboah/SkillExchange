@@ -13,7 +13,7 @@ import { useEffect } from "react";
 import { ErrorDisplay } from "@/components/ui/error-display";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
-import { useCommunityStore } from "@/hooks/useCommunityStore";
+import { useCommunityStore } from "@/hooks/useCommunityStatsStore";
 import { CommunityForm } from "@/components/forms/community-form";
 import { useCommunities } from "@/hooks/use-communities";
 

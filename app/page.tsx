@@ -32,13 +32,14 @@ import {
   Briefcase,
   TrendingUp,
   ArrowUp,
+  Calendar,
+  User,
+  Award,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { useServices } from "@/hooks/use-services";
-import { useChallenges } from "@/hooks/use-challenges";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { ReminderCheck } from "@/components/reminder-check";
-import { useCommunityStore } from "@/hooks/useCommunityStore";
+import { useCommunityStore } from "@/hooks/useCommunityStatsStore";
 import { TestimonialCarousel } from "@/components/testimonial-carousel";
 import { FeatureCards } from "@/components/feature-cards";
 import { ParticleBackground } from "@/components/particlebackground";
@@ -49,6 +50,7 @@ import { useChallengesStore } from "@/hooks/use-challenges-store";
 import Image from "next/image";
 import { Progress } from "@/components/ui/progress";
 import coin from "@/public/coin.png";
+import { useMarketplace } from "@/hooks/use-marketplace";
 
 const RotatingText = ({ items }: { items: string[] }) => {
   const [index, setIndex] = useState(0);
@@ -80,7 +82,23 @@ const RotatingText = ({ items }: { items: string[] }) => {
 export default function Home() {
   const { user } = useAuth();
   const router = useRouter();
-  const { services, isLoading: servicesLoading, fetchServices } = useServices();
+
+  useEffect(() => {
+    const fetchAllData = async () => {
+      try {
+        await Promise.all([
+          fetchServices(),
+          fetchChallenges(),
+          fetchCommunityStats(),
+        ]);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchAllData();
+  }, []);
+
   const renderSkillsBadges = (skills: string[] | string | undefined) => {
     if (!skills) return null;
 
@@ -99,19 +117,27 @@ export default function Home() {
     );
   };
 
-  const handleJoinChallenge = async (challengeId: number) => {
+  const handleJoinChallenge = async (challengeId: string) => {
     if (!user) {
       toast.error("Please login to join challenges");
       return;
     }
 
     try {
-      await participateInChallenge(challengeId, user.id);
+      await participateInChallenge(challengeId, user?.user_id);
       console.log("Successfully joined the challenge!");
     } catch (error) {
       console.log("Failed to join challenge. Please try again.");
     }
   };
+
+  const {
+    services,
+    isLoading: isServicesLoading,
+    error: isServicesError,
+    fetchServices,
+  } = useMarketplace();
+
   const {
     activeChallenges,
     isLoading: challengesLoading,
@@ -124,17 +150,16 @@ export default function Home() {
     isLoading: communityLoading,
     fetchCommunityStats,
   } = useCommunityStore();
-  useEffect(() => {
-    fetchServices();
-    fetchChallenges();
-    fetchCommunityStats();
-  }, [fetchServices, fetchChallenges, fetchCommunityStats]);
 
-  if (servicesLoading || challengesLoading || communityLoading) {
+  if (isServicesError || challengesLoading || communityLoading) {
     return <LoadingSpinner />;
   }
 
+  const maxCount = Math.max(
+    ...communityStats.topSkills.map((s) => s.usage_count)
+  );
   const rotatingItems = ["Skills", "Knowledge", "Experiences", "Talents"];
+  console.log(user);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-background to-background/80">
@@ -192,7 +217,7 @@ export default function Home() {
             {[
               { label: "Services", value: services?.length },
               { label: "Active Challenges", value: activeChallenges.length },
-              { label: "Users", value: communityStats.activeUsers?.length },
+              { label: "Users", value: communityStats.activeUsers },
             ].map((stat, index) => (
               <motion.div
                 key={stat.label}
@@ -303,15 +328,13 @@ export default function Home() {
                         <Avatar className="h-8 w-8 mr-2">
                           <AvatarImage
                             src={service?.user.avatar_url}
-                            alt={service?.provider_name}
+                            alt={service?.user.name}
                           />
                           <AvatarFallback>
                             {service?.user.name?.[0]}
                           </AvatarFallback>
                         </Avatar>
-                        <span className="text-sm">
-                          {service?.provider_name}
-                        </span>
+                        <span className="text-sm">{service?.user.name}</span>
                       </div>
                     </div>
                   </CardContent>
@@ -373,7 +396,7 @@ export default function Home() {
                   </div>
                   <Progress value={challenge.progress} className="mb-2" />
                   <p className="text-sm text-muted-foreground mb-4">
-                    {challenge.progress}% completed
+                    {challenge.progress}% time elapsed
                   </p>
                   <div className="flex justify-between items-center mb-4">
                     <span className="flex items-center">
@@ -395,27 +418,40 @@ export default function Home() {
                   </div>
                   <div>
                     <h4 className="font-semibold mb-2">Top Participants:</h4>
-                    <div className="flex justify-between">
-                      {challenge.topParticipants?.map((participant, index) => (
-                        <div key={index} className="flex flex-col items-center">
-                          <Avatar className="h-10 w-10 mb-1">
-                            <AvatarImage
-                              src={participant.avatar_url}
-                              alt={participant.username}
-                            />
-                            <AvatarFallback>
-                              {participant.username[0]}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="text-sm">
-                            {participant.username}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {participant.progress}%
-                          </span>
-                        </div>
-                      ))}
-                    </div>
+                    {challenge?.topParticipants &&
+                    challenge.topParticipants.length > 0 ? (
+                      <div className="flex justify-between">
+                        {challenge.topParticipants.map((participant, index) => (
+                          <div
+                            key={index}
+                            className="flex flex-col items-center"
+                          >
+                            <Avatar className="h-10 w-10 mb-1">
+                              <AvatarImage
+                                src={participant.avatar_url}
+                                alt={participant.username}
+                              />
+                              <AvatarFallback>
+                                {participant.username[0]}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="text-sm">
+                              {participant.username}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {participant.progress}%
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center p-4 bg-muted/50 rounded-lg">
+                        <Users className="h-8 w-8 text-muted-foreground mb-2" />
+                        <p className="text-sm text-muted-foreground text-center">
+                          Be the first to join this challenge!
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
                 <CardFooter>
@@ -467,7 +503,7 @@ export default function Home() {
                         <CardTitle className="flex items-center">
                           <Avatar className="h-8 w-8 mr-2">
                             <AvatarImage
-                              src={provider.avatar_url}
+                              src={provider?.avatar_url || undefined}
                               alt={provider.username}
                             />
                             <AvatarFallback>
@@ -482,7 +518,7 @@ export default function Home() {
                         <div className="flex justify-between items-center">
                           <span className="flex items-center">
                             <Star className="w-4 h-4 mr-1 text-yellow-500" />
-                            {provider.avg_rating ?? "No ratings"}
+                            {provider.rating ?? "No ratings"}
                           </span>
                           <span>{provider.skillcoins} skillcoins</span>
                         </div>
@@ -494,13 +530,130 @@ export default function Home() {
             </TabsContent>
             <TabsContent value="recentReviews">
               <ScrollArea className="h-[400px] w-full">
-                {/* Recent reviews will be displayed here */}
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {communityStats.recentReviews.map((review, index) => (
+                    <motion.div
+                      key={review.review_id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                    >
+                      <Card className="h-full bg-gradient-to-b from-card to-card/50 shadow-md hover:shadow-lg transition-shadow">
+                        <CardHeader className="space-y-4 pb-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <Avatar className="h-8 w-8">
+                                <AvatarFallback>
+                                  <User className="h-4 w-4" />
+                                </AvatarFallback>
+                              </Avatar>
+                              <Badge variant="secondary">
+                                Service #{review.service_id}
+                              </Badge>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              {[...Array(5)].map((_, i) => (
+                                <Star
+                                  key={i}
+                                  className={`h-4 w-4 transition-colors ${
+                                    i < review.rating
+                                      ? "text-yellow-500 fill-yellow-500"
+                                      : "text-muted-foreground"
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                          <div className="flex items-center text-sm text-muted-foreground">
+                            <Calendar className="mr-2 h-4 w-4" />
+                            {new Date(review.created_at).toLocaleDateString(
+                              "en-US",
+                              {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              }
+                            )}
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-pretty leading-relaxed">
+                            {review.content}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </div>
               </ScrollArea>
             </TabsContent>
             <TabsContent value="skillLeaderboard">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {/* Skill leaderboard will be displayed here */}
-              </div>
+              <ScrollArea className="h-[500px] w-full">
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {communityStats.topSkills.map((skill, index) => {
+                    const percentage = (skill.usage_count / maxCount) * 100;
+
+                    return (
+                      <motion.div
+                        key={skill.skill}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: index * 0.1 }}
+                      >
+                        <Card className="group relative overflow-hidden">
+                          <div
+                            className="absolute inset-0 bg-gradient-to-br from-primary/5 to-primary/0 
+                  transition-opacity group-hover:opacity-100 opacity-0"
+                          />
+
+                          <CardHeader>
+                            <CardTitle className="flex items-center justify-between text-base font-medium">
+                              <div className="flex items-center gap-2">
+                                <Award className="h-5 w-5 text-primary" />
+                                {skill.skill}
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Users className="h-4 w-4 text-muted-foreground" />
+                                <Badge
+                                  variant="secondary"
+                                  className="bg-secondary/50 hover:bg-secondary/70"
+                                >
+                                  {skill.usage_count}
+                                </Badge>
+                              </div>
+                            </CardTitle>
+                          </CardHeader>
+
+                          <CardContent className="space-y-4">
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-muted-foreground">
+                                Popularity
+                              </span>
+                              <div className="flex items-center gap-1">
+                                <TrendingUp className="h-4 w-4 text-green-500" />
+                                <span className="font-medium">
+                                  {percentage.toFixed(0)}%
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="relative h-2 overflow-hidden rounded-full bg-secondary/20">
+                              <motion.div
+                                className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary to-primary/80 rounded-full"
+                                initial={{ width: 0 }}
+                                animate={{ width: `${percentage}%` }}
+                                transition={{ duration: 1, ease: "easeOut" }}
+                              />
+                            </div>
+
+                            <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </ScrollArea>
             </TabsContent>
           </Tabs>
         </div>

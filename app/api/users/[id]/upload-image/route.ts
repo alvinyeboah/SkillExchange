@@ -1,49 +1,70 @@
-import { NextRequest, NextResponse } from "next/server";
-import pool, { withConnection } from "@/lib/db";
-import { authMiddleware } from "@/lib/middleware/authMiddleware";
-import { uploadToCloudinary } from "@/lib/cloudinary";
+import { createClient } from "@/utils/supabase/client";
+import { NextResponse } from "next/server";
+import { v2 as cloudinary } from 'cloudinary';
 
-export async function POST(
-  req: NextRequest,
-  props: { params: Promise<{ id: string }> }
-) {
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+export async function POST(request: Request, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
-  const authResult = await authMiddleware(req);
-  if (authResult instanceof Response) return authResult;
-
   try {
-    const formData = await req.formData();
-    const file = formData.get("image") as File;
-
+    const formData = await request.formData();
+    const file = formData.get("file") as File;
+    
     if (!file) {
       return NextResponse.json(
-        { message: "No image provided" },
+        { error: "No file provided" },
         { status: 400 }
       );
     }
 
     // Convert File to Buffer
-    const buffer = Buffer.from(await file.arrayBuffer());
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
 
     // Upload to Cloudinary
-    const avatar_url = await uploadToCloudinary(buffer);
+    const result = await new Promise((resolve, reject) => {
+      cloudinary.uploader
+        .upload_stream(
+          {
+            folder: "user-avatars",
+            allowed_formats: ["jpg", "png", "jpeg", "gif"],
+            transformation: [
+              { width: 400, height: 400, crop: "fill" },
+              { quality: "auto" }
+            ]
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        )
+        .end(buffer);
+    });
 
-    return await withConnection(async (connection) => {
-      // Update database with new avatar URL
-      await connection.query(
-        "UPDATE Users SET avatar_url = ? WHERE user_id = ?",
-        [avatar_url, params.id]
-      );
+    // Update user's avatar_url in Supabase
+    const supabase = createClient();
+    const { error: updateError } = await supabase
+      .from("Users")
+      .update({ avatar_url: (result as any).secure_url })
+      .eq("user_id", params.id);
 
-      return NextResponse.json({
-        message: "Image uploaded successfully",
-        avatar_url,
-      });
-    }, "uploading user image");
-  } catch (error: any) {
-    console.error("Upload error:", error);
+    if (updateError) {
+      throw updateError;
+    }
+
+    return NextResponse.json({ 
+      avatar_url: (result as any).secure_url 
+    });
+
+  } catch (error) {
+    console.error("Error uploading image:", error);
     return NextResponse.json(
-      { message: "Failed to upload image", error: error.message },
+      { error: "Failed to upload image" },
       { status: 500 }
     );
   }

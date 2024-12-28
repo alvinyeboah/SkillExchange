@@ -1,185 +1,428 @@
-"use client"
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
-import { login as apiLogin, logout as apiLogout } from '@/lib/api'
+"use client";
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import { createClient } from "@/utils/supabase/client";
 
-interface UserRating {
-  rating_value: number
-  rating_count: number
+export interface ConsolidatedUser {
+  user_id: string;
+  email: string;
+  username: string;
+  name: string;
+  avatar_url?: string;
+  bio: string;
+  role: string;
+  status: "active" | "inactive" | "suspended";
+  created_at: string;
+  updated_at: string;
+  skillcoins: number;
+  rating: number;
+  settings?: {
+    email_notifications: boolean;
+    push_notifications: boolean;
+    sms_notifications: boolean;
+    notification_frequency: "realtime" | "daily" | "weekly";
+    language: string;
+    profile_visibility: "public" | "private" | "friends";
+    show_online_status: boolean;
+    allow_messages_from_strangers: boolean;
+  };
+  achievements?: {
+    id: number;
+    title: string;
+    description: string;
+    icon_url: string;
+    earned_at: string;
+    requirement_value: number;
+    requirement_type: string;
+    skillcoins_reward: number;
+  }[];
+  skillProgress?: {
+    skill_category: string;
+    tasks_completed: number;
+    skill_level: number;
+    last_updated: string;
+  }[];
+  services?: {
+    id: number;
+    title: string;
+    description: string;
+    skillcoin_price: number;
+    delivery_time: number;
+    status: "active" | "inactive" | "draft";
+    service_status: "available" | "in_progress" | "completed";
+    created_at: string;
+    updated_at: string;
+    category: string;
+    tags: string;
+    requirements: string;
+    revisions: number;
+  }[];
+  challengeParticipation?: {
+    challenge_id: number;
+    progress: number;
+    joined_at: string;
+    challenge: {
+      title: string;
+      description: string;
+      reward_skillcoins: number;
+      difficulty: string;
+      category: string;
+      start_date: string;
+      end_date: string;
+    };
+  }[];
+  completedChallengesCount?: number;
+  notifications?: {
+    id: number;
+    title: string;
+    message: string;
+    type: "email" | "push" | "sms";
+    status: "unread" | "read";
+    created_at: string;
+  }[];
+  activity?: {
+    id: number;
+    activity_type: "post" | "share";
+    description: string;
+    created_at: string;
+    status: "pending" | "completed" | "failed";
+  }[];
+  requestedServices?: {
+    request_id: number;
+    service_id: number;
+    provider_id: string;
+    status: "pending" | "accepted" | "rejected" | "completed";
+    requirements: string;
+    created_at: string;
+    updated_at: string;
+    service: {
+      title: string;
+      description: string;
+      skillcoin_price: number;
+      delivery_time: number;
+      status: string;
+    };
+  }[];
+  skills?: {
+    skill_id: number;
+    name: string;
+    category: string;
+    description: string;
+    proficiency_level: number;
+    endorsed_count: number;
+  }[];
 }
 
-interface UserTransaction {
-  transaction_id: number
-  amount: number
-  date: string
-  type: 'incoming' | 'outgoing'
-}
-
-interface UserChallenge {
-  challenge_id: number
-  title: string
-  status: 'active' | 'completed'
-  progress: number
-}
-
-interface UserService {
-  service_id: number
-  title: string
-  description: string
-  rating: number
-}
-
-export interface User {
-  id: number
-  email: string
-  username: string
-  name?: string
-  avatar_url?: string
-  bio?: string
-  skills?: string[]
-  role?: string
-  created_at: string
-  skillcoins: number
-  ratings?: UserRating
-  transactions?: UserTransaction[]
-  activeChallenges?: UserChallenge[]
-  completedChallenges?: UserChallenge[]
-  services?: UserService[]
+interface RegisterParams {
+  email: string;
+  password: string;
+  username: string;
+  name: string;
 }
 
 interface AuthState {
-  user: User | null
-  isLoading: boolean
-  error: string | null
-  isInitialized: boolean
-  login: (email: string, password: string) => Promise<void>
-  logout: () => Promise<void>
-  setUser: (user: User | null) => void
-  clearError: () => void
-  refreshUserData: () => Promise<void>
-  checkAuth: () => Promise<void>
-  updateUser: (user: User) => void
+  user: ConsolidatedUser | null;
+  isLoading: boolean;
+  error: string | null;
+  isInitialized: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  setUser: (user: ConsolidatedUser | null) => void;
+  clearError: () => void;
+  refreshUserData: () => Promise<void>;
+  checkAuth: () => Promise<void>;
+  updateUser: (user: ConsolidatedUser) => void;
+  register: (params: RegisterParams) => Promise<boolean>;
 }
 
-const useAuth =
-  typeof window !== "undefined"
-    ? create<AuthState>()(
-        persist(
-          (set, get) => ({
-        user: null,
-        isLoading: false,
-        error: null,
-        isInitialized: false,
+const useAuth = create<AuthState>()(
+  persist(
+    (set, get) => ({
+      user: null,
+      isLoading: false,
+      error: null,
+      isInitialized: false,
 
-        login: async (email: string, password: string) => {
-          set({ isLoading: true, error: null })
-          try {
-            const response = await apiLogin({ email, password })
-            const authCheck = await fetch('/api/auth/check')
-            if (!authCheck.ok) {
-              throw new Error('Failed to verify authentication')
-            }
-            const { user } = await authCheck.json()
-            set({ user, isLoading: false, isInitialized: true })
-          } catch (error: any) {
-            set({ error: error.message, isLoading: false })
-            throw error
-          }
-        },
+      login: async (email: string, password: string) => {
+        try {
+          const supabase = createClient();
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
 
-        logout: async () => {
-          set({ isLoading: true, error: null })
-          try {
-            await apiLogout()
-            set({ user: null, isLoading: false })
-            window.location.href = '/auth/signin'
-          } catch (error: any) {
-            set({ error: error.message, isLoading: false })
-            throw error
-          }
-        },
+          if (error) throw error;
 
-        setUser: (user: User | null) => set({ user }),
-        clearError: () => set({ error: null }),
+          // Fetch complete user data after successful authentication
+          const { data: userData, error: userError } = await supabase
+            .from("Users")
+            .select("*")
+            .eq("user_id", data.user?.id)
+            .single();
 
-        checkAuth: async () => {
-          try {
-            const response = await fetch('/api/auth/check');
-            if (response.ok) {
-              const { user } = await response.json();
-              set({ user, isInitialized: true });
-            } else {
-              // Clear everything if authentication fails
-              set({ user: null, isInitialized: true });
-              localStorage.removeItem('auth-storage');
-              window.location.href = '/auth/signin';
-            }
-          } catch {
-            // Clear everything on error
-            set({ user: null, isInitialized: true });
-            localStorage.removeItem('auth-storage');
-            window.location.href = '/auth/signin';
-          }
-        },
+          // Fetch related data
+          const [
+            { data: settings },
+            { data: achievements },
+            { data: services },
+            { data: skills },
+          ] = await Promise.all([
+            supabase
+              .from("UserSettings")
+              .select("*")
+              .eq("user_id", data.user?.id)
+              .single(),
+            supabase
+              .from("Achievements")
+              .select("*")
+              .eq("user_id", data?.user.id),
+            supabase
+              .from("Services")
+              .select("*")
+              .eq("user_id", data.user?.id),
+            supabase
+              .from("UserSkills")
+              .select(
+                `
+                proficiency_level,
+                endorsed_count,
+                Skills (
+                  skill_id,
+                  name,
+                  category,
+                  description
+                )
+              `
+              )
+              .eq("user_id", data.user?.id),
+          ]);
 
-        refreshUserData: async () => {
-          const currentUser = get().user
-          if (!currentUser?.id) return
+          // Transform the skills data before consolidating
+          const transformedSkills = skills?.map((skill: any) => ({
+            skill_id: skill.Skills.skill_id,
+            name: skill.Skills.name,
+            category: skill.Skills.category,
+            description: skill.Skills.description,
+            proficiency_level: skill.proficiency_level,
+            endorsed_count: skill.endorsed_count,
+          }));
 
-          try {
-            const [userResponse, transactionsResponse, servicesResponse] = await Promise.all([
-              fetch(`/api/users/${currentUser.id}`),
-              fetch(`/api/transactions/${currentUser.id}`),
-              fetch(`/api/services/${currentUser.id}`)
-            ])
+          // Combine all data
+          const consolidatedUser = {
+            ...userData,
+            settings,
+            achievements,
+            services,
+            skills: transformedSkills,
+          } as ConsolidatedUser;
 
-            if (!userResponse.ok || !transactionsResponse.ok || !servicesResponse.ok) {
-              throw new Error('Failed to fetch user data')
-            }
-
-            const [userData, transactionsData, servicesData] = await Promise.all([
-              userResponse.json(),
-              transactionsResponse.json(),
-              servicesResponse.json()
-            ])
-
-            const enrichedUser = {
-              ...userData,
-              transactions: transactionsData,
-              services: servicesData
-            }
-
-            set({ user: enrichedUser })
-          } catch (error: any) {
-            console.error('Failed to refresh user data:', error)
-          }
-        },
-
-        updateUser: (user: User) => set({ user })
-      }),
-      {
-        name: 'auth-storage',
-        partialize: (state) => ({ user: state.user }),
-        onRehydrateStorage: () => (state) => {
-          if (state?.user) {
-            state.checkAuth()
-          }
+          set({ user: consolidatedUser, isLoading: false });
+        } catch (error: any) {
+          set({ error: error.message, isLoading: false });
+          throw error;
         }
-      }
-    )
+      },
+
+      logout: async () => {
+        set({ isLoading: true, error: null });
+        try {
+          const supabase = createClient();
+          await supabase.auth.signOut();
+          set({ user: null, isLoading: false });
+        } catch (error: any) {
+          set({ error: error.message, isLoading: false });
+          throw error;
+        }
+      },
+
+      setUser: (user: ConsolidatedUser | null) => set({ user }),
+      clearError: () => set({ error: null }),
+      refreshUserData: async () => {
+        const { login } = get();
+        const supabase = createClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (user?.email) {
+          await login(user.email, ""); // This will refresh all user data
+        }
+      },
+
+      checkAuth: async () => {
+        const supabase = createClient();
+        try {
+          const {
+            data: { session },
+            error,
+          } = await supabase.auth.getSession();
+
+          if (error) throw error;
+
+          if (session?.user) {
+            // Current implementation only fetches basic user data
+            const { data: userData, error: userError } = await supabase
+              .from("Users")
+              .select("*") // This needs to be expanded
+              .eq("user_id", session.user?.id)
+              .single();
+
+            // Add this: Fetch related data
+            const [
+              { data: settings },
+              { data: achievements },
+              { data: services },
+              { data: skills },
+            ] = await Promise.all([
+              supabase
+                .from("UserSettings")
+                .select("*")
+                .eq("user_id", session.user?.id)
+                .single(),
+              supabase
+                .from("Achievements")
+                .select("*")
+                .eq("user_id", session.user?.id),
+              supabase
+                .from("Services")
+                .select("*")
+                .eq("user_id", session.user?.id),
+              supabase
+                .from("UserSkills")
+                .select(
+                  `
+                  proficiency_level,
+                  endorsed_count,
+                  Skills (
+                    skill_id,
+                    name,
+                    category,
+                    description
+                  )
+                `
+                )
+                .eq("user_id", session.user?.id),
+            ]);
+
+            // Transform the skills data before consolidating
+            const transformedSkills = skills?.map((skill: any) => ({
+              skill_id: skill.Skills.skill_id,
+              name: skill.Skills.name,
+              category: skill.Skills.category,
+              description: skill.Skills.description,
+              proficiency_level: skill.proficiency_level,
+              endorsed_count: skill.endorsed_count,
+            }));
+
+            // Combine all data
+            const consolidatedUser = {
+              ...userData,
+              settings,
+              achievements,
+              services,
+              skills: transformedSkills,
+            } as ConsolidatedUser;
+
+            set({
+              user: consolidatedUser,
+              isInitialized: true,
+            });
+          } else {
+            set({ user: null, isInitialized: true });
+          }
+        } catch (error) {
+          set({ user: null, isInitialized: true });
+          console.error("Auth check error:", error);
+        }
+      },
+
+      updateUser: (user: ConsolidatedUser) => set({ user }),
+
+      register: async ({
+        email,
+        password,
+        username,
+        name,
+      }: RegisterParams): Promise<boolean> => {
+        set({ isLoading: true, error: null });
+        try {
+          const supabase = createClient();
+
+          // Register user with Supabase Auth
+          const { data: authData, error: authError } =
+            await supabase.auth.signUp({
+              email,
+              password,
+            });
+
+          if (authError) throw new Error(authError.message);
+          if (!authData.user) throw new Error("Registration failed");
+
+          // Create user profile in Users table
+          const { error: profileError } = await supabase.from("Users").insert([
+            {
+              user_id: authData.user?.id,
+              email,
+              username,
+              name,
+              bio: "",
+              role: "user",
+              status: "active",
+              skillcoins: 0,
+              rating: 0,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+          ]);
+
+          if (profileError) throw new Error(profileError.message);
+
+          // Create default user settings
+          const { error: settingsError } = await supabase
+            .from("UserSettings")
+            .insert([
+              {
+                user_id: authData.user?.id,
+                email_notifications: true,
+                push_notifications: false,
+                sms_notifications: false,
+                notification_frequency: "daily",
+                language: "en",
+                profile_visibility: "public",
+                show_online_status: true,
+                allow_messages_from_strangers: true,
+              },
+            ]);
+
+          if (settingsError) throw new Error(settingsError.message);
+
+          // Log the user in automatically after registration
+          await get().login(email, password);
+
+          set({ isLoading: false });
+          return true;
+        } catch (error: any) {
+          set({ error: error.message, isLoading: false });
+          throw error;
+        }
+      },
+    }),
+    {
+      name: "auth-storage",
+      storage:
+        typeof window !== "undefined"
+          ? {
+              getItem: (name) => {
+                const str = localStorage.getItem(name);
+                return str ? JSON.parse(str) : null;
+              },
+              setItem: (name, value) => {
+                localStorage.setItem(name, JSON.stringify(value));
+              },
+              removeItem: (name) => localStorage.removeItem(name),
+            }
+          : undefined,
+    }
   )
-  : (() => ({
-    user: null,
-    isLoading: false,
-    error: null,
-    isInitialized: false,
-    login: async () => {},
-    logout: async () => {},
-    setUser: () => {},
-    clearError: () => {},
-    refreshUserData: async () => {},
-    checkAuth: async () => {},
-    updateUser: () => {},
-  }));
+);
 
 export { useAuth };
