@@ -93,8 +93,7 @@ export default function Marketplace() {
 
   useEffect(() => {
     fetchServices();
-    fetchServices();
-  }, [fetchServices, fetchServices]);
+  }, [ fetchServices]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

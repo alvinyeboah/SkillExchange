@@ -40,11 +40,11 @@ export const metadata = {
     title: "SkillExchange - Simplified Service Exchange Platform",
     description:
       "Exchange services and collaborate in a community-driven ecosystem with SkillCoin.",
-    url: "https://skillcoin.com",
+    url: "https://lnkd.in/d64DTj2e",
     siteName: "SkillCoin",
     images: [
       {
-        url: "/og-image.png",
+        url: "/public/favicon.ico",
         width: 1200,
         height: 1200,
         alt: "SkillExchange - Simplified Service Exchange Platform",
