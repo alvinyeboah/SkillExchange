@@ -176,10 +176,7 @@ const useAuth = create<AuthState>()(
               .from("Achievements")
               .select("*")
               .eq("user_id", data?.user.id),
-            supabase
-              .from("Services")
-              .select("*")
-              .eq("user_id", data.user?.id),
+            supabase.from("Services").select("*").eq("user_id", data.user?.id),
             supabase
               .from("UserSkills")
               .select(
@@ -251,87 +248,61 @@ const useAuth = create<AuthState>()(
       checkAuth: async () => {
         const supabase = createClient();
         try {
+          // Get session first
           const {
             data: { session },
             error,
           } = await supabase.auth.getSession();
-
           if (error) throw error;
 
-          if (session?.user) {
-            // Current implementation only fetches basic user data
-            const { data: userData, error: userError } = await supabase
-              .from("Users")
-              .select("*") // This needs to be expanded
-              .eq("user_id", session.user?.id)
-              .single();
+          if (!session?.user) {
+            set({ user: null, isInitialized: true });
+            return;
+          }
 
-            // Add this: Fetch related data
-            const [
-              { data: settings },
-              { data: achievements },
-              { data: services },
-              { data: skills },
-            ] = await Promise.all([
+          // Fetch all data in parallel
+          const userId = session.user.id;
+          const [userData, settings, achievements, services, skills] =
+            await Promise.all([
+              supabase.from("Users").select("*").eq("user_id", userId).single(),
               supabase
                 .from("UserSettings")
                 .select("*")
-                .eq("user_id", session.user?.id)
+                .eq("user_id", userId)
                 .single(),
-              supabase
-                .from("Achievements")
-                .select("*")
-                .eq("user_id", session.user?.id),
-              supabase
-                .from("Services")
-                .select("*")
-                .eq("user_id", session.user?.id),
+              supabase.from("Achievements").select("*").eq("user_id", userId),
+              supabase.from("Services").select("*").eq("user_id", userId),
               supabase
                 .from("UserSkills")
                 .select(
                   `
-                  proficiency_level,
-                  endorsed_count,
-                  Skills (
-                    skill_id,
-                    name,
-                    category,
-                    description
-                  )
-                `
+              proficiency_level,
+              endorsed_count,
+              Skills (skill_id, name, category, description)
+            `
                 )
-                .eq("user_id", session.user?.id),
+                .eq("user_id", userId),
             ]);
 
-            // Transform the skills data before consolidating
-            const transformedSkills = skills?.map((skill: any) => ({
-              skill_id: skill.Skills.skill_id,
-              name: skill.Skills.name,
-              category: skill.Skills.category,
-              description: skill.Skills.description,
-              proficiency_level: skill.proficiency_level,
-              endorsed_count: skill.endorsed_count,
-            }));
-
-            // Combine all data
-            const consolidatedUser = {
-              ...userData,
-              settings,
-              achievements,
-              services,
-              skills: transformedSkills,
-            } as ConsolidatedUser;
-
-            set({
-              user: consolidatedUser,
-              isInitialized: true,
-            });
-          } else {
-            set({ user: null, isInitialized: true });
-          }
+          // Process and set user data
+          set({
+            user: {
+              ...userData.data,
+              settings: settings.data,
+              achievements: achievements.data,
+              services: services.data,
+              skills: skills.data,
+            },
+            isInitialized: true,
+          });
         } catch (error) {
-          set({ user: null, isInitialized: true });
-          console.error("Auth check error:", error);
+          set({
+            error:
+              error instanceof Error
+                ? error.message
+                : "An unknown error occurred",
+            isInitialized: true,
+          });
         }
       },
 
