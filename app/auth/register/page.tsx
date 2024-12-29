@@ -19,22 +19,25 @@ import {
 } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/navigation";
 import { useAuth } from "@/hooks/use-auth";
+import { Loader2 } from 'lucide-react';
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 export default function RegisterPage() {
   const router = useRouter();
-  const {register} = useAuth();
+  const { register } = useAuth();
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [name, setName] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
+    setIsLoading(true);
 
     // Validate fields
     const newErrors: { [key: string]: string } = {};
@@ -54,6 +57,7 @@ export default function RegisterPage() {
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
+      setIsLoading(false);
       return;
     }
 
@@ -65,8 +69,12 @@ export default function RegisterPage() {
       }
     } catch (error: any) {
       toast.error(error.message || "Registration failed");
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  const passwordMismatch = password !== confirmPassword && confirmPassword !== "";
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-background">
@@ -99,7 +107,7 @@ export default function RegisterPage() {
               <CardTitle className="text-3xl font-semibold">
                 Create an Account
               </CardTitle>
-              <ThemeToggle />{" "}
+              <ThemeToggle />
             </div>
             <CardDescription>
               Join SkillExchange and start your journey
@@ -146,7 +154,11 @@ export default function RegisterPage() {
                   <p className="text-destructive text-xs">{errors.username}</p>
                 )}
               </div>
-              <div className="space-y-2">
+              <motion.div 
+                className="space-y-2"
+                animate={passwordMismatch ? { x: [0, -10, 10, -10, 10, 0] } : {}}
+                transition={{ duration: 0.5 }}
+              >
                 <Label htmlFor="password">Password</Label>
                 <Input
                   id="password"
@@ -154,12 +166,17 @@ export default function RegisterPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
+                  className={passwordMismatch ? "border-destructive" : ""}
                 />
                 {errors.password && (
                   <p className="text-destructive text-xs">{errors.password}</p>
                 )}
-              </div>
-              <div className="space-y-2">
+              </motion.div>
+              <motion.div 
+                className="space-y-2"
+                animate={passwordMismatch ? { x: [0, -10, 10, -10, 10, 0] } : {}}
+                transition={{ duration: 0.5 }}
+              >
                 <Label htmlFor="confirmPassword">Confirm Password</Label>
                 <Input
                   id="confirmPassword"
@@ -167,18 +184,31 @@ export default function RegisterPage() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Confirm your password"
+                  className={passwordMismatch ? "border-destructive" : ""}
                 />
                 {errors.confirmPassword && (
                   <p className="text-destructive text-xs">
                     {errors.confirmPassword}
                   </p>
                 )}
-              </div>
+              </motion.div>
             </form>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
-            <Button className="w-full" type="submit" onClick={handleSubmit}>
-              Register
+            <Button 
+              className="w-full" 
+              type="submit" 
+              onClick={handleSubmit}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Registering...
+                </>
+              ) : (
+                "Register"
+              )}
             </Button>
             <p className="text-sm text-muted-foreground text-center">
               Already have an account?{" "}
@@ -195,3 +225,4 @@ export default function RegisterPage() {
     </div>
   );
 }
+

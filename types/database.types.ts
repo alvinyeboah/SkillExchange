@@ -50,6 +50,15 @@ export interface UserSettings {
   updated_at: string;
 }
 
+export interface Skill {
+    skill_id: string;  // Change this from number to string
+    name: string;
+    category: string;
+    description: string;
+    proficiency_level: number;
+    endorsed_count: number;
+  }
+  
 export interface Service {
   service_id: number;
   user_id: string;
