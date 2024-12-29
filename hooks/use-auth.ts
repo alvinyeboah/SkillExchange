@@ -318,7 +318,21 @@ const useAuth = create<AuthState>()(
         try {
           const supabase = createClient();
 
-          // Register user with Supabase Auth
+          // Check if username or email already exists
+          const { data: existingUser, error: checkError } = await supabase
+            .from("Users")
+            .select("username, email")
+            .or(`username.eq.${username},email.eq.${email}`)
+            .single();
+
+          if (existingUser) {
+            if (existingUser.email === email) {
+              throw new Error("Email already registered");
+            }
+            if (existingUser.username === username) {
+              throw new Error("Username already taken");
+            }
+          }
           const { data: authData, error: authError } =
             await supabase.auth.signUp({
               email,
