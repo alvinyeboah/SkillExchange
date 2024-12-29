@@ -338,7 +338,6 @@ const useAuth = create<AuthState>()(
               bio: "",
               role: "user",
               status: "active",
-              skillcoins: 0,
               rating: 0,
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
@@ -366,9 +365,8 @@ const useAuth = create<AuthState>()(
 
           if (settingsError) throw new Error(settingsError.message);
 
-          // Log the user in automatically after registration
-          await get().login(email, password);
-
+          // Don't automatically log in after registration
+          // Instead, return true to indicate successful registration
           set({ isLoading: false });
           return true;
         } catch (error: any) {

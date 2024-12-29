@@ -200,15 +200,10 @@ export default function Home() {
     fetchCommunityStats,
   } = useCommunityStore();
 
-  if (isServicesError || challengesLoading || communityLoading) {
-    return <LoadingSpinner />;
-  }
-
-  const maxCount = Math.max(
-    ...communityStats.topSkills.map((s) => s.usage_count)
-  );
+  const maxCount = communityStats?.topSkills
+    ? Math.max(...communityStats.topSkills.map((s) => s.usage_count))
+    : 0;
   const rotatingItems = ["Skills", "Knowledge", "Experiences", "Talents"];
-  console.log(user);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-background to-background/80">
@@ -264,9 +259,30 @@ export default function Home() {
             transition={{ duration: 0.5, delay: 0.4 }}
           >
             {[
-              { label: "Services", value: services?.length },
-              { label: "Active Challenges", value: activeChallenges.length },
-              { label: "Users", value: communityStats.activeUsers },
+              {
+                label: "Services",
+                value: isServicesLoading ? (
+                  <LoadingSpinner size="sm" />
+                ) : (
+                  services?.length
+                ),
+              },
+              {
+                label: "Active Challenges",
+                value: challengesLoading ? (
+                  <LoadingSpinner size="sm" />
+                ) : (
+                  activeChallenges.length
+                ),
+              },
+              {
+                label: "Users",
+                value: communityLoading ? (
+                  <LoadingSpinner size="sm" />
+                ) : (
+                  communityStats.activeUsers
+                ),
+              },
             ].map((stat, index) => (
               <motion.div
                 key={stat.label}
@@ -354,54 +370,60 @@ export default function Home() {
           <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-8 text-center bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary-foreground">
             Featured Services
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {services.slice(0, 6).map((service, index) => (
-              <motion.div
-                key={service.service_id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-              >
-                <Card className="flex flex-col h-full bg-card/50 backdrop-blur-sm border-primary/20 hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/20">
-                  <CardHeader>
-                    <CardTitle>{service.title}</CardTitle>
-                    <CardDescription>{service.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="flex-grow">
-                    <div className="flex justify-between items-center">
-                      <SkillCoinCounter
-                        amount={service.skillcoin_price}
-                        duration={2}
-                      />
-                      <div className="flex items-center">
-                        <Avatar className="h-8 w-8 mr-2">
-                          <AvatarImage
-                            src={service?.user.avatar_url}
-                            alt={service?.user.name}
-                          />
-                          <AvatarFallback>
-                            {service?.user.name?.[0]}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="text-sm">{service?.user.name}</span>
+          {isServicesLoading ? (
+            <div className="flex justify-center items-center h-64">
+              <LoadingSpinner size="lg" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {services.slice(0, 6).map((service, index) => (
+                <motion.div
+                  key={service.service_id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                >
+                  <Card className="flex flex-col h-full bg-card/50 backdrop-blur-sm border-primary/20 hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/20">
+                    <CardHeader>
+                      <CardTitle>{service.title}</CardTitle>
+                      <CardDescription>{service.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex-grow">
+                      <div className="flex justify-between items-center">
+                        <SkillCoinCounter
+                          amount={service.skillcoin_price}
+                          duration={2}
+                        />
+                        <div className="flex items-center">
+                          <Avatar className="h-8 w-8 mr-2">
+                            <AvatarImage
+                              src={service?.user.avatar_url}
+                              alt={service?.user.name}
+                            />
+                            <AvatarFallback>
+                              {service?.user.name?.[0]}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-sm">{service?.user.name}</span>
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button
-                      className="w-full bg-primary/80 hover:bg-primary"
-                      disabled={!user}
-                      onClick={() =>
-                        router.push(`/marketplace/${service.service_id}`)
-                      }
-                    >
-                      Request Service
-                    </Button>
-                  </CardFooter>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
+                    </CardContent>
+                    <CardFooter>
+                      <Button
+                        className="w-full bg-primary/80 hover:bg-primary"
+                        disabled={!user}
+                        onClick={() =>
+                          router.push(`/marketplace/${service.service_id}`)
+                        }
+                      >
+                        Request Service
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          )}
           <div className="text-center mt-8">
             <GlowingButton variant="outline" size="lg" asChild>
               <Link href="/marketplace">
@@ -417,104 +439,114 @@ export default function Home() {
           <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-8 text-center bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary-foreground">
             Active Challenges
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {activeChallenges.slice(0, 2).map((challenge) => (
-              <Card key={challenge.challenge_id} className="flex flex-col">
-                <CardHeader>
-                  <CardTitle className="flex justify-between items-center">
-                    {challenge.title}
-                    <Badge variant="secondary">{challenge.category}</Badge>
-                  </CardTitle>
-                  <CardDescription>{challenge.description}</CardDescription>
-                </CardHeader>
-                <CardContent className="flex-grow">
-                  <div className="flex justify-between items-center mb-4">
-                    <Badge
-                      variant={
-                        challenge.difficulty === "Hard"
-                          ? "destructive"
-                          : "default"
+          {challengesLoading ? (
+            <div className="flex justify-center items-center h-64">
+              <LoadingSpinner size="lg" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {activeChallenges.slice(0, 2).map((challenge) => (
+                <Card key={challenge.challenge_id} className="flex flex-col">
+                  <CardHeader>
+                    <CardTitle className="flex justify-between items-center">
+                      {challenge.title}
+                      <Badge variant="secondary">{challenge.category}</Badge>
+                    </CardTitle>
+                    <CardDescription>{challenge.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="flex-grow">
+                    <div className="flex justify-between items-center mb-4">
+                      <Badge
+                        variant={
+                          challenge.difficulty === "Hard"
+                            ? "destructive"
+                            : "default"
+                        }
+                      >
+                        {challenge.difficulty}
+                      </Badge>
+                      <span className="flex items-center">
+                        <Users className="w-4 h-4 mr-1" />
+                        {challenge.participantsCount} participants
+                      </span>
+                    </div>
+                    <Progress value={challenge.progress} className="mb-2" />
+                    <p className="text-sm text-muted-foreground mb-4">
+                      {challenge.progress}% time elapsed
+                    </p>
+                    <div className="flex justify-between items-center mb-4">
+                      <span className="flex items-center">
+                        <Image
+                          alt="skillcoin-image"
+                          src={coin}
+                          className="w-8 h-8"
+                        />
+                        {challenge.reward_skillcoins} SkillCoins
+                      </span>
+                      <span className="flex items-center">
+                        <Clock className="w-4 h-4 mr-1" />
+                        {new Date(challenge.end_date).toUTCString()}
+                      </span>
+                    </div>
+                    <div className="mb-4">
+                      <h4 className="font-semibold mb-2">Required Skills:</h4>
+                      {renderSkillsBadges(challenge.skills)}
+                    </div>
+                    <div>
+                      <h4 className="font-semibold mb-2">Top Participants:</h4>
+                      {challenge?.topParticipants &&
+                      challenge.topParticipants.length > 0 ? (
+                        <div className="flex justify-between">
+                          {challenge.topParticipants.map(
+                            (participant, index) => (
+                              <div
+                                key={index}
+                                className="flex flex-col items-center"
+                              >
+                                <Avatar className="h-10 w-10 mb-1">
+                                  <AvatarImage
+                                    src={participant.avatar_url}
+                                    alt={participant.username}
+                                  />
+                                  <AvatarFallback>
+                                    {participant.username[0]}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span className="text-sm">
+                                  {participant.username}
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                  {participant.progress}%
+                                </span>
+                              </div>
+                            )
+                          )}
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center p-4 bg-muted/50 rounded-lg">
+                          <Users className="h-8 w-8 text-muted-foreground mb-2" />
+                          <p className="text-sm text-muted-foreground text-center">
+                            Be the first to join this challenge!
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                  <CardFooter>
+                    <Button
+                      className="w-full"
+                      disabled={!user}
+                      onClick={() =>
+                        handleJoinChallenge(challenge.challenge_id)
                       }
                     >
-                      {challenge.difficulty}
-                    </Badge>
-                    <span className="flex items-center">
-                      <Users className="w-4 h-4 mr-1" />
-                      {challenge.participantsCount} participants
-                    </span>
-                  </div>
-                  <Progress value={challenge.progress} className="mb-2" />
-                  <p className="text-sm text-muted-foreground mb-4">
-                    {challenge.progress}% time elapsed
-                  </p>
-                  <div className="flex justify-between items-center mb-4">
-                    <span className="flex items-center">
-                      <Image
-                        alt="skillcoin-image"
-                        src={coin}
-                        className="w-8 h-8"
-                      />
-                      {challenge.reward_skillcoins} SkillCoins
-                    </span>
-                    <span className="flex items-center">
-                      <Clock className="w-4 h-4 mr-1" />
-                      {new Date(challenge.end_date).toUTCString()}
-                    </span>
-                  </div>
-                  <div className="mb-4">
-                    <h4 className="font-semibold mb-2">Required Skills:</h4>
-                    {renderSkillsBadges(challenge.skills)}
-                  </div>
-                  <div>
-                    <h4 className="font-semibold mb-2">Top Participants:</h4>
-                    {challenge?.topParticipants &&
-                    challenge.topParticipants.length > 0 ? (
-                      <div className="flex justify-between">
-                        {challenge.topParticipants.map((participant, index) => (
-                          <div
-                            key={index}
-                            className="flex flex-col items-center"
-                          >
-                            <Avatar className="h-10 w-10 mb-1">
-                              <AvatarImage
-                                src={participant.avatar_url}
-                                alt={participant.username}
-                              />
-                              <AvatarFallback>
-                                {participant.username[0]}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span className="text-sm">
-                              {participant.username}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              {participant.progress}%
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center p-4 bg-muted/50 rounded-lg">
-                        <Users className="h-8 w-8 text-muted-foreground mb-2" />
-                        <p className="text-sm text-muted-foreground text-center">
-                          Be the first to join this challenge!
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <Button
-                    className="w-full"
-                    disabled={!user}
-                    onClick={() => handleJoinChallenge(challenge.challenge_id)}
-                  >
-                    Join Challenge
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
+                      Join Challenge
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          )}
           <div className="text-center mt-8">
             <GlowingButton variant="outline" size="lg" asChild>
               <Link href="/challenges">
@@ -530,181 +562,187 @@ export default function Home() {
           <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-8 text-center bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary-foreground">
             Community Highlights
           </h2>
-          <Tabs defaultValue="topProviders" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-8">
-              <TabsTrigger value="topProviders">Top Providers</TabsTrigger>
-              <TabsTrigger value="recentReviews">Recent Reviews</TabsTrigger>
-              <TabsTrigger value="skillLeaderboard">
-                Skill Leaderboard
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="topProviders">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {communityStats.topProviders?.map((provider, index) => (
-                  <motion.div
-                    key={provider.user_id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: index * 0.1 }}
-                  >
-                    <Card className="flex flex-col h-full bg-card/50 backdrop-blur-sm border-primary/20 hover:border-primary/50 transition-all duration-300">
-                      <CardHeader>
-                        <CardTitle className="flex items-center">
-                          <Avatar className="h-8 w-8 mr-2">
-                            <AvatarImage
-                              src={provider?.avatar_url || undefined}
-                              alt={provider.username}
-                            />
-                            <AvatarFallback>
-                              {provider.username[0]}
-                            </AvatarFallback>
-                          </Avatar>
-                          {provider.name}
-                        </CardTitle>
-                        <CardDescription>{provider.username}</CardDescription>
-                      </CardHeader>
-                      <CardContent className="flex-grow">
-                        <div className="flex justify-between items-center">
-                          <span className="flex items-center">
-                            <Star className="w-4 h-4 mr-1 text-yellow-500" />
-                            {provider.rating ?? "No ratings"}
-                          </span>
-                          <span>{provider.skillcoins} skillcoins</span>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ))}
-              </div>
-            </TabsContent>
-            <TabsContent value="recentReviews">
-              <ScrollArea className="h-[400px] w-full">
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {communityStats.recentReviews.map((review, index) => (
+          {communityLoading ? (
+            <div className="flex justify-center items-center h-64">
+              <LoadingSpinner size="lg" />
+            </div>
+          ) : (
+            <Tabs defaultValue="topProviders" className="w-full">
+              <TabsList className="grid w-full grid-cols-3 mb-8">
+                <TabsTrigger value="topProviders">Top Providers</TabsTrigger>
+                <TabsTrigger value="recentReviews">Recent Reviews</TabsTrigger>
+                <TabsTrigger value="skillLeaderboard">
+                  Skill Leaderboard
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="topProviders">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {communityStats.topProviders?.map((provider, index) => (
                     <motion.div
-                      key={review.review_id}
+                      key={provider.user_id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
+                      transition={{ duration: 0.5, delay: index * 0.1 }}
                     >
-                      <Card className="h-full bg-gradient-to-b from-card to-card/50 shadow-md hover:shadow-lg transition-shadow">
-                        <CardHeader className="space-y-4 pb-4">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
-                              <Avatar className="h-8 w-8">
-                                <AvatarFallback>
-                                  <User className="h-4 w-4" />
-                                </AvatarFallback>
-                              </Avatar>
-                              <Badge variant="secondary">
-                                Service #{review.service_id}
-                              </Badge>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              {[...Array(5)].map((_, i) => (
-                                <Star
-                                  key={i}
-                                  className={`h-4 w-4 transition-colors ${
-                                    i < review.rating
-                                      ? "text-yellow-500 fill-yellow-500"
-                                      : "text-muted-foreground"
-                                  }`}
-                                />
-                              ))}
-                            </div>
-                          </div>
-                          <div className="flex items-center text-sm text-muted-foreground">
-                            <Calendar className="mr-2 h-4 w-4" />
-                            {new Date(review.created_at).toLocaleDateString(
-                              "en-US",
-                              {
-                                year: "numeric",
-                                month: "long",
-                                day: "numeric",
-                              }
-                            )}
-                          </div>
+                      <Card className="flex flex-col h-full bg-card/50 backdrop-blur-sm border-primary/20 hover:border-primary/50 transition-all duration-300">
+                        <CardHeader>
+                          <CardTitle className="flex items-center">
+                            <Avatar className="h-8 w-8 mr-2">
+                              <AvatarImage
+                                src={provider?.avatar_url || undefined}
+                                alt={provider.username}
+                              />
+                              <AvatarFallback>
+                                {provider.username[0]}
+                              </AvatarFallback>
+                            </Avatar>
+                            {provider.name}
+                          </CardTitle>
+                          <CardDescription>{provider.username}</CardDescription>
                         </CardHeader>
-                        <CardContent>
-                          <p className="text-pretty leading-relaxed">
-                            {review.content}
-                          </p>
+                        <CardContent className="flex-grow">
+                          <div className="flex justify-between items-center">
+                            <span className="flex items-center">
+                              <Star className="w-4 h-4 mr-1 text-yellow-500" />
+                              {provider.rating ?? "No ratings"}
+                            </span>
+                            <span>{provider.skillcoins} skillcoins</span>
+                          </div>
                         </CardContent>
                       </Card>
                     </motion.div>
                   ))}
                 </div>
-              </ScrollArea>
-            </TabsContent>
-            <TabsContent value="skillLeaderboard">
-              <ScrollArea className="h-[500px] w-full">
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {communityStats.topSkills.map((skill, index) => {
-                    const percentage = (skill.usage_count / maxCount) * 100;
-
-                    return (
+              </TabsContent>
+              <TabsContent value="recentReviews">
+                <ScrollArea className="h-[400px] w-full">
+                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    {communityStats.recentReviews.map((review, index) => (
                       <motion.div
-                        key={skill.skill}
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
+                        key={review.review_id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1 }}
                       >
-                        <Card className="group relative overflow-hidden">
-                          <div
-                            className="absolute inset-0 bg-gradient-to-br from-primary/5 to-primary/0 
-                  transition-opacity group-hover:opacity-100 opacity-0"
-                          />
-
-                          <CardHeader>
-                            <CardTitle className="flex items-center justify-between text-base font-medium">
-                              <div className="flex items-center gap-2">
-                                <Award className="h-5 w-5 text-primary" />
-                                {skill.skill}
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Users className="h-4 w-4 text-muted-foreground" />
-                                <Badge
-                                  variant="secondary"
-                                  className="bg-secondary/50 hover:bg-secondary/70"
-                                >
-                                  {skill.usage_count}
+                        <Card className="h-full bg-gradient-to-b from-card to-card/50 shadow-md hover:shadow-lg transition-shadow">
+                          <CardHeader className="space-y-4 pb-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-2">
+                                <Avatar className="h-8 w-8">
+                                  <AvatarFallback>
+                                    <User className="h-4 w-4" />
+                                  </AvatarFallback>
+                                </Avatar>
+                                <Badge variant="secondary">
+                                  Service #{review.service_id}
                                 </Badge>
                               </div>
-                            </CardTitle>
-                          </CardHeader>
-
-                          <CardContent className="space-y-4">
-                            <div className="flex items-center justify-between text-sm">
-                              <span className="text-muted-foreground">
-                                Popularity
-                              </span>
-                              <div className="flex items-center gap-1">
-                                <TrendingUp className="h-4 w-4 text-green-500" />
-                                <span className="font-medium">
-                                  {percentage.toFixed(0)}%
-                                </span>
+                              <div className="flex items-center space-x-1">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star
+                                    key={i}
+                                    className={`h-4 w-4 transition-colors ${
+                                      i < review.rating
+                                        ? "text-yellow-500 fill-yellow-500"
+                                        : "text-muted-foreground"
+                                    }`}
+                                  />
+                                ))}
                               </div>
                             </div>
-
-                            <div className="relative h-2 overflow-hidden rounded-full bg-secondary/20">
-                              <motion.div
-                                className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary to-primary/80 rounded-full"
-                                initial={{ width: 0 }}
-                                animate={{ width: `${percentage}%` }}
-                                transition={{ duration: 1, ease: "easeOut" }}
-                              />
+                            <div className="flex items-center text-sm text-muted-foreground">
+                              <Calendar className="mr-2 h-4 w-4" />
+                              {new Date(review.created_at).toLocaleDateString(
+                                "en-US",
+                                {
+                                  year: "numeric",
+                                  month: "long",
+                                  day: "numeric",
+                                }
+                              )}
                             </div>
-
-                            <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-pretty leading-relaxed">
+                              {review.content}
+                            </p>
                           </CardContent>
                         </Card>
                       </motion.div>
-                    );
-                  })}
-                </div>
-              </ScrollArea>
-            </TabsContent>
-          </Tabs>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </TabsContent>
+              <TabsContent value="skillLeaderboard">
+                <ScrollArea className="h-[500px] w-full">
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {communityStats.topSkills.map((skill, index) => {
+                      const percentage = (skill.usage_count / maxCount) * 100;
+
+                      return (
+                        <motion.div
+                          key={skill.skill}
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: index * 0.1 }}
+                        >
+                          <Card className="group relative overflow-hidden">
+                            <div
+                              className="absolute inset-0 bg-gradient-to-br from-primary/5 to-primary/0 
+                  transition-opacity group-hover:opacity-100 opacity-0"
+                            />
+
+                            <CardHeader>
+                              <CardTitle className="flex items-center justify-between text-base font-medium">
+                                <div className="flex items-center gap-2">
+                                  <Award className="h-5 w-5 text-primary" />
+                                  {skill.skill}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Users className="h-4 w-4 text-muted-foreground" />
+                                  <Badge
+                                    variant="secondary"
+                                    className="bg-secondary/50 hover:bg-secondary/70"
+                                  >
+                                    {skill.usage_count}
+                                  </Badge>
+                                </div>
+                              </CardTitle>
+                            </CardHeader>
+
+                            <CardContent className="space-y-4">
+                              <div className="flex items-center justify-between text-sm">
+                                <span className="text-muted-foreground">
+                                  Popularity
+                                </span>
+                                <div className="flex items-center gap-1">
+                                  <TrendingUp className="h-4 w-4 text-green-500" />
+                                  <span className="font-medium">
+                                    {percentage.toFixed(0)}%
+                                  </span>
+                                </div>
+                              </div>
+
+                              <div className="relative h-2 overflow-hidden rounded-full bg-secondary/20">
+                                <motion.div
+                                  className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary to-primary/80 rounded-full"
+                                  initial={{ width: 0 }}
+                                  animate={{ width: `${percentage}%` }}
+                                  transition={{ duration: 1, ease: "easeOut" }}
+                                />
+                              </div>
+
+                              <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+                            </CardContent>
+                          </Card>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                </ScrollArea>
+              </TabsContent>
+            </Tabs>
+          )}
         </div>
       </section>
 
@@ -757,7 +795,9 @@ export default function Home() {
                 </form>
               </CardContent>
               <CardFooter className="flex justify-between">
-                <Button onClick={handleSubmit} variant="ghost">Sign In</Button>
+                <Button onClick={handleSubmit} variant="ghost">
+                  Sign In
+                </Button>
                 <GlowingButton asChild>
                   <Link href="/auth/register">Create Account</Link>
                 </GlowingButton>

@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { motion } from "framer-motion";
-
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import {
   Select,
   SelectContent,
@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
-import { Award, Briefcase, Camera, Coins, Loader, Star } from "lucide-react";
+import { Award, Briefcase, Camera, Coins, Loader, Plus, Star } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -39,6 +39,9 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { ProtectedRoute } from "@/components/protected-route";
+import { AddSkillForm } from "@/components/forms/addSkillform";
+import { Skill } from "@/types/database.types";
+
 
 export default function SettingsPage() {
   const { user, updateUser } = useAuth();
@@ -58,6 +61,17 @@ export default function SettingsPage() {
       fetchSettings(user?.user_id);
     }
   }, [user?.user_id, fetchSettings]);
+
+  const [skills, setSkills] = useState<Skill[]>(user?.skills?.map(skill => ({
+    ...skill,
+    skill_id: skill.skill_id.toString()  // Convert number to string
+  })) || []);
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+
+  const handleAddSkill = (newSkill: Skill) => {
+    setSkills([...skills, newSkill])
+    setIsDialogOpen(false)
+  }
 
   const handleNotificationUpdate = async (key: string, value: boolean) => {
     if (!user?.user_id) return;
@@ -83,7 +97,8 @@ export default function SettingsPage() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    await handleProfileUpdate(new FormData(e.currentTarget));
+    const formData = new FormData(e.currentTarget);
+    await handleProfileUpdate(formData);
     setIsEditing(false);
   };
 
@@ -106,14 +121,28 @@ export default function SettingsPage() {
         bio: formData.get("bio") as string,
         email: formData.get("email") as string,
       });
+
+      if (updateUser && user) {
+        updateUser({
+          ...user,
+          name: formData.get("fullName") as string,
+          username: formData.get("username") as string,
+          bio: formData.get("bio") as string,
+          email: formData.get("email") as string,
+        });
+      }
+
       toast.success("Profile updated successfully");
     } catch (error) {
       toast.error("Failed to update profile");
     }
   };
 
-  const handleAccountUpdate = async (formData: FormData) => {
+  const handleAccountUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     if (!user?.user_id) return;
+
+    const formData = new FormData(e.currentTarget);
     try {
       const accountData = {
         email: formData.get("email") as string,
@@ -128,7 +157,6 @@ export default function SettingsPage() {
         return;
       }
 
-      // Update account data through your API
       await fetch(`/api/users/${user?.user_id}/account`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -386,69 +414,95 @@ export default function SettingsPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Award className="h-5 w-5" />
-                  <span>Skills</span>
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Award className="h-5 w-5" />
+                    <span>Skills</span>
+                  </div>
+                  <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Skill
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Add a New Skill</DialogTitle>
+                      </DialogHeader>
+                      <AddSkillForm onAddSkill={handleAddSkill} />
+                    </DialogContent>
+                  </Dialog>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {user?.skills?.map((skill, index) => (
-                    <TooltipProvider key={skill.skill_id}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: index * 0.1 }}
-                          >
-                            <Card className="overflow-hidden">
-                              <CardContent className="p-4">
-                                <div className="flex justify-between items-start mb-2">
-                                  <div>
-                                    <h3 className="font-semibold text-lg">
-                                      {skill.name}
-                                    </h3>
-                                    <Badge variant="outline" className="mt-1">
-                                      {skill.category}
+                {user?.skills?.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground mb-4">
+                      You haven't added any skills yet.
+                    </p>
+                    <Button
+                      variant="secondary"
+                      onClick={() => setIsDialogOpen(true)}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Your First Skill
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {user?.skills?.map((skill, index) => (
+                      <TooltipProvider key={skill.skill_id}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <motion.div
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: index * 0.1 }}
+                            >
+                              <Card className="overflow-hidden">
+                                <CardContent className="p-4">
+                                  <div className="flex justify-between items-start mb-2">
+                                    <div>
+                                      <h3 className="font-semibold text-lg">
+                                        {skill.name}
+                                      </h3>
+                                      <Badge variant="outline" className="mt-1">
+                                        {skill.category}
+                                      </Badge>
+                                    </div>
+                                    <Badge
+                                      variant="secondary"
+                                      className="text-xs"
+                                    >
+                                      Lvl {skill.proficiency_level}
                                     </Badge>
                                   </div>
-                                  <Badge
-                                    variant="secondary"
-                                    className="text-xs"
-                                  >
-                                    Lvl {skill.proficiency_level}
-                                  </Badge>
-                                </div>
-                                <p className="text-sm text-muted-foreground line-clamp-2">
-                                  {skill.description}
-                                </p>
-                                <div className="mt-2 text-xs text-muted-foreground">
-                                  Endorsements: {skill.endorsed_count}
-                                </div>
-                              </CardContent>
-                            </Card>
-                          </motion.div>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>{skill.description}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  ))}
-                </div>
+                                  <p className="text-sm text-muted-foreground line-clamp-2">
+                                    {skill.description}
+                                  </p>
+                                  <div className="mt-2 text-xs text-muted-foreground">
+                                    Endorsements: {skill.endorsed_count}
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            </motion.div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{skill.description}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="account">
             <Card>
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleAccountUpdate(new FormData(e.currentTarget));
-                }}
-              >
+              <form onSubmit={handleAccountUpdate}>
                 <CardHeader>
                   <CardTitle>Account Settings</CardTitle>
                   <CardDescription>
@@ -536,7 +590,7 @@ export default function SettingsPage() {
                     id="emailNotifications"
                     checked={settings?.email_notifications}
                     onCheckedChange={(checked) =>
-                      handleNotificationUpdate("emailNotifications", checked)
+                      handleNotificationUpdate("email_notificatiions", checked)
                     }
                   />
                 </div>
@@ -546,7 +600,7 @@ export default function SettingsPage() {
                     id="pushNotifications"
                     checked={settings?.push_notifications}
                     onCheckedChange={(checked) =>
-                      handleNotificationUpdate("pushNotifications", checked)
+                      handleNotificationUpdate("push_notifications", checked)
                     }
                   />
                 </div>
@@ -556,7 +610,7 @@ export default function SettingsPage() {
                     id="smsNotifications"
                     checked={settings?.sms_notifications}
                     onCheckedChange={(checked) =>
-                      handleNotificationUpdate("smsNotifications", checked)
+                      handleNotificationUpdate("sms_notifications", checked)
                     }
                   />
                 </div>
@@ -598,7 +652,7 @@ export default function SettingsPage() {
                   <Select
                     defaultValue={settings?.profile_visibility || "public"}
                     onValueChange={(value) =>
-                      handlePrivacyUpdate("profileVisibility", value)
+                      handlePrivacyUpdate("profile_visibility", value)
                     }
                   >
                     <SelectTrigger id="profileVisibility">
@@ -617,7 +671,7 @@ export default function SettingsPage() {
                     id="showOnlineStatus"
                     checked={settings?.show_online_status}
                     onCheckedChange={(checked) =>
-                      handlePrivacyUpdate("showOnlineStatus", checked)
+                      handlePrivacyUpdate("show_online_status", checked)
                     }
                   />
                 </div>
@@ -629,7 +683,10 @@ export default function SettingsPage() {
                     id="allowMessagesFromStrangers"
                     checked={settings?.allow_messages_from_strangers}
                     onCheckedChange={(checked) =>
-                      handlePrivacyUpdate("allowMessagesFromStrangers", checked)
+                      handlePrivacyUpdate(
+                        "allow_messages_from_strangers",
+                        checked
+                      )
                     }
                   />
                 </div>
@@ -641,7 +698,7 @@ export default function SettingsPage() {
                     id="dataUsageConsent"
                     checked={settings?.data_usage_consent}
                     onCheckedChange={(checked) =>
-                      handlePrivacyUpdate("dataUsageConsent", checked)
+                      handlePrivacyUpdate("data_usage_consent", checked)
                     }
                   />
                 </div>

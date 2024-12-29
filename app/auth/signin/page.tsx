@@ -82,7 +82,7 @@ export default function SignInPage() {
           );
           break;
         default:
-          toast.error("An error occurred during sign in. Please try again.");
+          toast.error(`${error.message || "An error occurred"}. Please try again.`);
       }
     } finally {
       setLoading(false);
