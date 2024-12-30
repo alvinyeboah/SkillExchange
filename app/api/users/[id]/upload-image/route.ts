@@ -21,12 +21,8 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
         { status: 400 }
       );
     }
-
-    // Convert File to Buffer
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-
-    // Upload to Cloudinary
     const result = await new Promise((resolve, reject) => {
       cloudinary.uploader
         .upload_stream(
@@ -46,7 +42,6 @@ export async function POST(request: Request, props: { params: Promise<{ id: stri
         .end(buffer);
     });
 
-    // Update user's avatar_url in Supabase
     const supabase = createClient();
     const { error: updateError } = await supabase
       .from("Users")

@@ -166,6 +166,8 @@ const useAuth = create<AuthState>()(
             { data: achievements },
             { data: services },
             { data: skills },
+            { data: requestedServices },
+            { data: challengeParticipation },
           ] = await Promise.all([
             supabase
               .from("UserSettings")
@@ -175,7 +177,7 @@ const useAuth = create<AuthState>()(
             supabase
               .from("Achievements")
               .select("*")
-              .eq("user_id", data?.user.id),
+              .eq("user_id", data.user?.id),
             supabase.from("Services").select("*").eq("user_id", data.user?.id),
             supabase
               .from("UserSkills")
@@ -192,6 +194,46 @@ const useAuth = create<AuthState>()(
               `
               )
               .eq("user_id", data.user?.id),
+            supabase
+              .from("ServiceRequests")
+              .select(
+                `
+                request_id,
+                service_id,
+                provider_id,
+                status,
+                requirements,
+                created_at,
+                updated_at,
+                Services (
+                  title,
+                  description,
+                  skillcoin_price,
+                  delivery_time,
+                  status
+                )
+              `
+              )
+              .eq("requester_id", data.user?.id),
+            supabase
+              .from("ChallengeParticipation")
+              .select(
+                `
+                challenge_id,
+                progress,
+                joined_at,
+                Challenges (
+                  title,
+                  description,
+                  reward_skillcoins,
+                  difficulty,
+                  category,
+                  start_date,
+                  end_date
+                )
+              `
+              )
+              .eq("user_id", data.user?.id),
           ]);
 
           // Transform the skills data before consolidating
@@ -204,6 +246,30 @@ const useAuth = create<AuthState>()(
             endorsed_count: skill.endorsed_count,
           }));
 
+          // Transform requested services data
+          const transformedRequestedServices = requestedServices?.map(
+            (request: any) => ({
+              request_id: request.request_id,
+              service_id: request.service_id,
+              provider_id: request.provider_id,
+              status: request.status,
+              requirements: request.requirements,
+              created_at: request.created_at,
+              updated_at: request.updated_at,
+              service: request.Services,
+            })
+          );
+
+          // Transform challenge participation data
+          const transformedChallengeParticipation = challengeParticipation?.map(
+            (participation: any) => ({
+              challenge_id: participation.challenge_id,
+              progress: participation.progress,
+              joined_at: participation.joined_at,
+              challenge: participation.Challenges,
+            })
+          );
+
           // Combine all data
           const consolidatedUser = {
             ...userData,
@@ -211,6 +277,8 @@ const useAuth = create<AuthState>()(
             achievements,
             services,
             skills: transformedSkills,
+            requestedServices: transformedRequestedServices,
+            challengeParticipation: transformedChallengeParticipation,
           } as ConsolidatedUser;
 
           set({ user: consolidatedUser, isLoading: false });
@@ -262,27 +330,97 @@ const useAuth = create<AuthState>()(
 
           // Fetch all data in parallel
           const userId = session.user.id;
-          const [userData, settings, achievements, services, skills] =
-            await Promise.all([
-              supabase.from("Users").select("*").eq("user_id", userId).single(),
-              supabase
-                .from("UserSettings")
-                .select("*")
-                .eq("user_id", userId)
-                .single(),
-              supabase.from("Achievements").select("*").eq("user_id", userId),
-              supabase.from("Services").select("*").eq("user_id", userId),
-              supabase
-                .from("UserSkills")
-                .select(
-                  `
-              proficiency_level,
-              endorsed_count,
-              Skills (skill_id, name, category, description)
-            `
+          const [
+            userData,
+            settings,
+            achievements,
+            services,
+            skills,
+            requestedServices,
+            challengeParticipation,
+          ] = await Promise.all([
+            supabase.from("Users").select("*").eq("user_id", userId).single(),
+            supabase
+              .from("UserSettings")
+              .select("*")
+              .eq("user_id", userId)
+              .single(),
+            supabase.from("Achievements").select("*").eq("user_id", userId),
+            supabase.from("Services").select("*").eq("user_id", userId),
+            supabase
+              .from("UserSkills")
+              .select(
+                `
+                proficiency_level,
+                endorsed_count,
+                Skills (skill_id, name, category, description)
+              `
+              )
+              .eq("user_id", userId),
+            supabase
+              .from("ServiceRequests")
+              .select(
+                `
+                request_id,
+                service_id,
+                provider_id,
+                status,
+                requirements,
+                created_at,
+                updated_at,
+                Services (
+                  title,
+                  description,
+                  skillcoin_price,
+                  delivery_time,
+                  status
                 )
-                .eq("user_id", userId),
-            ]);
+              `
+              )
+              .eq("requester_id", userId),
+            supabase
+              .from("ChallengeParticipation")
+              .select(
+                `
+                challenge_id,
+                progress,
+                joined_at,
+                Challenges (
+                  title,
+                  description,
+                  reward_skillcoins,
+                  difficulty,
+                  category,
+                  start_date,
+                  end_date
+                )
+              `
+              )
+              .eq("user_id", userId),
+          ]);
+
+          // Transform requested services data
+          const transformedRequestedServices = requestedServices.data?.map(
+            (request: any) => ({
+              request_id: request.request_id,
+              service_id: request.service_id,
+              provider_id: request.provider_id,
+              status: request.status,
+              requirements: request.requirements,
+              created_at: request.created_at,
+              updated_at: request.updated_at,
+              service: request.Services,
+            })
+          );
+
+          // Transform challenge participation data
+          const transformedChallengeParticipation =
+            challengeParticipation.data?.map((participation: any) => ({
+              challenge_id: participation.challenge_id,
+              progress: participation.progress,
+              joined_at: participation.joined_at,
+              challenge: participation.Challenges,
+            }));
 
           // Process and set user data
           set({
@@ -292,6 +430,8 @@ const useAuth = create<AuthState>()(
               achievements: achievements.data,
               services: services.data,
               skills: skills.data,
+              requestedServices: transformedRequestedServices,
+              challengeParticipation: transformedChallengeParticipation,
             },
             isInitialized: true,
           });
@@ -378,9 +518,6 @@ const useAuth = create<AuthState>()(
             ]);
 
           if (settingsError) throw new Error(settingsError.message);
-
-          // Don't automatically log in after registration
-          // Instead, return true to indicate successful registration
           set({ isLoading: false });
           return true;
         } catch (error: any) {

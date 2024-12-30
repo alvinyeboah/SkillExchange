@@ -51,7 +51,7 @@ export interface UserSettings {
 }
 
 export interface Skill {
-    skill_id: string;  // Change this from number to string
+    skill_id: number;  
     name: string;
     category: string;
     description: string;

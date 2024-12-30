@@ -1,14 +1,28 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import * as z from "zod"
-import { Button } from "@/components/ui/button"
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const skillFormSchema = z.object({
   name: z.string().min(2, {
@@ -17,14 +31,14 @@ const skillFormSchema = z.object({
   category: z.string().min(2, {
     message: "Category must be at least 2 characters.",
   }),
-  proficiency_level: z.number().min(1).max(10),
+  proficiency_level: z.number().min(1).max(5),
   description: z.string().min(10, {
     message: "Description must be at least 10 characters.",
   }),
-})
+});
 
 interface AddSkillFormProps {
-  onAddSkill: (skill: any) => void
+  onAddSkill: (skill: any) => void;
 }
 
 export function AddSkillForm({ onAddSkill }: AddSkillFormProps) {
@@ -36,15 +50,15 @@ export function AddSkillForm({ onAddSkill }: AddSkillFormProps) {
       proficiency_level: 1,
       description: "",
     },
-  })
+  });
 
   function onSubmit(values: z.infer<typeof skillFormSchema>) {
     onAddSkill({
       ...values,
       skill_id: Date.now().toString(), // Generate a temporary ID
       endorsed_count: 0,
-    })
-    form.reset()
+    });
+    form.reset();
   }
 
   return (
@@ -82,7 +96,10 @@ export function AddSkillForm({ onAddSkill }: AddSkillFormProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Proficiency Level</FormLabel>
-              <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={field.value.toString()}>
+              <Select
+                onValueChange={(value) => field.onChange(parseInt(value))}
+                defaultValue={field.value.toString()}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select proficiency level" />
@@ -116,6 +133,5 @@ export function AddSkillForm({ onAddSkill }: AddSkillFormProps) {
         <Button type="submit">Add Skill</Button>
       </form>
     </Form>
-  )
+  );
 }
-

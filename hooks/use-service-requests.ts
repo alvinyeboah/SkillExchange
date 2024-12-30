@@ -88,6 +88,16 @@ export const useServiceRequests = create<ServiceRequestsState>((set, get) => ({
 
       if (error) throw new Error(error.message);
 
+      // Fetch provider's email
+      const { data: providerData, error: providerError } = await supabase
+        .from("Users")
+        .select("email")
+        .eq("user_id", requestData.provider_id)
+        .single();
+
+      if (providerError) throw new Error(providerError.message);
+      if (!providerData?.email) throw new Error("Provider email not found");
+
       // Create notification for the provider
       const { error: notificationError } = await supabase
         .from("Notifications")
@@ -105,9 +115,9 @@ export const useServiceRequests = create<ServiceRequestsState>((set, get) => ({
 
       if (notificationError) throw new Error(notificationError.message);
       await sendEmailNotification({
-        to: requestData.provider_id,
+        to: providerData.email,
         subject: "New Service Request",
-        template: "service-request", // Specify which template to use
+        template: "service-request",
         data: {
           requestId: newRequest.request_id,
           requirements: requestData.requirements,
