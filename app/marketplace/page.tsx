@@ -37,7 +37,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { ServiceForm } from "@/components/forms/service-form";
+import { ServiceForm } from "@/components/forms/service-add";
 import Image from "next/image";
 import coin from "@/public/coin.png";
 import { useAuth } from "@/hooks/use-auth";

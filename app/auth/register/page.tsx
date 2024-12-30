@@ -19,7 +19,8 @@ import {
 } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/navigation";
 import { useAuth } from "@/hooks/use-auth";
-import { Loader2 } from 'lucide-react';
+import { Loader2 } from "lucide-react";
+import { sendEmailNotification } from "@/utils/email";
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
@@ -39,14 +40,19 @@ export default function RegisterPage() {
     setErrors({});
     setIsLoading(true);
 
+    // Trim all input values
+    const trimmedName = name.trim();
+    const trimmedUsername = username.trim();
+    const trimmedEmail = email.trim();
+
     // Validate fields
     const newErrors: { [key: string]: string } = {};
 
-    if (!name) newErrors.name = "Name is required";
-    if (!username) newErrors.username = "Username is required";
-    if (!email) {
+    if (!trimmedName) newErrors.name = "Name is required";
+    if (!trimmedUsername) newErrors.username = "Username is required";
+    if (!trimmedEmail) {
       newErrors.email = "Email is required";
-    } else if (!EMAIL_REGEX.test(email)) {
+    } else if (!EMAIL_REGEX.test(trimmedEmail)) {
       newErrors.email = "Please enter a valid email address";
     }
     if (!password) newErrors.password = "Password is required";
@@ -62,10 +68,31 @@ export default function RegisterPage() {
     }
 
     try {
-      const response = await register({ email, password, username, name });
+      const response = await register({
+        email: trimmedEmail,
+        password,
+        username: trimmedUsername,
+        name: trimmedName,
+      });
       if (response) {
+        try {
+          await sendEmailNotification({
+            to: email,
+            subject: "Welcome to SkillExchange!",
+            template: "welcome",
+            data: {
+              name: name,
+            },
+          });
+        } catch (emailError) {
+          console.error("Failed to send welcome email:", emailError);
+          // Don't block registration if email fails
+        }
+
         router.push("/auth/signin");
-        toast.success("Registration successful! Please check your email to confirm");
+        toast.success(
+          "Registration successful! Please check your email to confirm"
+        );
       }
     } catch (error: any) {
       toast.error(error.message || "Registration failed");
@@ -74,7 +101,8 @@ export default function RegisterPage() {
     }
   };
 
-  const passwordMismatch = password !== confirmPassword && confirmPassword !== "";
+  const passwordMismatch =
+    password !== confirmPassword && confirmPassword !== "";
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-background">
@@ -121,7 +149,7 @@ export default function RegisterPage() {
                   id="email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => setEmail(e.target.value.trimStart())}
                   placeholder="Enter your email"
                 />
                 {errors.email && (
@@ -134,7 +162,7 @@ export default function RegisterPage() {
                   id="name"
                   type="text"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) => setName(e.target.value.trimStart())}
                   placeholder="Enter your name"
                 />
                 {errors.name && (
@@ -147,16 +175,18 @@ export default function RegisterPage() {
                   id="username"
                   type="text"
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  onChange={(e) => setUsername(e.target.value.trimStart())}
                   placeholder="Enter your username"
                 />
                 {errors.username && (
                   <p className="text-destructive text-xs">{errors.username}</p>
                 )}
               </div>
-              <motion.div 
+              <motion.div
                 className="space-y-2"
-                animate={passwordMismatch ? { x: [0, -10, 10, -10, 10, 0] } : {}}
+                animate={
+                  passwordMismatch ? { x: [0, -10, 10, -10, 10, 0] } : {}
+                }
                 transition={{ duration: 0.5 }}
               >
                 <Label htmlFor="password">Password</Label>
@@ -172,9 +202,11 @@ export default function RegisterPage() {
                   <p className="text-destructive text-xs">{errors.password}</p>
                 )}
               </motion.div>
-              <motion.div 
+              <motion.div
                 className="space-y-2"
-                animate={passwordMismatch ? { x: [0, -10, 10, -10, 10, 0] } : {}}
+                animate={
+                  passwordMismatch ? { x: [0, -10, 10, -10, 10, 0] } : {}
+                }
                 transition={{ duration: 0.5 }}
               >
                 <Label htmlFor="confirmPassword">Confirm Password</Label>
@@ -195,9 +227,9 @@ export default function RegisterPage() {
             </form>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
-            <Button 
-              className="w-full" 
-              type="submit" 
+            <Button
+              className="w-full"
+              type="submit"
               onClick={handleSubmit}
               disabled={isLoading}
             >
@@ -225,4 +257,3 @@ export default function RegisterPage() {
     </div>
   );
 }
-

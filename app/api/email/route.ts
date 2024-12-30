@@ -18,13 +18,13 @@ export async function POST(request: Request) {
     }
 
     const Template = EMAIL_TEMPLATES[template as EmailTemplate];
+    const htmlContent: string = Template(data);
 
-    // process.env.RESEND_FROM_EMAIL || will change this once i get the domain
     const { data: emailData, error } = await resend.emails.send({
       from: "onboarding@resend.dev",
       to: [to],
       subject: subject,
-      react: Template(data),
+      html: htmlContent,
     });
 
     if (error) {

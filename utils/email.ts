@@ -1,5 +1,4 @@
 import { EmailTemplateType } from '@/components/EmailTemplates';
-import { Resend } from 'resend';
 
 
 interface EmailParams {

@@ -45,7 +45,7 @@ import {
   DrawerDescription,
   DrawerFooter,
 } from "@/components/ui/drawer";
-import { ServiceForm } from "@/components/forms/service-form";
+import { ServiceForm } from "@/components/forms/service-add";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

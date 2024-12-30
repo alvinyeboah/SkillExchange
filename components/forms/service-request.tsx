@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useServiceRequests } from "@/hooks/use-service-requests";
 import { useAuth } from "@/hooks/use-auth";
+import { useMarketplace } from "@/hooks/use-marketplace";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,7 @@ import {
 } from "@/components/ui/form";
 import { toast } from "sonner";
 import { Loader2, Send } from "lucide-react";
+import { sendEmailNotification } from "@/utils/email";
 
 const formSchema = z.object({
   requirements: z
@@ -47,6 +49,7 @@ export function ServiceRequestForm({
 }: ServiceRequestFormProps) {
   const { user } = useAuth();
   const { addRequest } = useServiceRequests();
+  const { fetchServiceById } = useMarketplace();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -62,7 +65,10 @@ export function ServiceRequestForm({
 
     setIsLoading(true);
     try {
-      await addRequest({
+      const service = await fetchServiceById(serviceId);
+      if (!service) throw new Error("Service not found");
+
+      const request = await addRequest({
         service_id: serviceId,
         requester_id: user.user_id,
         provider_id: providerId,
@@ -70,8 +76,24 @@ export function ServiceRequestForm({
         deadline: new Date(values.deadline).toISOString(),
       });
 
+      if (request) {
+        await sendEmailNotification({
+          to: service.user.email,
+          subject: "New Service Request",
+          template: "service-request",
+          data: {
+            requestId: request.request_id.toString(),
+            requirements: values.requirements,
+            deadline: values.deadline,
+            clientName: user.name,
+            projectTitle: service.title,
+          },
+        });
+      }
+
       toast.success("Request sent successfully!");
       form.reset();
+      if (onClose) onClose();
     } catch (error: any) {
       toast.error(error.message || "Failed to send request. Please try again.");
     } finally {
