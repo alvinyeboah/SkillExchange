@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { useMarketplace } from "@/hooks/use-marketplace";
 
-export function ServiceForm() {
+export function ServiceForm({ serviceAdded }: { serviceAdded: () => void }) {
   const [category, setCategory] = useState<string>("");
   const { user } = useAuth();
   const { createNewService } = useMarketplace();
@@ -39,8 +39,10 @@ export function ServiceForm() {
         category,
         requirements: formData.get("requirements")?.toString(),
       });
+      serviceAdded();
     } catch (error) {
-      // Error is already handled in the hook
+    } finally {
+      setIsLoading(false);
     }
   };
 

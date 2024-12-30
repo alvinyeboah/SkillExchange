@@ -94,7 +94,7 @@ const formSchema = z.object({
 export default function UserDashboard() {
   const { user, isLoading, error } = useAuth();
   const { addSubmission } = useChallengeSubmissions();
-  const { editService } = useMarketplace();
+  const { editService, fetchServices } = useMarketplace();
 
   const [submitting, setSubmitting] = useState<number | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<{
@@ -148,6 +148,11 @@ export default function UserDashboard() {
     } finally {
       setSubmitting(null);
     }
+  };
+
+  const handleServiceAdded = async () => {
+    await fetchServices();
+    setShowServiceForm(false);
   };
 
   const handleEditService = (service: any) => {
@@ -657,7 +662,7 @@ export default function UserDashboard() {
                 Fill in the details to create your new service
               </DialogDescription>
             </DialogHeader>
-            <ServiceForm />
+            <ServiceForm serviceAdded={handleServiceAdded} />
           </DialogContent>
         </Dialog>
       )}

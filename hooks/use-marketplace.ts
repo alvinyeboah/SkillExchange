@@ -193,6 +193,7 @@ export const useMarketplace = create<MarketplaceState>((set, get) => ({
 
       await get().fetchServices();
       toast.success("Service created successfully!");
+      set({ isLoading: false });
     } catch (error: any) {
       set({ error: error.message, isLoading: false });
       toast.error(`Service creation failed: ${error.message}`);

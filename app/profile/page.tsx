@@ -34,15 +34,7 @@ import {
 } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
-import {
-  Award,
-  Briefcase,
-  Camera,
-  Coins,
-  Loader,
-  Plus,
-  Star,
-} from "lucide-react";
+import { Award, Briefcase, Camera, Coins, Loader, Plus, Star } from 'lucide-react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -58,7 +50,7 @@ import { Skill } from "@/types/database.types";
 import { createClient } from "@/utils/supabase/client";
 
 export default function SettingsPage() {
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, addSkill } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
 
   const {
@@ -89,56 +81,12 @@ export default function SettingsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const handleAddSkill = async (newSkill: Skill) => {
-    if (!user?.user_id) return;
-
     try {
-      const supabase = createClient();
-
-      // First check if skill exists
-      let { data: existingSkill, error: skillError } = await supabase
-        .from("Skills")
-        .select("skill_id")
-        .eq("name", newSkill.name)
-        .single();
-
-      let skillId;
-
-      if (!existingSkill) {
-        // Create new skill
-        const { data: newSkillData, error: createError } = await supabase
-          .from("Skills")
-          .insert({
-            name: newSkill.name,
-            category: newSkill.category,
-            description: newSkill.description,
-          })
-          .select("skill_id")
-          .single();
-
-        if (createError) throw createError;
-        skillId = newSkillData.skill_id;
-      } else {
-        skillId = existingSkill.skill_id;
-      }
-
-      // Add user skill relationship
-      const { error: userSkillError } = await supabase
-        .from("UserSkills")
-        .insert({
-          user_id: user.user_id,
-          skill_id: skillId,
-          proficiency_level: newSkill.proficiency_level,
-          endorsed_count: 0,
-        });
-
-      if (userSkillError) throw userSkillError;
-
-      // Update local state
-      setSkills([...skills, newSkill]);
+      await addSkill(newSkill);
       setIsDialogOpen(false);
       toast.success("Skill added successfully!");
     } catch (error: any) {
-      toast.error("Failed to add skill: " + error.message);
+      toast.error(error.message);
     }
   };
 
@@ -295,14 +243,14 @@ export default function SettingsPage() {
 
   return (
     <ProtectedRoute>
-      <div className="container mx-auto py-10">
-        <h1 className="text-3xl font-bold mb-6">User Profile</h1>
+      <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-10">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">User Profile</h1>
         <Tabs defaultValue="profile" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="account">Account</TabsTrigger>
-            <TabsTrigger value="notifications">Notifications</TabsTrigger>
-            <TabsTrigger value="privacy">Privacy</TabsTrigger>
+          <TabsList className="flex flex-wrap justify-start gap-2 mb-4 md:w-fit">
+            <TabsTrigger value="profile" className="flex-grow sm:flex-grow-0">Profile</TabsTrigger>
+            <TabsTrigger value="account" className="flex-grow sm:flex-grow-0">Account</TabsTrigger>
+            <TabsTrigger value="notifications" className="flex-grow sm:flex-grow-0">Notifications</TabsTrigger>
+            <TabsTrigger value="privacy" className="flex-grow sm:flex-grow-0">Privacy</TabsTrigger>
           </TabsList>
 
           <TabsContent value="profile" className="space-y-6">
@@ -325,7 +273,7 @@ export default function SettingsPage() {
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="flex items-center space-x-6">
+                  <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-6">
                     <div className="relative">
                       <Avatar className="w-24 h-24">
                         <AvatarImage
@@ -344,7 +292,7 @@ export default function SettingsPage() {
                         </label>
                       )}
                     </div>
-                    <div>
+                    <div className="text-center sm:text-left">
                       <h3 className="text-lg font-semibold">{user?.name}</h3>
                       <p className="text-sm text-muted-foreground">
                         @{user?.username}
@@ -364,7 +312,7 @@ export default function SettingsPage() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                     <div className="space-y-2">
                       <Label htmlFor="fullName">Full Name</Label>
                       <Input
@@ -372,6 +320,7 @@ export default function SettingsPage() {
                         name="fullName"
                         defaultValue={user?.name}
                         disabled={!isEditing}
+                        className="w-full"
                       />
                     </div>
                     <div className="space-y-2">
@@ -381,6 +330,7 @@ export default function SettingsPage() {
                         name="username"
                         defaultValue={user?.username}
                         disabled={!isEditing}
+                        className="w-full"
                       />
                     </div>
                     <div className="space-y-2">
@@ -390,6 +340,7 @@ export default function SettingsPage() {
                         name="email"
                         defaultValue={user?.email}
                         disabled={!isEditing}
+                        className="w-full"
                       />
                     </div>
                     <div className="space-y-2">
@@ -399,21 +350,21 @@ export default function SettingsPage() {
                         name="bio"
                         defaultValue={user?.bio}
                         disabled={!isEditing}
-                        className="h-[104px]"
+                        className="h-[104px] w-full"
                       />
                     </div>
                   </div>
 
                   {isEditing && (
                     <CardFooter className="px-0 pt-6">
-                      <Button type="submit">Save Changes</Button>
+                      <Button type="submit" className="w-full sm:w-auto">Save Changes</Button>
                     </CardFooter>
                   )}
                 </form>
               </CardContent>
             </Card>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
@@ -526,7 +477,7 @@ export default function SettingsPage() {
                     </Button>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {user?.skills?.map((skill: any, index: any) => (
                       <TooltipProvider key={skill.Skills.skill_id}>
                         <Tooltip>
@@ -593,6 +544,7 @@ export default function SettingsPage() {
                       name="email"
                       type="email"
                       defaultValue={user?.email || ""}
+                      className="w-full"
                     />
                   </div>
                   <div className="space-y-2">
@@ -601,6 +553,7 @@ export default function SettingsPage() {
                       id="currentPassword"
                       name="currentPassword"
                       type="password"
+                      className="w-full"
                     />
                   </div>
                   <div className="space-y-2">
@@ -609,6 +562,7 @@ export default function SettingsPage() {
                       id="newPassword"
                       name="newPassword"
                       type="password"
+                      className="w-full"
                     />
                   </div>
                   <div className="space-y-2">
@@ -619,6 +573,7 @@ export default function SettingsPage() {
                       id="confirmPassword"
                       name="confirmPassword"
                       type="password"
+                      className="w-full"
                     />
                   </div>
                   <div className="space-y-2">
@@ -643,7 +598,7 @@ export default function SettingsPage() {
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Button type="submit">Update Account</Button>
+                  <Button type="submit" className="w-full sm:w-auto">Update Account</Button>
                 </CardFooter>
               </form>
             </Card>
@@ -786,3 +741,4 @@ export default function SettingsPage() {
     </ProtectedRoute>
   );
 }
+

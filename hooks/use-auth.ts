@@ -2,6 +2,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { createClient } from "@/utils/supabase/client";
+import { Skill } from "@/types/database.types";
 
 export interface ConsolidatedUser {
   user_id: string;
@@ -133,6 +134,7 @@ interface AuthState {
   checkAuth: () => Promise<void>;
   updateUser: (user: ConsolidatedUser) => void;
   register: (params: RegisterParams) => Promise<boolean>;
+  addSkill: (newSkill: Skill) => Promise<void>; // New function
 }
 
 const useAuth = create<AuthState>()(
@@ -287,6 +289,7 @@ const useAuth = create<AuthState>()(
           throw error;
         }
       },
+
 
       logout: async () => {
         set({ isLoading: true, error: null });
@@ -525,6 +528,65 @@ const useAuth = create<AuthState>()(
           throw error;
         }
       },
+
+      addSkill: async (newSkill: Skill) => {
+        const { user, updateUser } = get();
+        if (!user?.user_id) throw new Error("User not authenticated");
+
+        try {
+          const supabase = createClient();
+
+          // First check if skill exists
+          let { data: existingSkill, error: skillError } = await supabase
+            .from("Skills")
+            .select("skill_id")
+            .eq("name", newSkill.name)
+            .single();
+
+          let skillId;
+
+          if (!existingSkill) {
+            // Create new skill
+            const { data: newSkillData, error: createError } = await supabase
+              .from("Skills")
+              .insert({
+                name: newSkill.name,
+                category: newSkill.category,
+                description: newSkill.description,
+              })
+              .select("skill_id")
+              .single();
+
+            if (createError) throw createError;
+            skillId = newSkillData.skill_id;
+          } else {
+            skillId = existingSkill.skill_id;
+          }
+
+          // Add user skill relationship
+          const { error: userSkillError } = await supabase
+            .from("UserSkills")
+            .insert({
+              user_id: user.user_id,
+              skill_id: skillId,
+              proficiency_level: newSkill.proficiency_level,
+              endorsed_count: 0,
+            });
+
+          if (userSkillError) throw userSkillError;
+
+          // Update local state
+          const updatedSkills = [...(user.skills || []), newSkill];
+          updateUser({
+            ...user,
+            skills: updatedSkills,
+          });
+
+        } catch (error: any) {
+          throw new Error(`Failed to add skill: ${error.message}`);
+        }
+      },
+
     }),
     {
       name: "auth-storage",

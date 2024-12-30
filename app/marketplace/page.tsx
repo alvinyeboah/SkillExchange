@@ -50,6 +50,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useChallengesStore } from "@/hooks/use-challenges-store";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function Marketplace() {
   const {
@@ -93,7 +94,7 @@ export default function Marketplace() {
 
   useEffect(() => {
     fetchServices();
-  }, [ fetchServices]);
+  }, [fetchServices]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -189,7 +190,7 @@ export default function Marketplace() {
             </CardHeader>
             <CardContent>
               <ul className="space-y-2">
-                {communityStats.rankedUsers.slice(0,3).map((user, index) => (
+                {communityStats.rankedUsers.slice(0, 3).map((user, index) => (
                   <li key={index} className="flex items-center justify-between">
                     <div className="flex items-center truncate">
                       <Avatar className="h-8 w-8 mr-2 flex-shrink-0">
@@ -227,7 +228,9 @@ export default function Marketplace() {
                 </div>
                 <div className="flex justify-between items-center">
                   <span>Skills Exchanged</span>
-                  <span className="font-semibold">{communityStats.topSkills.length}</span>
+                  <span className="font-semibold">
+                    {communityStats.topSkills.length}
+                  </span>
                 </div>
               </div>
             </CardContent>
@@ -308,64 +311,71 @@ export default function Marketplace() {
               </SelectContent>
             </Select>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredServices.map((service, index) => (
-              <Card key={service.service_id || index} className="flex flex-col">
-                <CardHeader>
-                  <CardTitle className="text-xl">{service.title}</CardTitle>
-                  <Badge variant="secondary">
-                    {service.category.charAt(0).toUpperCase() +
-                      service.category.slice(1).toLowerCase()}
-                  </Badge>
-                </CardHeader>
-                <CardContent className="flex-grow">
-                  <p className="mb-4 text-sm text-gray-600 dark:text-gray-300">
-                    {service.description}
-                  </p>
-                  <div className="flex justify-between items-center mb-4 text-sm">
-                    <span className="flex items-center">
-                      <Image
-                        alt="skillcoin-image"
-                        src={coin}
-                        className="w-8 h-8"
-                      />
-                      {service.skillcoin_price} SkillCoins
-                    </span>
-                    <span className="flex items-center">
-                      <Clock className="w-4 h-4 mr-1" />
-                      {service.delivery_time}
-                    </span>
-                  </div>
-                  <div className="flex items-center">
-                    <Avatar className="h-8 w-8 mr-2">
-                      <AvatarImage src={service?.user.avatar_url} />
-                      <AvatarFallback>{service?.user?.name[0]}</AvatarFallback>
-                    </Avatar>
-                    <span className="text-sm font-medium">
-                      {service?.user?.name}
-                    </span>
-                    <Badge
-                      variant="secondary"
-                      className="ml-auto flex items-center"
-                    >
-                      <Star className="w-3 h-3 mr-1 fill-current" />
-                      {service?.user?.rating}
+          <ScrollArea className="h-[calc(100vh-200px)] w-full rounded-md border p-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
+              {filteredServices.map((service, index) => (
+                <Card
+                  key={service.service_id || index}
+                  className="flex flex-col"
+                >
+                  <CardHeader>
+                    <CardTitle className="text-xl">{service.title}</CardTitle>
+                    <Badge variant="secondary">
+                      {service.category.charAt(0).toUpperCase() +
+                        service.category.slice(1).toLowerCase()}
                     </Badge>
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <Button
-                    className="w-full"
-                    onClick={() =>
-                      router.push(`/marketplace/${service.service_id}`)
-                    }
-                  >
-                    View Details
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
+                  </CardHeader>
+                  <CardContent className="flex-grow">
+                    <p className="mb-4 text-sm text-gray-600 dark:text-gray-300">
+                      {service.description}
+                    </p>
+                    <div className="flex justify-between items-center mb-4 text-sm">
+                      <span className="flex items-center">
+                        <Image
+                          alt="skillcoin-image"
+                          src={coin}
+                          className="w-8 h-8"
+                        />
+                        {service.skillcoin_price} SkillCoins
+                      </span>
+                      <span className="flex items-center">
+                        <Clock className="w-4 h-4 mr-1" />
+                        {service.delivery_time}
+                      </span>
+                    </div>
+                    <div className="flex items-center">
+                      <Avatar className="h-8 w-8 mr-2">
+                        <AvatarImage src={service?.user.avatar_url} />
+                        <AvatarFallback>
+                          {service?.user?.name[0]}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-sm font-medium">
+                        {service?.user?.name}
+                      </span>
+                      <Badge
+                        variant="secondary"
+                        className="ml-auto flex items-center"
+                      >
+                        <Star className="w-3 h-3 mr-1 fill-current" />
+                        {service?.user?.rating}
+                      </Badge>
+                    </div>
+                  </CardContent>
+                  <CardFooter>
+                    <Button
+                      className="w-full"
+                      onClick={() =>
+                        router.push(`/marketplace/${service.service_id}`)
+                      }
+                    >
+                      View Details
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          </ScrollArea>
         </TabsContent>
         <TabsContent value="post">
           <Card>
