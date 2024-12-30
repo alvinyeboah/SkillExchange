@@ -27,6 +27,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { StatCard } from "@/components/stat-card";
 import { useCommunityStore } from "@/hooks/useCommunityStatsStore";
 import { useMarketplace } from "@/hooks/use-marketplace";
+import { useAuth } from "@/hooks/use-auth";
+import * as XLSX from 'xlsx';
+
 
 export default function CommunityStats() {
   const {
@@ -35,6 +38,7 @@ export default function CommunityStats() {
     error:isServicesError,
     fetchServices,
   } = useMarketplace();
+  const {user} = useAuth();
 
   const { communityStats, isLoading: communityLoading, fetchCommunityStats, error } = useCommunityStore();
 
@@ -91,13 +95,57 @@ export default function CommunityStats() {
     { hour: '23:00', post: 2, share: 1 }
   ];
   
+
+  const generateReport = () => {
+    const wb = XLSX.utils.book_new();
+    const overviewData = [{
+      'Active Users': communityStats.activeUsers,
+      'Total Services': services.length,
+      'Total Challenges': communityStats.availableChallenges.length,
+      'Total SkillCoins': communityStats.totalSkillcoins
+    }];
+    const overviewSheet = XLSX.utils.json_to_sheet(overviewData);
+    XLSX.utils.book_append_sheet(wb, overviewSheet, "Overview");
+    const skillsSheet = XLSX.utils.json_to_sheet(communityStats.topSkills);
+    XLSX.utils.book_append_sheet(wb, skillsSheet, "Top Skills");
+    const contributorsData = communityStats.topProviders.map(user => ({
+      Username: user.username,
+      Name: user.name || 'Community Member',
+      SkillCoins: user.skillcoins,
+      Rating: user.rating
+    }));
+    const contributorsSheet = XLSX.utils.json_to_sheet(contributorsData);
+    XLSX.utils.book_append_sheet(wb, contributorsSheet, "Top Contributors");
+
+    const challengesData = communityStats.availableChallenges.map(challenge => ({
+      Title: challenge.title,
+      Description: challenge.description,
+      Reward: challenge.reward_skillcoins,
+      Difficulty: challenge.difficulty,
+      Category: challenge.category,
+      Skills: challenge.skills,
+      'Start Date': challenge.start_date,
+      'End Date': challenge.end_date
+    }));
+    const challengesSheet = XLSX.utils.json_to_sheet(challengesData);
+    XLSX.utils.book_append_sheet(wb, challengesSheet, "Challenges");
+    const reviewsData = communityStats.recentReviews.map(review => ({
+      'Service ID': review.service_id,
+      Rating: review.rating,
+      Content: review.content,
+      'Created At': review.created_at
+    }));
+    const reviewsSheet = XLSX.utils.json_to_sheet(reviewsData);
+    XLSX.utils.book_append_sheet(wb, reviewsSheet, "Recent Reviews");
+    XLSX.writeFile(wb, "community-stats-report.xlsx");
+  };
   
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-4xl font-bold">Community Stats</h1>
-        <Button>Generate Report</Button>
+        {user && <Button onClick={generateReport}>Generate Report</Button>}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

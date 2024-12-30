@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Clock, Flame, Lightbulb, Trophy, Users, Zap } from "lucide-react";
+import { Clock, Flame, Lightbulb, Trophy, Users, Zap } from 'lucide-react';
 import { toast } from "sonner";
 import Link from "next/link";
 import { useReminders } from "@/hooks/use-reminders-store";
@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/tooltip";
 import coin from "@/public/coin.png";
 import Image from "next/image";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function Challenges() {
   const { user } = useAuth();
@@ -191,7 +192,7 @@ export default function Challenges() {
       <Tabs defaultValue="active" className="mb-12">
         <TooltipProvider>
           <div className="container mx-auto px-4">
-            <TabsList className="mb-8 inline-flex space-x-2 p-1 bg-muted rounded-md">
+            <TabsList className="mb-8 inline-flex h-auto flex-wrap justify-center space-x-2 rounded-md bg-muted p-1">
               <TabsTrigger
                 value="active"
                 className="px-3 py-1.5 text-sm font-medium transition-all data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
@@ -216,186 +217,107 @@ export default function Challenges() {
 
         <div className="container mx-auto px-4">
           <TabsContent value="active">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {activeChallenges.map((challenge) => (
-                <Card key={challenge.challenge_id} className="flex flex-col">
-                  <CardHeader>
-                    <CardTitle className="flex justify-between items-center">
-                      {challenge.title}
-                      <Badge variant="secondary">{challenge.category}</Badge>
-                    </CardTitle>
-                    <CardDescription>{challenge.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="flex-grow">
-                    <div className="flex justify-between items-center mb-4">
-                      <Badge
-                        variant={
-                          challenge.difficulty === "Hard"
-                            ? "destructive"
-                            : "default"
+            <ScrollArea className="h-[600px] w-full rounded-md border p-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {activeChallenges.map((challenge) => (
+                  <Card key={challenge.challenge_id} className="flex flex-col">
+                    <CardHeader>
+                      <CardTitle className="flex justify-between items-center">
+                        {challenge.title}
+                        <Badge variant="secondary">{challenge.category}</Badge>
+                      </CardTitle>
+                      <CardDescription>{challenge.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex-grow space-y-4">
+                      <div className="flex flex-wrap justify-between items-center gap-2">
+                        <Badge
+                          variant={
+                            challenge.difficulty === "Hard"
+                              ? "destructive"
+                              : "default"
+                          }
+                        >
+                          {challenge.difficulty}
+                        </Badge>
+                        <span className="flex items-center">
+                          <Users className="w-4 h-4 mr-1" />
+                          {challenge.participantsCount} participants
+                        </span>
+                      </div>
+                      <Progress value={challenge.progress} className="w-full" />
+                      <p className="text-sm text-muted-foreground">
+                        {challenge.progress}% completed
+                      </p>
+                      <div className="flex flex-wrap justify-between items-center gap-2">
+                        <span className="flex items-center">
+                          <Image
+                            alt="skillcoin-image"
+                            src={coin}
+                            className="w-8 h-8 mr-2"
+                          />
+                          {challenge.reward_skillcoins} SkillCoins
+                        </span>
+                        <span className="flex items-center">
+                          <Clock className="w-4 h-4 mr-1" />
+                          {new Date(challenge.end_date).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">Required Skills:</h4>
+                        {renderSkillsBadges(challenge.skills)}
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-2">Top Participants:</h4>
+                        <div className="flex flex-wrap justify-between gap-2">
+                          {challenge.topParticipants?.map(
+                            (participant, index) => (
+                              <div
+                                key={index}
+                                className="flex flex-col items-center"
+                              >
+                                <Avatar className="h-10 w-10 mb-1">
+                                  <AvatarImage
+                                    src={participant.avatar_url}
+                                    alt={participant.username}
+                                  />
+                                  <AvatarFallback>
+                                    {participant.username[0]}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span className="text-sm">
+                                  {participant.username}
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                  {participant.progress}%
+                                </span>
+                              </div>
+                            )
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                    <CardFooter>
+                      <Button
+                        className="w-full"
+                        onClick={() =>
+                          handleJoinChallenge(challenge.challenge_id)
                         }
                       >
-                        {challenge.difficulty}
-                      </Badge>
-                      <span className="flex items-center">
-                        <Users className="w-4 h-4 mr-1" />
-                        {challenge.participantsCount} participants
-                      </span>
-                    </div>
-                    <Progress value={challenge.progress} className="mb-2" />
-                    <p className="text-sm text-muted-foreground mb-4">
-                      {challenge.progress}% completed
-                    </p>
-                    <div className="flex justify-between items-center mb-4">
-                      <span className="flex items-center">
-                        <Image
-                          alt="skillcoin-image"
-                          src={coin}
-                          className="w-8 h-8"
-                        />
-                        {challenge.reward_skillcoins} SkillCoins
-                      </span>
-                      <span className="flex items-center">
-                        <Clock className="w-4 h-4 mr-1" />
-                        {new Date(challenge.end_date).toUTCString()}
-                      </span>
-                    </div>
-                    <div className="mb-4">
-                      <h4 className="font-semibold mb-2">Required Skills:</h4>
-                      {renderSkillsBadges(challenge.skills)}
-                    </div>
-                    <div>
-                      <h4 className="font-semibold mb-2">Top Participants:</h4>
-                      <div className="flex justify-between">
-                        {challenge.topParticipants?.map(
-                          (participant, index) => (
-                            <div
-                              key={index}
-                              className="flex flex-col items-center"
-                            >
-                              <Avatar className="h-10 w-10 mb-1">
-                                <AvatarImage
-                                  src={participant.avatar_url}
-                                  alt={participant.username}
-                                />
-                                <AvatarFallback>
-                                  {participant.username[0]}
-                                </AvatarFallback>
-                              </Avatar>
-                              <span className="text-sm">
-                                {participant.username}
-                              </span>
-                              <span className="text-xs text-muted-foreground">
-                                {participant.progress}%
-                              </span>
-                            </div>
-                          )
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button
-                      className="w-full"
-                      onClick={() =>
-                        handleJoinChallenge(challenge.challenge_id)
-                      }
-                    >
-                      Join Challenge
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
+                        Join Challenge
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                ))}
+              </div>
+            </ScrollArea>
           </TabsContent>
         </div>
 
         <div className="container mx-auto px-4">
           <TabsContent value="upcoming">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {upcomingChallenges.map((challenge) => (
-                <Card key={challenge.challenge_id}>
-                  <CardHeader>
-                    <CardTitle className="flex justify-between items-center">
-                      {challenge.title}
-                      <Badge variant="secondary">{challenge.category}</Badge>
-                    </CardTitle>
-                    <CardDescription>{challenge.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex justify-between items-center mb-4">
-                      <Badge
-                        variant={
-                          challenge.difficulty === "Hard"
-                            ? "destructive"
-                            : "default"
-                        }
-                      >
-                        {challenge.difficulty}
-                      </Badge>
-                      <span className="flex items-center">
-                        <Users className="w-4 h-4 mr-1" />
-                        {challenge.participantsCount} est. participants
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center mb-4">
-                      <span className="flex items-center">
-                        <Image
-                          alt="skillcoin-image"
-                          src={coin}
-                          className="w-8 h-8"
-                        />
-                        {challenge.reward_skillcoins} SkillCoins
-                      </span>
-                      <span className="flex items-center">
-                        <Clock className="w-4 h-4 mr-1" />
-                        Starts: {challenge.start_date}
-                      </span>
-                    </div>
-                    <div>
-                      <h4 className="font-semibold mb-2">Required Skills:</h4>
-                      {renderSkillsBadges(challenge.skills)}
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button
-                      className="w-full"
-                      onClick={async () => {
-                        if (!user) {
-                          toast.error("Please login to set reminders");
-                          return;
-                        }
-                        try {
-                          await setReminder({
-                            user_id: user?.user_id,
-                            type: "Challenge",
-                            reference_id: challenge.challenge_id,
-                            title: challenge.title,
-                            datetime: challenge.start_date,
-                          });
-                          toast.success("Reminder set successfully!");
-                        } catch (error) {
-                          console.error("Error setting reminder:", error);
-                          toast.error(
-                            "Failed to set reminder. Please try again."
-                          );
-                        }
-                      }}
-                    >
-                      Set Reminder
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-        </div>
-
-        <div className="container mx-auto px-4">
-          <TabsContent value="completed">
-            {completedChallenges.length > 0 ? (
+            <ScrollArea className="h-[600px] w-full rounded-md border p-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {completedChallenges.map((challenge) => (
+                {upcomingChallenges.map((challenge) => (
                   <Card key={challenge.challenge_id}>
                     <CardHeader>
                       <CardTitle className="flex justify-between items-center">
@@ -417,7 +339,7 @@ export default function Challenges() {
                         </Badge>
                         <span className="flex items-center">
                           <Users className="w-4 h-4 mr-1" />
-                          {challenge.participantsCount} participants
+                          {challenge.participantsCount} est. participants
                         </span>
                       </div>
                       <div className="flex justify-between items-center mb-4">
@@ -429,19 +351,10 @@ export default function Challenges() {
                           />
                           {challenge.reward_skillcoins} SkillCoins
                         </span>
-                        <div className="flex items-center">
-                          <span className="mr-2">Winner:</span>
-                          <Avatar className="h-6 w-6 mr-1">
-                            <AvatarImage
-                              src={challenge.winner?.avatar}
-                              alt={challenge.winner?.name}
-                            />
-                            <AvatarFallback>
-                              {challenge.winner?.name?.[0]}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span>{challenge.winner?.name}</span>
-                        </div>
+                        <span className="flex items-center">
+                          <Clock className="w-4 h-4 mr-1" />
+                          Starts: {challenge.start_date}
+                        </span>
                       </div>
                       <div>
                         <h4 className="font-semibold mb-2">Required Skills:</h4>
@@ -449,30 +362,121 @@ export default function Challenges() {
                       </div>
                     </CardContent>
                     <CardFooter>
-                      <Button variant="outline" className="w-full">
-                        View Results
+                      <Button
+                        className="w-full"
+                        onClick={async () => {
+                          if (!user) {
+                            toast.error("Please login to set reminders");
+                            return;
+                          }
+                          try {
+                            await setReminder({
+                              user_id: user?.user_id,
+                              type: "Challenge",
+                              reference_id: challenge.challenge_id,
+                              title: challenge.title,
+                              datetime: challenge.start_date,
+                            });
+                          } catch (error) {
+                            console.error("Error setting reminder:", error);
+                          }
+                        }}
+                        disabled={!user}
+                      >
+                        {user ? "Set Reminder" : "Please login to set reminders"}
                       </Button>
                     </CardFooter>
                   </Card>
                 ))}
               </div>
-            ) : (
-              <Card className="w-full">
-                <CardContent className="flex flex-col items-center justify-center py-10">
-                  <Lightbulb className="w-16 h-16 text-yellow-400 mb-4" />
-                  <h3 className="text-2xl font-bold text-center mb-2">
-                    No Completed Challenges Yet
-                  </h3>
-                  <p className="text-muted-foreground text-center mb-6">
-                    Ready to showcase your skills? Start a challenge and see
-                    your accomplishments here!
-                  </p>
-                  <Link href="/challenges">
-                    <Button>Explore Challenges</Button>
-                  </Link>
-                </CardContent>
-              </Card>
-            )}
+            </ScrollArea>
+          </TabsContent>
+        </div>
+
+        <div className="container mx-auto px-4">
+          <TabsContent value="completed">
+            <ScrollArea className="h-[600px] w-full rounded-md border p-4">
+              {completedChallenges.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {completedChallenges.map((challenge) => (
+                    <Card key={challenge.challenge_id}>
+                      <CardHeader>
+                        <CardTitle className="flex justify-between items-center">
+                          {challenge.title}
+                          <Badge variant="secondary">{challenge.category}</Badge>
+                        </CardTitle>
+                        <CardDescription>{challenge.description}</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex justify-between items-center mb-4">
+                          <Badge
+                            variant={
+                              challenge.difficulty === "Hard"
+                                ? "destructive"
+                                : "default"
+                            }
+                          >
+                            {challenge.difficulty}
+                          </Badge>
+                          <span className="flex items-center">
+                            <Users className="w-4 h-4 mr-1" />
+                            {challenge.participantsCount} participants
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center mb-4">
+                          <span className="flex items-center">
+                            <Image
+                              alt="skillcoin-image"
+                              src={coin}
+                              className="w-8 h-8"
+                            />
+                            {challenge.reward_skillcoins} SkillCoins
+                          </span>
+                          <div className="flex items-center">
+                            <span className="mr-2">Winner:</span>
+                            <Avatar className="h-6 w-6 mr-1">
+                              <AvatarImage
+                                src={challenge.winner?.avatar}
+                                alt={challenge.winner?.name}
+                              />
+                              <AvatarFallback>
+                                {challenge.winner?.name?.[0]}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span>{challenge.winner?.name}</span>
+                          </div>
+                        </div>
+                        <div>
+                          <h4 className="font-semibold mb-2">Required Skills:</h4>
+                          {renderSkillsBadges(challenge.skills)}
+                        </div>
+                      </CardContent>
+                      <CardFooter>
+                        <Button variant="outline" className="w-full">
+                          View Results
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <Card className="w-full">
+                  <CardContent className="flex flex-col items-center justify-center py-10">
+                    <Lightbulb className="w-16 h-16 text-yellow-400 mb-4" />
+                    <h3 className="text-2xl font-bold text-center mb-2">
+                      No Completed Challenges Yet
+                    </h3>
+                    <p className="text-muted-foreground text-center mb-6">
+                      Ready to showcase your skills? Start a challenge and see
+                      your accomplishments here!
+                    </p>
+                    <Link href="/challenges">
+                      <Button>Explore Challenges</Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+              )}
+            </ScrollArea>
           </TabsContent>
         </div>
       </Tabs>
@@ -617,3 +621,4 @@ export default function Challenges() {
     </div>
   );
 }
+

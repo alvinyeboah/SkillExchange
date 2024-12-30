@@ -178,6 +178,7 @@ export function AddFundsDialog({ onSuccess }: { onSuccess?: () => void }) {
                       <PaystackButton
                         {...(handlePaystackButtonProps(option) as any)}
                         className="w-full"
+                        onClick={() => setOpen(false)}
                       >
                         Purchase
                       </PaystackButton>
