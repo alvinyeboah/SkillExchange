@@ -13,6 +13,7 @@ interface MarketplaceService {
     name: string;
     avatar_url: string;
     rating: number;
+    email: string;
   };
   category: string;
   status: string;
@@ -89,7 +90,8 @@ export const useMarketplace = create<MarketplaceState>((set, get) => ({
           user:Users!Services_user_id_fkey (
             name,
             avatar_url,
-            rating
+            rating,
+            email
           )
         `
         )
@@ -129,7 +131,8 @@ export const useMarketplace = create<MarketplaceState>((set, get) => ({
           user:Users!Services_user_id_fkey (
             name,
             avatar_url,
-            rating
+            rating,
+            email
           )
         `
         )

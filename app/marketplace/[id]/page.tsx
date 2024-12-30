@@ -28,15 +28,6 @@ interface ServiceDetailsPageProps {
 export default function ServiceDetailsPage(props: ServiceDetailsPageProps) {
   const {
     services,
-    filteredServices,
-    isLoading,
-    error,
-    searchTerm,
-    selectedCategory,
-    fetchServices,
-    createNewService,
-    setSearchTerm,
-    setSelectedCategory,
   } = useMarketplace();
 
   const params = use(props.params);

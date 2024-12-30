@@ -58,31 +58,8 @@ export default function SignInPage() {
         case "Email not confirmed":
           toast.error("Please verify your email before signing in.");
           break;
-        case "Invalid credentials":
-          toast.error("Invalid email or password. Please try again.");
-          break;
-        case "OAuth error":
-          toast.error(
-            "There was a problem signing in with your provider. Please try again."
-          );
-          break;
-        case "JWT error":
-          toast.error(
-            "Authentication configuration error. Please contact support."
-          );
-          break;
-        case "Network error":
-          toast.error(
-            "Network error. Please check your connection and try again."
-          );
-          break;
-        case "Session verification failed":
-          toast.error(
-            "Session verification failed. Please try signing in again."
-          );
-          break;
         default:
-          toast.error(`${error.message || "An error occurred"}. Please try again.`);
+          toast.error(`${error.message || "An error occurred"}. Please try again later.`);
       }
     } finally {
       setLoading(false);

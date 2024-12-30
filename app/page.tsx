@@ -86,6 +86,16 @@ export default function Home() {
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 50);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -416,7 +426,9 @@ export default function Home() {
                           router.push(`/marketplace/${service.service_id}`)
                         }
                       >
-                        Request Service
+                        {user
+                          ? "Request Service"
+                          : "Sign in to Request Service"}
                       </Button>
                     </CardFooter>
                   </Card>
@@ -540,7 +552,7 @@ export default function Home() {
                         handleJoinChallenge(challenge.challenge_id)
                       }
                     >
-                      Join Challenge
+                      {user ? "Join Challenge" : "Sign in to Join Challenges"}
                     </Button>
                   </CardFooter>
                 </Card>
@@ -809,10 +821,10 @@ export default function Home() {
 
       <ReminderCheck />
       <motion.button
-        className="fixed bottom-8 right-8 p-2 bg-primary text-primary-foreground rounded-full shadow-lg"
+        className="fixed bottom-8 right-8 z-50 p-2 bg-primary text-primary-foreground rounded-full shadow-lg"
         initial={{ opacity: 0, y: 100 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
+        animate={{ opacity: showScrollTop ? 1 : 0, y: showScrollTop ? 0 : 100 }}
+        transition={{ duration: 0.2 }}
         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
       >
         <ArrowUp className="w-6 h-6" />

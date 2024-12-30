@@ -239,6 +239,19 @@ export const useChallengesStore = create<ChallengesState>((set, get) => ({
     try {
       const supabase = createClient();
 
+      // Check if user is already participating
+      const { data: existingParticipation } = await supabase
+        .from("ChallengeParticipation")
+        .select()
+        .eq("challenge_id", challengeId)
+        .eq("user_id", userId)
+        .single();
+
+      if (existingParticipation) {
+        toast.error("You are already participating in this challenge");
+        return;
+      }
+
       const { error } = await supabase.from("ChallengeParticipation").insert([
         {
           challenge_id: challengeId,

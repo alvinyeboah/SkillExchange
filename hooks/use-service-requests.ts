@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { createClient } from "@/utils/supabase/client";
+import { sendEmailNotification } from "@/utils/email";
 
 const supabase = createClient();
 
@@ -87,6 +88,42 @@ export const useServiceRequests = create<ServiceRequestsState>((set, get) => ({
 
       if (error) throw new Error(error.message);
 
+      // Fetch provider's email
+      const { data: providerData, error: providerError } = await supabase
+        .from("Users")
+        .select("email")
+        .eq("user_id", requestData.provider_id)
+        .single();
+
+      if (providerError) throw new Error(providerError.message);
+      if (!providerData?.email) throw new Error("Provider email not found");
+
+      // Create notification for the provider
+      const { error: notificationError } = await supabase
+        .from("Notifications")
+        .insert([
+          {
+            user_id: requestData.provider_id,
+            title: "New Service Request",
+            message: "You have received a new service request",
+            type: "push",
+            status: "unread",
+            reference_id: newRequest.request_id,
+            reference_type: "service_request",
+          },
+        ]);
+
+      if (notificationError) throw new Error(notificationError.message);
+      await sendEmailNotification({
+        to: providerData.email,
+        subject: "New Service Request",
+        template: "service-request",
+        data: {
+          requestId: newRequest.request_id,
+          requirements: requestData.requirements,
+          deadline: requestData.deadline,
+        },
+      });
       set((state) => ({
         requests: [...state.requests, newRequest as ServiceRequest],
         isLoading: false,

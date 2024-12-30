@@ -10,7 +10,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { motion } from "framer-motion";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -28,7 +34,15 @@ import {
 } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
-import { Award, Briefcase, Camera, Coins, Loader, Plus, Star } from "lucide-react";
+import {
+  Award,
+  Briefcase,
+  Camera,
+  Coins,
+  Loader,
+  Plus,
+  Star,
+} from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -41,7 +55,7 @@ import {
 import { ProtectedRoute } from "@/components/protected-route";
 import { AddSkillForm } from "@/components/forms/addSkillform";
 import { Skill } from "@/types/database.types";
-
+import { createClient } from "@/utils/supabase/client";
 
 export default function SettingsPage() {
   const { user, updateUser } = useAuth();
@@ -62,16 +76,71 @@ export default function SettingsPage() {
     }
   }, [user?.user_id, fetchSettings]);
 
-  const [skills, setSkills] = useState<Skill[]>(user?.skills?.map(skill => ({
-    ...skill,
-    skill_id: skill.skill_id.toString()  // Convert number to string
-  })) || []);
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [skills, setSkills] = useState<Skill[]>(
+    user?.skills?.map((skill: any) => ({
+      skill_id: skill.Skills.skill_id,
+      name: skill.Skills.name,
+      category: skill.Skills.category,
+      description: skill.Skills.description,
+      proficiency_level: skill.proficiency_level,
+      endorsed_count: skill.endorsed_count,
+    })) || []
+  );
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const handleAddSkill = (newSkill: Skill) => {
-    setSkills([...skills, newSkill])
-    setIsDialogOpen(false)
-  }
+  const handleAddSkill = async (newSkill: Skill) => {
+    if (!user?.user_id) return;
+
+    try {
+      const supabase = createClient();
+
+      // First check if skill exists
+      let { data: existingSkill, error: skillError } = await supabase
+        .from("Skills")
+        .select("skill_id")
+        .eq("name", newSkill.name)
+        .single();
+
+      let skillId;
+
+      if (!existingSkill) {
+        // Create new skill
+        const { data: newSkillData, error: createError } = await supabase
+          .from("Skills")
+          .insert({
+            name: newSkill.name,
+            category: newSkill.category,
+            description: newSkill.description,
+          })
+          .select("skill_id")
+          .single();
+
+        if (createError) throw createError;
+        skillId = newSkillData.skill_id;
+      } else {
+        skillId = existingSkill.skill_id;
+      }
+
+      // Add user skill relationship
+      const { error: userSkillError } = await supabase
+        .from("UserSkills")
+        .insert({
+          user_id: user.user_id,
+          skill_id: skillId,
+          proficiency_level: newSkill.proficiency_level,
+          endorsed_count: 0,
+        });
+
+      if (userSkillError) throw userSkillError;
+
+      // Update local state
+      setSkills([...skills, newSkill]);
+      setIsDialogOpen(false);
+      toast.success("Skill added successfully!");
+    } catch (error: any) {
+      toast.error("Failed to add skill: " + error.message);
+    }
+  };
 
   const handleNotificationUpdate = async (key: string, value: boolean) => {
     if (!user?.user_id) return;
@@ -174,7 +243,7 @@ export default function SettingsPage() {
 
     try {
       const formData = new FormData();
-      formData.append("image", file);
+      formData.append("file", file);
 
       const response = await fetch(`/api/users/${user?.user_id}/upload-image`, {
         method: "POST",
@@ -182,7 +251,9 @@ export default function SettingsPage() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to upload image");
+        const errorData = await response.json();
+        console.error("Upload error:", errorData);
+        throw new Error(errorData.error || "Failed to upload image");
       }
 
       const data = await response.json();
@@ -195,7 +266,12 @@ export default function SettingsPage() {
 
       toast.success("Profile image updated successfully");
     } catch (error) {
-      toast.error("Failed to upload profile image");
+      console.error("Upload error:", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to upload profile image"
+      );
     }
   };
 
@@ -451,8 +527,8 @@ export default function SettingsPage() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {user?.skills?.map((skill, index) => (
-                      <TooltipProvider key={skill.skill_id}>
+                    {user?.skills?.map((skill: any, index: any) => (
+                      <TooltipProvider key={skill.Skills.skill_id}>
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <motion.div
@@ -465,10 +541,10 @@ export default function SettingsPage() {
                                   <div className="flex justify-between items-start mb-2">
                                     <div>
                                       <h3 className="font-semibold text-lg">
-                                        {skill.name}
+                                        {skill.Skills.name}
                                       </h3>
                                       <Badge variant="outline" className="mt-1">
-                                        {skill.category}
+                                        {skill.Skills.category}
                                       </Badge>
                                     </div>
                                     <Badge
@@ -479,7 +555,7 @@ export default function SettingsPage() {
                                     </Badge>
                                   </div>
                                   <p className="text-sm text-muted-foreground line-clamp-2">
-                                    {skill.description}
+                                    {skill.Skills.description}
                                   </p>
                                   <div className="mt-2 text-xs text-muted-foreground">
                                     Endorsements: {skill.endorsed_count}
@@ -489,7 +565,7 @@ export default function SettingsPage() {
                             </motion.div>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>{skill.description}</p>
+                            <p>{skill.Skills.description}</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>

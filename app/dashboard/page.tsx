@@ -45,7 +45,7 @@ import {
   DrawerDescription,
   DrawerFooter,
 } from "@/components/ui/drawer";
-import { ServiceForm } from "@/components/forms/service-form";
+import { ServiceForm } from "@/components/forms/service-add";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -115,9 +115,6 @@ export default function UserDashboard() {
       delivery_time: 0,
     },
   });
-
-  console.log(user, "but email exists");
-
   const handleFileChange = (
     challengeId: number,
     event: React.ChangeEvent<HTMLInputElement>
@@ -182,12 +179,7 @@ export default function UserDashboard() {
     }
   };
 
-  useEffect(() => {
-    if (!isLoading && user && !user.email) {
-      toast.error("Please complete your profile with an email address");
-    }
-  }, [user, isLoading]);
-
+ 
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -196,21 +188,21 @@ export default function UserDashboard() {
     );
   }
 
-  if (!isLoading && user && !user.email) {
-    return (
+  // if (!isLoading && user && !user.email) {
+  //   return (
 
 
-      <div className="container mx-auto py-10">
-        <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
-          Please complete your profile with an email address to access the
-          dashboard.
-          <Button asChild className="ml-4">
-            <Link href="/profile">Complete Profile</Link>
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  //     <div className="container mx-auto py-10">
+  //       <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
+  //         Please complete your profile with an email address to access the
+  //         dashboard.
+  //         <Button asChild className="ml-4">
+  //           <Link href="/profile">Complete Profile</Link>
+  //         </Button>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   const EditServiceContent = () => (
     <Form {...form}>
@@ -500,9 +492,9 @@ export default function UserDashboard() {
         <TabsContent value="requested-services" className="space-y-4">
           <h2 className="text-2xl font-semibold mb-4">Requested Services</h2>
           <ScrollArea className="h-[400px]">
-            {user?.requestedServices && user.requestedServices.length > 0 ? (
+            {user?.requestedServices && user?.requestedServices?.length > 0 ? (
               user.requestedServices.map((service) => (
-                <Card key={service.service_id} className="mb-4">
+                <Card key={service?.service_id} className="mb-4">
                   <CardHeader>
                     <CardTitle>{service.service.title}</CardTitle>
                   </CardHeader>
