@@ -51,12 +51,101 @@ interface ServiceRequestsState {
   ) => Promise<void>;
   fetchRequestById: (requestId: number) => Promise<ServiceRequest | null>;
   fetchPendingRequests: () => Promise<void>;
+  submitServiceRequest: (requestData: CreateServiceRequestDTO) => Promise<void>;
+
 }
 
 export const useServiceRequests = create<ServiceRequestsState>((set, get) => ({
   requests: [],
   isLoading: false,
   error: null,
+
+  submitServiceRequest: async (requestData: CreateServiceRequestDTO) => {
+    set({ isLoading: true, error: null });
+    try {
+      // Validate the service exists and is available
+      const { data: service } = await supabase
+        .from('Services')
+        .select('*')
+        .eq('service_id', requestData.service_id)
+        .single();
+
+      if (!service) {
+        throw new Error('Service not found');
+      }
+
+      if (service.service_status !== 'available') {
+        throw new Error('This service is currently unavailable');
+      }
+
+      // Check if user has enough skillcoins
+      const { data: user } = await supabase
+        .from('Users')
+        .select('skillcoins')
+        .eq('user_id', requestData.requester_id)
+        .single();
+
+      if (!user || user.skillcoins < service.skillcoin_price) {
+        throw new Error('Insufficient skillcoins');
+      }
+
+      // Create the service request
+      const { data: newRequest, error: requestError } = await supabase
+        .from('ServiceRequests')
+        .insert([{
+          ...requestData,
+          status: RequestStatus.PENDING,
+          created_at: new Date().toISOString()
+        }])
+        .select()
+        .single();
+
+      if (requestError) throw requestError;
+
+      // Create notification for the service provider
+      await supabase
+        .from('Notifications')
+        .insert([{
+          user_id: requestData.provider_id,
+          title: 'New Service Request',
+          message: `You have received a new service request for: ${service.title}`,
+          type: 'push',
+          status: 'unread'
+        }]);
+
+      // Send email notification
+      const { data: providerData } = await supabase
+        .from('Users')
+        .select('email')
+        .eq('user_id', requestData.provider_id)
+        .single();
+
+      if (providerData?.email) {
+        await sendEmailNotification({
+          to: providerData.email,
+          subject: 'New Service Request',
+          template: 'service-request',
+          data: {
+            serviceName: service.title,
+            requirements: requestData.requirements,
+            deadline: requestData.deadline
+          }
+        });
+      }
+
+      set((state) => ({
+        requests: [...state.requests, newRequest as ServiceRequest],
+        isLoading: false
+      }));
+
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : 'Failed to submit service request',
+        isLoading: false
+      });
+      throw error;
+    }
+  },
 
   addRequest: async (requestData: CreateServiceRequestDTO) => {
     set({ isLoading: true, error: null });

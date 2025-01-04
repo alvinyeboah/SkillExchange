@@ -9,7 +9,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { UserNav } from "./user-nav";
 import { NotificationsDropdown } from "./notifications-dropdown";
 import Image from "next/image";
-import logo from "@/public/coin.png";
+import logo from "@/public/logo.png";
 import {
   Popover,
   PopoverContent,
@@ -51,10 +51,10 @@ export default function Header() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center justify-center space-x-2">
-          <div className="items-center justify-center mt-1">
+          <div className="items-center justify-center">
             <Image src={logo} width={50} height={50} alt="Logo" />
           </div>
-          <span className="font-bold text-xl flex items-center">
+          <span className="font-bold text-xl flex items-center mt-1">
             SkillExchange
           </span>
         </Link>
@@ -69,11 +69,13 @@ export default function Header() {
             </Link>
           ))}
         </nav>
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center justify-center space-x-4">
           <ThemeToggle />
           {user && <NotificationsDropdown />}
           {user ? (
-            <UserNav user={user} />
+            <div className="flex items-center justify-center">
+              <UserNav user={user} />
+            </div>
           ) : (
             <Link href="/auth/signin">
               <Button variant="default">Sign In</Button>

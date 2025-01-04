@@ -32,7 +32,7 @@ interface ChallengeSubmissionsState {
   submissions: ChallengeSubmission[];
   isLoading: boolean;
   error: string | null;
-  addSubmission: (submissionData: CreateSubmissionDTO) => Promise<ChallengeSubmission | null>;
+  submitChallenge: (submissionData: CreateSubmissionDTO) => Promise<void>;
   fetchUserSubmissions: (userId: string) => Promise<void>;
   fetchChallengeSubmissions: (challengeId: number) => Promise<void>;
   updateSubmissionStatus: (
@@ -48,39 +48,75 @@ export const useChallengeSubmissions = create<ChallengeSubmissionsState>(
     isLoading: false,
     error: null,
 
-    addSubmission: async (submissionData: CreateSubmissionDTO) => {
+    submitChallenge: async (submissionData: CreateSubmissionDTO) => {
       set({ isLoading: true, error: null });
       try {
-        // Validate submission data
-        if (!submissionData.challenge_id || !submissionData.user_id || !submissionData.content) {
-          throw new Error('Missing required submission fields');
+        // First, check if user has already submitted for this challenge
+        const { data: existingSubmissions } = await supabase
+          .from('ChallengeSubmissions')
+          .select('*')
+          .eq('challenge_id', submissionData.challenge_id)
+          .eq('user_id', submissionData.user_id);
+  
+        if (existingSubmissions && existingSubmissions.length > 0) {
+          throw new Error('You have already submitted to this challenge');
         }
-
-        const { data: newSubmission, error } = await supabase
-          .from('challenge_submissions')
+  
+        // Get challenge details to verify submission is within timeframe
+        const { data: challenge } = await supabase
+          .from('Challenges')
+          .select('*')
+          .eq('challenge_id', submissionData.challenge_id)
+          .single();
+  
+        if (!challenge) {
+          throw new Error('Challenge not found');
+        }
+  
+        const now = new Date();
+        const endDate = new Date(challenge.end_date);
+        if (now > endDate) {
+          throw new Error('Challenge submission period has ended');
+        }
+  
+        // Create the submission
+        const { data: submission, error } = await supabase
+          .from('ChallengeSubmissions')
           .insert([{
             ...submissionData,
-            status: SubmissionStatus.PENDING
+            status: SubmissionStatus.PENDING,
+            submitted_at: new Date().toISOString()
           }])
-          .select('*')
+          .select()
           .single();
-
-        if (error) throw new Error(error.message);
-
+  
+        if (error) throw error;
+  
+        // Create notification for challenge moderators
+        await supabase
+          .from('Notifications')
+          .insert([{
+            user_id: challenge.creator_id, // Assuming challenge has a creator_id
+            title: 'New Challenge Submission',
+            message: `New submission received for challenge: ${challenge.title}`,
+            type: 'push',
+            status: 'unread'
+          }]);
+  
         set((state) => ({
-          submissions: [...state.submissions, newSubmission as ChallengeSubmission],
+          submissions: [...state.submissions, submission as ChallengeSubmission],
           isLoading: false
         }));
-
-        return newSubmission as ChallengeSubmission;
+  
       } catch (error) {
-        set({ 
-          error: error instanceof Error ? error.message : 'Failed to add submission', 
-          isLoading: false 
+        set({
+          error: error instanceof Error ? error.message : 'Failed to submit challenge',
+          isLoading: false
         });
-        return null;
+        throw error;
       }
     },
+
 
     fetchUserSubmissions: async (userId: string) => {
       set({ isLoading: true, error: null });

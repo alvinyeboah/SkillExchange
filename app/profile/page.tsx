@@ -34,7 +34,15 @@ import {
 } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
-import { Award, Briefcase, Camera, Coins, Loader, Plus, Star } from 'lucide-react';
+import {
+  Award,
+  Briefcase,
+  Camera,
+  Coins,
+  Loader,
+  Plus,
+  Star,
+} from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -47,11 +55,11 @@ import {
 import { ProtectedRoute } from "@/components/protected-route";
 import { AddSkillForm } from "@/components/forms/addSkillform";
 import { Skill } from "@/types/database.types";
-import { createClient } from "@/utils/supabase/client";
 
 export default function SettingsPage() {
   const { user, updateUser, addSkill } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const {
     settings,
@@ -64,36 +72,32 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (user?.user_id) {
-      fetchSettings(user?.user_id);
+      fetchSettings(user.user_id);
     }
   }, [user?.user_id, fetchSettings]);
 
-  const [skills, setSkills] = useState<Skill[]>(
-    user?.skills?.map((skill: any) => ({
-      skill_id: skill.Skills.skill_id,
-      name: skill.Skills.name,
-      category: skill.Skills.category,
-      description: skill.Skills.description,
-      proficiency_level: skill.proficiency_level,
-      endorsed_count: skill.endorsed_count,
-    })) || []
-  );
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-
   const handleAddSkill = async (newSkill: Skill) => {
     try {
+      if (!user) throw new Error("User not authenticated");
       await addSkill(newSkill);
+      // Update local user state with new skill
+      if (updateUser) {
+        updateUser({
+          ...user,
+          skills: [...(user.skills || []), { skill_id: newSkill.skill_id, name: newSkill.name, category: newSkill.category, description: newSkill.description, proficiency_level: newSkill.proficiency_level, endorsed_count: 0 }]
+        });
+      }
       setIsDialogOpen(false);
       toast.success("Skill added successfully!");
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(error.message || "Failed to add skill");
     }
   };
 
   const handleNotificationUpdate = async (key: string, value: boolean) => {
     if (!user?.user_id) return;
     try {
-      await updateSettings(user?.user_id, { [key]: value });
+      await updateSettings(user.user_id, { [key]: value });
       toast.success("Notification settings updated");
     } catch (error) {
       toast.error("Failed to update notification settings");
@@ -103,7 +107,7 @@ export default function SettingsPage() {
   const handleFrequencyUpdate = async (value: string) => {
     if (!user?.user_id) return;
     try {
-      await updateSettings(user?.user_id, {
+      await updateSettings(user.user_id, {
         notification_frequency: value as "realtime" | "daily" | "weekly",
       });
       toast.success("Notification frequency updated");
@@ -122,7 +126,7 @@ export default function SettingsPage() {
   const handlePrivacyUpdate = async (key: string, value: any) => {
     if (!user?.user_id) return;
     try {
-      await updateSettings(user?.user_id, { [key]: value });
+      await updateSettings(user.user_id, { [key]: value });
       toast.success("Privacy settings updated");
     } catch (error) {
       toast.error("Failed to update privacy settings");
@@ -174,7 +178,7 @@ export default function SettingsPage() {
         return;
       }
 
-      await fetch(`/api/users/${user?.user_id}/account`, {
+      await fetch(`/api/users/${user.user_id}/account`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(accountData),
@@ -193,14 +197,13 @@ export default function SettingsPage() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await fetch(`/api/users/${user?.user_id}/upload-image`, {
+      const response = await fetch(`/api/users/${user.user_id}/upload-image`, {
         method: "POST",
         body: formData,
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error("Upload error:", errorData);
         throw new Error(errorData.error || "Failed to upload image");
       }
 
@@ -241,16 +244,114 @@ export default function SettingsPage() {
     );
   }
 
+  // Render the Skills section
+  const renderSkillsSection = () => {
+    const hasSkills = user?.skills && user.skills.length > 0;
+
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Award className="h-5 w-5" />
+              <span>Skills</span>
+            </div>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Plus className="h-4 w-4 mr-2" />
+                  {hasSkills ? "Add Skill" : "Add Your First Skill"}
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add a New Skill</DialogTitle>
+                </DialogHeader>
+                <AddSkillForm onAddSkill={handleAddSkill} />
+              </DialogContent>
+            </Dialog>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {!hasSkills ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground mb-4">
+                You haven't added any skills yet.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {user.skills?.map((skill: any, index: number) => (
+                <TooltipProvider key={skill.Skills.skill_id}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                      >
+                        <Card className="overflow-hidden">
+                          <CardContent className="p-4">
+                            <div className="flex justify-between items-start mb-2">
+                              <div>
+                                <h3 className="font-semibold text-lg">
+                                  {skill.Skills.name}
+                                </h3>
+                                <Badge variant="outline" className="mt-1">
+                                  {skill.Skills.category}
+                                </Badge>
+                              </div>
+                              <Badge variant="secondary" className="text-xs">
+                                Lvl {skill.proficiency_level}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground line-clamp-2">
+                              {skill.Skills.description}
+                            </p>
+                            <div className="mt-2 text-xs text-muted-foreground">
+                              Endorsements: {skill.endorsed_count}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{skill.Skills.description}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
+
+
   return (
     <ProtectedRoute>
       <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-10">
-        <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">User Profile</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">
+          User Profile
+        </h1>
         <Tabs defaultValue="profile" className="space-y-4">
           <TabsList className="flex flex-wrap justify-start gap-2 mb-4 md:w-fit">
-            <TabsTrigger value="profile" className="flex-grow sm:flex-grow-0">Profile</TabsTrigger>
-            <TabsTrigger value="account" className="flex-grow sm:flex-grow-0">Account</TabsTrigger>
-            <TabsTrigger value="notifications" className="flex-grow sm:flex-grow-0">Notifications</TabsTrigger>
-            <TabsTrigger value="privacy" className="flex-grow sm:flex-grow-0">Privacy</TabsTrigger>
+            <TabsTrigger value="profile" className="flex-grow sm:flex-grow-0">
+              Profile
+            </TabsTrigger>
+            <TabsTrigger value="account" className="flex-grow sm:flex-grow-0">
+              Account
+            </TabsTrigger>
+            <TabsTrigger
+              value="notifications"
+              className="flex-grow sm:flex-grow-0"
+            >
+              Notifications
+            </TabsTrigger>
+            <TabsTrigger value="privacy" className="flex-grow sm:flex-grow-0">
+              Privacy
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="profile" className="space-y-6">
@@ -357,7 +458,9 @@ export default function SettingsPage() {
 
                   {isEditing && (
                     <CardFooter className="px-0 pt-6">
-                      <Button type="submit" className="w-full sm:w-auto">Save Changes</Button>
+                      <Button type="submit" className="w-full sm:w-auto">
+                        Save Changes
+                      </Button>
                     </CardFooter>
                   )}
                 </form>
@@ -406,14 +509,14 @@ export default function SettingsPage() {
                 <ScrollArea className="h-[300px] pr-4">
                   {user?.services?.map((service, index) => (
                     <motion.div
-                      key={service.id}
+                      key={service.service_id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.1 }}
                       className="mb-4 last:mb-0"
                     >
                       <div
-                        key={service.id}
+                        key={service.service_id}
                         className="flex justify-between items-center"
                       >
                         <h3 className="font-semibold">{service.title}</h3>
@@ -446,20 +549,22 @@ export default function SettingsPage() {
                     <Award className="h-5 w-5" />
                     <span>Skills</span>
                   </div>
-                  <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="sm">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add Skill
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Add a New Skill</DialogTitle>
-                      </DialogHeader>
-                      <AddSkillForm onAddSkill={handleAddSkill} />
-                    </DialogContent>
-                  </Dialog>
+                  {user?.skills?.length === 0 ? null : (
+                    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Skill
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Add a New Skill</DialogTitle>
+                        </DialogHeader>
+                        <AddSkillForm onAddSkill={handleAddSkill} />
+                      </DialogContent>
+                    </Dialog>
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -598,7 +703,9 @@ export default function SettingsPage() {
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Button type="submit" className="w-full sm:w-auto">Update Account</Button>
+                  <Button type="submit" className="w-full sm:w-auto">
+                    Update Account
+                  </Button>
                 </CardFooter>
               </form>
             </Card>
@@ -621,7 +728,7 @@ export default function SettingsPage() {
                     id="emailNotifications"
                     checked={settings?.email_notifications}
                     onCheckedChange={(checked) =>
-                      handleNotificationUpdate("email_notificatiions", checked)
+                      handleNotificationUpdate("email_notifications", checked)
                     }
                   />
                 </div>
@@ -741,4 +848,3 @@ export default function SettingsPage() {
     </ProtectedRoute>
   );
 }
-

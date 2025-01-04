@@ -28,13 +28,13 @@ export interface ConsolidatedUser {
     allow_messages_from_strangers: boolean;
   };
   achievements?: {
-    id: number;
+    achievement_id: number;
     title: string;
     description: string;
     icon_url: string;
     earned_at: string;
-    requirement_value: number;
     requirement_type: string;
+    requirement_value: number;
     skillcoins_reward: number;
   }[];
   skillProgress?: {
@@ -44,7 +44,7 @@ export interface ConsolidatedUser {
     last_updated: string;
   }[];
   services?: {
-    id: number;
+    service_id: number;
     title: string;
     description: string;
     skillcoin_price: number;
@@ -57,6 +57,18 @@ export interface ConsolidatedUser {
     tags: string;
     requirements: string;
     revisions: number;
+    requests?: {
+      request_id: number;
+      requester_id: string;
+      status: "pending" | "accepted" | "rejected" | "completed";
+      requirements: string;
+      created_at: string;
+      updated_at: string;
+      requester: {
+        username: string;
+        avatar_url?: string;
+      };
+    }[];
   }[];
   challengeParticipation?: {
     challenge_id: number;
@@ -166,7 +178,7 @@ const useAuth = create<AuthState>()(
           const [
             { data: settings },
             { data: achievements },
-            { data: services },
+            { data: servicesData },
             { data: skills },
             { data: requestedServices },
             { data: challengeParticipation },
@@ -177,10 +189,42 @@ const useAuth = create<AuthState>()(
               .eq("user_id", data.user?.id)
               .single(),
             supabase
-              .from("Achievements")
-              .select("*")
+              .from("UserAchievements")
+              .select(
+                `
+                achievement_id,
+                earned_at,
+                Achievements (
+                  title,
+                  description,
+                  icon_url,
+                  requirement_type,
+                  requirement_value,
+                  skillcoins_reward
+                )
+              `
+              )
               .eq("user_id", data.user?.id),
-            supabase.from("Services").select("*").eq("user_id", data.user?.id),
+            supabase
+              .from("Services")
+              .select(
+                `
+                *,
+                requests:ServiceRequests(
+                  request_id,
+                  requester_id,
+                  status,
+                  requirements,
+                  created_at,
+                  updated_at,
+                  requester:Users!ServiceRequests_requester_id_fkey(
+                    username,
+                    avatar_url
+                  )
+                )
+              `
+              )
+              .eq("user_id", data.user?.id),
             supabase
               .from("UserSkills")
               .select(
@@ -248,6 +292,12 @@ const useAuth = create<AuthState>()(
             endorsed_count: skill.endorsed_count,
           }));
 
+          // Transform services data to include requests
+          const services = servicesData?.map((service: any) => ({
+            ...service,
+            requests: service.requests || [],
+          }));
+
           // Transform requested services data
           const transformedRequestedServices = requestedServices?.map(
             (request: any) => ({
@@ -290,7 +340,6 @@ const useAuth = create<AuthState>()(
         }
       },
 
-
       logout: async () => {
         set({ isLoading: true, error: null });
         try {
@@ -315,11 +364,9 @@ const useAuth = create<AuthState>()(
           await login(user.email, ""); // This will refresh all user data
         }
       },
-
       checkAuth: async () => {
         const supabase = createClient();
         try {
-          // Get session first
           const {
             data: { session },
             error,
@@ -337,7 +384,7 @@ const useAuth = create<AuthState>()(
             userData,
             settings,
             achievements,
-            services,
+            servicesData,
             skills,
             requestedServices,
             challengeParticipation,
@@ -349,7 +396,26 @@ const useAuth = create<AuthState>()(
               .eq("user_id", userId)
               .single(),
             supabase.from("Achievements").select("*").eq("user_id", userId),
-            supabase.from("Services").select("*").eq("user_id", userId),
+            supabase
+              .from("Services")
+              .select(
+                `
+                *,
+                requests:ServiceRequests(
+                  request_id,
+                  requester_id,
+                  status,
+                  requirements,
+                  created_at,
+                  updated_at,
+                  requester:Users!ServiceRequests_requester_id_fkey(
+                    username,
+                    avatar_url
+                  )
+                )
+              `
+              )
+              .eq("user_id", userId),
             supabase
               .from("UserSkills")
               .select(
@@ -402,6 +468,12 @@ const useAuth = create<AuthState>()(
               .eq("user_id", userId),
           ]);
 
+          // Transform services data to include requests
+          const services = servicesData.data?.map((service: any) => ({
+            ...service,
+            requests: service.requests || [],
+          }));
+
           // Transform requested services data
           const transformedRequestedServices = requestedServices.data?.map(
             (request: any) => ({
@@ -431,7 +503,7 @@ const useAuth = create<AuthState>()(
               ...userData.data,
               settings: settings.data,
               achievements: achievements.data,
-              services: services.data,
+              services,
               skills: skills.data,
               requestedServices: transformedRequestedServices,
               challengeParticipation: transformedChallengeParticipation,
@@ -448,7 +520,6 @@ const useAuth = create<AuthState>()(
           });
         }
       },
-
       updateUser: (user: ConsolidatedUser) => set({ user }),
 
       register: async ({
@@ -581,12 +652,10 @@ const useAuth = create<AuthState>()(
             ...user,
             skills: updatedSkills,
           });
-
         } catch (error: any) {
           throw new Error(`Failed to add skill: ${error.message}`);
         }
       },
-
     }),
     {
       name: "auth-storage",

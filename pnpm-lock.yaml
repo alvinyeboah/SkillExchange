@@ -95,6 +95,9 @@ importers:
       '@vercel/speed-insights':
         specifier: ^1.1.0
         version: 1.1.0(next@15.0.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
+      avataaars:
+        specifier: ^2.0.0
+        version: 2.0.0(react@18.3.1)
       bcrypt:
         specifier: ^5.1.1
         version: 5.1.1
@@ -122,6 +125,9 @@ importers:
       framer-motion:
         specifier: ^11.11.17
         version: 11.12.0(@emotion/is-prop-valid@1.2.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      get-full-year:
+        specifier: ^0.0.3
+        version: 0.0.3
       input-otp:
         specifier: ^1.4.1
         version: 1.4.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -1257,6 +1263,11 @@ packages:
   aria-query@5.3.0:
     resolution: {integrity: sha512-b0P0sZPKtyu8HkeRAfCq0IfURZK+SuwMjY1UXGBU27wpAiTwQAIlq56IbIO+ytk/JjS1fMR14ee5WBBfKi5J6A==}
 
+  avataaars@2.0.0:
+    resolution: {integrity: sha512-VBS14dAvTe1l/HEwSoR5LArV7OqXgbhksBCS3CZZLIOQfv+oM3yVgy0d5QKz/KYqNMmS8emSzD9znlrOhbg2fA==}
+    peerDependencies:
+      react: ^17.0.0
+
   aws-ssl-profiles@1.1.2:
     resolution: {integrity: sha512-NZKeq9AfyQvEeNlN0zSYAaWrmBffJh3IELMZfRpJVWgrpEbtEpnjvzqBPf+mxoI287JohRDoa+/nsfqqiZmF6g==}
     engines: {node: '>= 6.0.0'}
@@ -1601,6 +1612,9 @@ packages:
 
   generate-function@2.3.1:
     resolution: {integrity: sha512-eeB5GfMNeevm/GRYq20ShmsaGcmI81kIX2K9XQx5miC8KdHaC6Jm0qQ8ZNeGOi7wYB8OsdxKs+Y2oVuTFuVwKQ==}
+
+  get-full-year@0.0.3:
+    resolution: {integrity: sha512-uKcYQNqgZRMcI+7wRtS/1spPjkAzOotG/4hiLH9DMnkiYxZacHfzcrAVviXoJQ57ckCSo67X8rwdmIjnaGwQyw==}
 
   get-nonce@1.0.1:
     resolution: {integrity: sha512-FJhYRoDaiatfEkUK8HKlicmu/3SGFD51q3itKDGoSTysQJBnfOcxU5GxnhE1E6soB76MbT0MBtnKJuXyAx+96Q==}
@@ -3601,6 +3615,12 @@ snapshots:
     dependencies:
       dequal: 2.0.3
 
+  avataaars@2.0.0(react@18.3.1):
+    dependencies:
+      lodash: 4.17.21
+      prop-types: 15.8.1
+      react: 18.3.1
+
   aws-ssl-profiles@1.1.2: {}
 
   balanced-match@1.0.2: {}
@@ -3919,6 +3939,8 @@ snapshots:
   generate-function@2.3.1:
     dependencies:
       is-property: 1.0.2
+
+  get-full-year@0.0.3: {}
 
   get-nonce@1.0.1: {}
 

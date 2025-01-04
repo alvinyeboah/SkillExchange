@@ -1,7 +1,10 @@
 import Link from 'next/link'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import getFullYear from "get-full-year";
 
 export default function Footer() {
+  const currentYear = new Date().getFullYear();
+  
   return (
     <footer className="bg-secondary text-secondary-foreground">
       <div className="container mx-auto px-4 py-8">
@@ -59,7 +62,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="mt-8 pt-8 border-t border-gray-700 text-center text-sm">
-          <p>&copy; 2024 SkillExchange. Alvin Yeboah. All rights reserved.</p>
+          <p>&copy; {currentYear} SkillExchange. Alvin Yeboah. All rights reserved.</p>
         </div>
       </div>
     </footer>
