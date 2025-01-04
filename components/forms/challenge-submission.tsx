@@ -15,7 +15,7 @@ export function ChallengeSubmissionForm({
   challengeId,
 }: ChallengeSubmissionFormProps) {
   const { user } = useAuth();
-  const { addSubmission } = useChallengeSubmissions();
+  const { submitChallenge } = useChallengeSubmissions();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -26,7 +26,7 @@ export function ChallengeSubmissionForm({
     const formData = new FormData(e.currentTarget);
 
     try {
-      await addSubmission({
+      await submitChallenge({
         challenge_id: challengeId,
         user_id: user?.user_id,
         content: formData.get("content") as string,

@@ -199,6 +199,7 @@ export default function Home() {
 
   const {
     activeChallenges,
+    challenges,
     isLoading: challengesLoading,
     error,
     fetchChallenges,
@@ -384,7 +385,7 @@ export default function Home() {
             <div className="flex justify-center items-center h-64">
               <LoadingSpinner size="lg" />
             </div>
-          ) : (
+          ) : services.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {services.slice(0, 6).map((service, index) => (
                 <motion.div
@@ -435,6 +436,29 @@ export default function Home() {
                 </motion.div>
               ))}
             </div>
+          ) : (
+            <Card className="w-full max-w-2xl mx-auto">
+              <CardHeader>
+                <CardTitle className="text-center">
+                  No Services Available
+                </CardTitle>
+                <CardDescription className="text-center">
+                  Be the first to offer your skills and services!
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col items-center justify-center py-10">
+                <Zap className="w-16 h-16 text-primary mb-4" />
+                <p className="text-center mb-6">
+                  Share your expertise and earn SkillCoins by creating a
+                  service.
+                </p>
+                <GlowingButton variant="outline" size="lg" asChild>
+                  <Link href="/marketplace/create">
+                    Create a Service <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </GlowingButton>
+              </CardContent>
+            </Card>
           )}
           <div className="text-center mt-8">
             <GlowingButton variant="outline" size="lg" asChild>
@@ -455,7 +479,7 @@ export default function Home() {
             <div className="flex justify-center items-center h-64">
               <LoadingSpinner size="lg" />
             </div>
-          ) : (
+          ) : activeChallenges.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {activeChallenges.slice(0, 2).map((challenge) => (
                 <Card key={challenge.challenge_id} className="flex flex-col">
@@ -558,17 +582,50 @@ export default function Home() {
                 </Card>
               ))}
             </div>
+          ) : (
+            <Card className="w-full max-w-2xl mx-auto">
+              <CardHeader>
+                <CardTitle className="text-center">
+                  No Active Challenges
+                </CardTitle>
+                <CardDescription className="text-center">
+                  Stay tuned for exciting new challenges coming soon!
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col items-center justify-center py-10">
+                <Trophy className="w-16 h-16 text-primary mb-4" />
+                <p className="text-center mb-6">
+                  Challenges are a great way to improve your skills and earn
+                  SkillCoins. Check back later for new opportunities!
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-md">
+                  <GlowingButton variant="outline" size="lg" asChild>
+                    <Link href="/challenges">
+                      All Challenges <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </GlowingButton>
+                  <GlowingButton variant="outline" size="lg" asChild>
+                    <Link href="/profile">
+                      My Profile <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </GlowingButton>
+                </div>
+              </CardContent>
+            </Card>
           )}
           <div className="text-center mt-8">
-            <GlowingButton variant="outline" size="lg" asChild>
-              <Link href="/challenges">
-                View All Challenges <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </GlowingButton>
+            {
+              (activeChallenges.length === 0 ? null : (
+                <GlowingButton variant="outline" size="lg" asChild>
+                  <Link href="/challenges">
+                    View All Challenges <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </GlowingButton>
+              ))
+            }
           </div>
         </div>
       </section>
-
       <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-b from-background/80 to-background relative overflow-hidden">
         <div className="container px-4 md:px-6 mx-auto">
           <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-8 text-center bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary-foreground">

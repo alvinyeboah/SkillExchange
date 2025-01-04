@@ -14,19 +14,19 @@ const testimonials: Testimonial[] = [
   {
     id: 1,
     name: "Alice Johnson",
-    avatar: "/placeholder.svg?height=40&width=40",
+    avatar: "https://avatar.iran.liara.run/public/girl",
     content: "SkillExchange has been a game-changer for my career. I've learned so much from the community!"
   },
   {
     id: 2,
     name: "Bob Smith",
-    avatar: "/placeholder.svg?height=40&width=40",
+    avatar: "https://avatar.iran.liara.run/public/boy",
     content: "The challenges on this platform push me to improve my skills every day. Highly recommended!"
   },
   {
     id: 3,
     name: "Carol Williams",
-    avatar: "/placeholder.svg?height=40&width=40",
+    avatar: "https://avatar.iran.liara.run/public/girl",
     content: "I love how easy it is to connect with other skilled professionals. SkillExchange is the future of networking!"
   }
 ]
